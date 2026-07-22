@@ -2,7 +2,6 @@ import os
 import hashlib
 import hmac
 import json
-from urllib.parse import parse_qsl
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -25,7 +24,12 @@ app.add_middleware(
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 class TelegramAuthData(BaseModel):
-    initData: str
+    id: int
+    first_name: str
+    username: str = None
+    photo_url: str = None
+    auth_date: int
+    hash: str
 
 @app.get("/")
 def read_root():
@@ -44,42 +48,46 @@ def verify_telegram_auth(data: TelegramAuthData):
                 detail="Telegram bot token not configured on server."
             )
             
-        parsed_data = dict(parse_qsl(data.initData))
-        received_hash = parsed_data.pop('hash', None)
+        # Convert incoming data to dict and remove the hash for validation checking
+        auth_data = data.dict(exclude_unset=True)
+        received_hash = auth_data.pop('hash', None)
         
         if not received_hash:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Hash is missing from initData."
+                detail="Hash is missing."
             )
 
+        # Sort parameters alphabetically and format as key=value
         data_check_string = '\n'.join(
-            f"{k}={v}" for k, v in sorted(parsed_data.items())
+            f"{k}={v}" for k, v in sorted(auth_data.items()) if v is not None
         )
 
-        secret_key = hmac.new(
-            b"WebAppData", 
-            TELEGRAM_BOT_TOKEN.encode(), 
-            hashlib.sha256
-        ).digest()
+        # Compute secret key using SHA256 of the bot token
+        secret_key = hashlib.sha256(TELEGRAM_BOT_TOKEN.encode()).digest()
 
+        # Compute signature hash
         calculated_hash = hmac.new(
             secret_key, 
             data_check_string.encode(), 
             hashlib.sha256
         ).hexdigest()
 
+        # Verify hash
         if not hmac.compare_digest(calculated_hash, received_hash):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid signature."
             )
 
-        user_info = json.loads(parsed_data.get('user', '{}'))
         return {
             "status": "success",
             "message": "Telegram authentication verified successfully.",
-            "user": user_info
+            "user": {
+                "id": data.id,
+                "first_name": data.first_name,
+                "username": data.username
+            }
         }
 
     except Exception as e:
