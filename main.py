@@ -1,3 +1,4 @@
+import os
 import hashlib
 import hmac
 import json
@@ -12,17 +13,16 @@ app = FastAPI(
     description="Backend server for TMX Quantum Telegram authentication"
 )
 
-# Enable CORS so your frontend/Mini App can communicate freely
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust this to your frontend domain in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Your Telegram Bot Token
-TELEGRAM_BOT_TOKEN = "8792544712:AAE8jprlzjBnrDJpbVpCKDAOwxFS-NGHOQc"
+# Securely load token from environment variables
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 class TelegramAuthData(BaseModel):
     initData: str
@@ -37,10 +37,13 @@ def read_root():
 
 @app.post("/api/auth/telegram")
 def verify_telegram_auth(data: TelegramAuthData):
-    """
-    Validates the initData string received from the Telegram WebApp SDK.
-    """
     try:
+        if not TELEGRAM_BOT_TOKEN:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Telegram bot token not configured on server."
+            )
+            
         parsed_data = dict(parse_qsl(data.initData))
         received_hash = parsed_data.pop('hash', None)
         
@@ -50,33 +53,28 @@ def verify_telegram_auth(data: TelegramAuthData):
                 detail="Hash is missing from initData."
             )
 
-        # Sort the remaining parameters alphabetically and format as key=value
         data_check_string = '\n'.join(
             f"{k}={v}" for k, v in sorted(parsed_data.items())
         )
 
-        # Compute the secret key using WebAppData and the bot token
         secret_key = hmac.new(
             b"WebAppData", 
             TELEGRAM_BOT_TOKEN.encode(), 
             hashlib.sha256
         ).digest()
 
-        # Compute the signature hash
         calculated_hash = hmac.new(
             secret_key, 
             data_check_string.encode(), 
             hashlib.sha256
         ).hexdigest()
 
-        # Secure comparison of hashes
         if not hmac.compare_digest(calculated_hash, received_hash):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid signature."
             )
 
-        # Authentication successful
         user_info = json.loads(parsed_data.get('user', '{}'))
         return {
             "status": "success",
