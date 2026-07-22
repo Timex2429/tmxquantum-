@@ -2,6 +2,7 @@ import os
 import hashlib
 import hmac
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
@@ -9,6 +10,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = FastAPI(title="TMX Quantum Backend", version="1.0.0")
+
+# Enable CORS for frontend applications
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows requests from any frontend origin
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows GET, POST, etc.
+    allow_headers=["*"],
+)
 
 # Fetch your Telegram Bot Token from environment variables (set these on Render)
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
