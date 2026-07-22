@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMX Quantum Mini App</title>
+    <!-- Include Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 400px;
+            margin: 40px auto;
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        button {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        button:hover {
+            background-color: #2563eb;
+        }
+        #response {
+            margin-top: 20px;
+            font-size: 14px;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>TMX Quantum</h2>
+        <p>Welcome to your Telegram Mini App</p>
+        <p id="user-info">Loading user data...</p>
+        <button onclick="authenticateUser()">Authenticate with Backend</button>
+        <div id="response"></div>
+    </div>
+
+    <script>
+        // Initialize Telegram Web App
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Display user details if available
+        const user = tg.initDataUnsafe?.user;
+        const userInfoEl = document.getElementById("user-info");
+        
+        if (user) {
+            userInfoEl.innerHTML = `Hello, <b>${user.first_name}</b>!`;
+        } else {
+            userInfoEl.innerHTML = "Opened outside Telegram or user data unavailable.";
+        }
+
+        async function authenticateUser() {
+            const responseEl = document.getElementById("response");
+            responseEl.innerText = "Authenticating...";
+
+            try {
+                // Send raw initData string to your FastAPI backend
+                const res = await fetch("https://tmxquantum.onrender.com/api/auth/telegram", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    // Note: Your backend TelegramAuthData model expects specific structured fields 
+                    // or you can adjust your backend to parse the initData string directly.
+                    body: JSON.stringify({
+                        id: user ? user.id : 0,
+                        first_name: user ? user.first_name : "Test",
+                        username: user ? user.username : "testuser",
+                        hash: tg.initData  // Passing raw initData or parsed hash based on your schema
+                    })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    responseEl.style.color = "#4ade80";
+                    responseEl.innerText = "Success: " + JSON.stringify(data);
+                } else {
+                    responseEl.style.color = "#f87171";
+                    responseEl.innerText = "Error: " + (data.detail || "Authentication failed");
+                }
+            } catch (err) {
+                responseEl.style.color = "#f87171";
+                responseEl.innerText = "Network Error: " + err.message;
+            }
+        }
+    </script>
+</body>
+</html>
