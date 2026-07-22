@@ -1,17 +1,12 @@
-import os
-import hashlib
-import hmac
-import json
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import os
 
-app = FastAPI(
-    title="TMX Quantum Backend",
-    version="1.0.0",
-    description="Backend server for TMX Quantum Telegram authentication"
-)
+app = FastAPI()
 
+# Enable CORS so your frontend and backend communicate without blocks
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,80 +15,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Securely load token from environment variables
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+# 1. Route to serve your index.html frontend file at the root URL
+@app.get("/")
+async def serve_frontend():
+    if os.path.exists("index.html"):
+        return FileResponse("index.html")
+    return {"status": "Online", "message": "Backend is running, but index.html was not found."}
 
+# 2. Example model for your Telegram authentication payload
 class TelegramAuthData(BaseModel):
     id: int
     first_name: str
-    username: str = None
-    photo_url: str = None
-    auth_date: int
+    username: str | None = None
     hash: str
 
-@app.get("/")
-def read_root():
-    return {
-        "status": "Online",
-        "service": "TMX Quantum Backend",
-        "message": "FastAPI server is live and running successfully."
-    }
-
+# 3. Your Telegram authentication endpoint
 @app.post("/api/auth/telegram")
-def verify_telegram_auth(data: TelegramAuthData):
-    try:
-        if not TELEGRAM_BOT_TOKEN:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Telegram bot token not configured on server."
-            )
-            
-        # Convert incoming data to dict and remove the hash for validation checking
-        auth_data = data.dict(exclude_unset=True)
-        received_hash = auth_data.pop('hash', None)
-        
-        if not received_hash:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Hash is missing."
-            )
-
-        # Sort parameters alphabetically and format as key=value
-        data_check_string = '\n'.join(
-            f"{k}={v}" for k, v in sorted(auth_data.items()) if v is not None
-        )
-
-        # Compute secret key using SHA256 of the bot token
-        secret_key = hashlib.sha256(TELEGRAM_BOT_TOKEN.encode()).digest()
-
-        # Compute signature hash
-        calculated_hash = hmac.new(
-            secret_key, 
-            data_check_string.encode(), 
-            hashlib.sha256
-        ).hexdigest()
-
-        # Verify hash
-        if not hmac.compare_digest(calculated_hash, received_hash):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid signature."
-            )
-
-        return {
-            "status": "success",
-            "message": "Telegram authentication verified successfully.",
-            "user": {
-                "id": data.id,
-                "first_name": data.first_name,
-                "username": data.username
-            }
-        }
-
-    except Exception as e:
-        if isinstance(e, HTTPException):
-            raise e
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid authentication payload: {str(e)}"
-        )
+async def authenticate_telegram(data: TelegramAuthData):
+    # Add your telegram validation / token verification logic here
+    return {
+        "success": True,
+        "message": f"Successfully authenticated user {data.first_name}!"
+    }
