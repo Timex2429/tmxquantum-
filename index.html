@@ -93,6 +93,7 @@
             <h3>Quick Actions</h3>
             <button class="btn" onclick="prepareDepositAction()">Deposit Funds (MainButton)</button>
                         <button class="btn" style="background-color: #f59e0b; margin-top: 8px;" onclick="upgradeNode()">Upgrade Quantum Node (Cost: 500 TMX)</button>
+<button class="btn" style="background-color: #3b82f6; margin-top: 8px;" onclick="openReferralModal()">Invite Friends (Earn 100 TMX)</button>
 
             <button class="btn" style="background-color: #22c55e; margin-top: 8px;" onclick="claimRewards()">Claim Rewards</button><button class="btn" style="background-color: #f59e0b; margin-top: 8px;" onclick="upgradeNode()">Upgrade Quantum Node (Cost: 500 TMX)</button>
 
@@ -209,7 +210,19 @@
         }
     } catch (e) {
         tg.showAlert("Simulated: Node upgraded successfully!");
+   function openReferralModal() {
+    const telegramId = user ? user.id : 12345;
+    const botUsername = "tmxquantum_bot"; // Replace with your actual Telegram Bot username
+    const inviteLink = `https://t.me/${botUsername}?start=ref_${telegramId}`;
+
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(inviteLink);
+        tg.showAlert("Invite link copied to clipboard!\n\n" + inviteLink);
+    } else {
+        tg.showAlert("Your invite link: " + inviteLink);
     }
+}
+ }
 }
     }
     </script>
