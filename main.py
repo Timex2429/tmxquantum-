@@ -37,8 +37,26 @@ async def authenticate_telegram(data: TelegramAuthData):
         "success": True,
         "message": f"Successfully authenticated user {data.first_name}!"
     }
-    @app.post("/api/claim-rewards")
+@app.post("/api/claim-rewards")
 async def claim_rewards(data: dict):
     telegram_id = data.get("telegramId")
-    # Add your MongoDB logic here to find the user, update their balance, and reset rewardsEarned to 0
-    return {"success": True, "newBalance": 1510.70, "claimedAmount": 85.20}
+    
+    # Find user in MongoDB and transfer rewards to balance
+    user = await users_collection.find_one({"telegramId": telegram_id})
+    if not user or user.get("rewardsEarned", 0) <= 0:
+        raise HTTPException(status_code=400, detail="No rewards available to claim")
+    
+    claimed_amount = user["rewardsEarned"]
+    new_balance = user.get("balance", 0) + claimed_amount
+    
+    # Update database: add to balance, reset rewards to 0
+    await users_collection.update_one(
+        {"telegramId": telegram_id},
+        {"$set": {"balance": new_balance, "rewardsEarned": 0}}
+    )
+    
+    return {
+        "success": True, 
+        "newBalance": new_balance, 
+        "claimedAmount": claimed_amount
+    }
