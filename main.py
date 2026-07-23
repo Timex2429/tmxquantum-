@@ -37,3 +37,8 @@ async def authenticate_telegram(data: TelegramAuthData):
         "success": True,
         "message": f"Successfully authenticated user {data.first_name}!"
     }
+    @app.post("/api/claim-rewards")
+async def claim_rewards(data: dict):
+    telegram_id = data.get("telegramId")
+    # Add your MongoDB logic here to find the user, update their balance, and reset rewardsEarned to 0
+    return {"success": True, "newBalance": 1510.70, "claimedAmount": 85.20}
