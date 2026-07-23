@@ -60,3 +60,31 @@ async def claim_rewards(data: dict):
         "newBalance": new_balance, 
         "claimedAmount": claimed_amount
     }
+    @app.post("/api/process-referral")
+async def process_referral(data: dict):
+    telegram_id = data.get("telegramId")
+    referrer_id = data.get("referrerId")
+
+    if not referrer_id or telegram_id == referrer_id:
+        return {"success": False, "message": "Invalid referral"}
+
+    # Check if this user already registered a referral
+    user = await users_collection.find_one({"telegramId": telegram_id})
+    if user and user.get("referredBy"):
+        return {"success": False, "message": "Already referred"}
+
+    # Mark user as referred and reward referrer
+    await users_collection.update_one(
+        {"telegramId": telegram_id},
+        {"$set": {"referredBy": referrer_id}},
+        upsert=True
+    )
+
+    # Give bonus to the referrer (e.g., 100 TMX)
+    await users_collection.update_one(
+        {"telegramId": referrer_id},
+        {"$inc": {"balance": 100.0}}
+    )
+
+    return {"success": True, "message": "Referral processed successfully"}
+
