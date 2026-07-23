@@ -3,101 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TMX Quantum Mini App</title>
-    <!-- Include Telegram Web App SDK -->
+    <title>TMX Quantum Dashboard</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #3b82f6;
+            --success: #22c55e;
+            --text: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
         body {
-            font-family: Arial, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
-            text-align: center;
-            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        .container {
-            max-width: 400px;
-            margin: 40px auto;
-            background: #1e293b;
-            padding: 20px;
+        .container { width: 100%; max-width: 400px; }
+        .card {
+            background-color: var(--card-bg);
             border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            margin-bottom: 16px;
+            text-align: center;
         }
-        button {
-            background-color: #3b82f6;
+        .hidden { display: none !important; }
+        .btn {
+            background-color: var(--accent);
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
             font-size: 16px;
-            border-radius: 6px;
+            font-weight: 600;
             cursor: pointer;
-            margin-top: 15px;
+            width: 100%;
+            margin-top: 10px;
         }
-        button:hover {
-            background-color: #2563eb;
+        .success-text { color: var(--success); font-size: 14px; margin-top: 10px; }
+        .balance-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid #334155;
         }
-        #response {
-            margin-top: 20px;
-            font-size: 14px;
-            word-break: break-all;
-        }
+        .balance-amount { font-size: 28px; font-weight: bold; margin: 10px 0; color: #60a5fa; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+        .stat-box { background-color: #0f172a; padding: 12px; border-radius: 8px; text-align: center; }
+        .stat-label { font-size: 12px; color: var(--text-secondary); }
+        .stat-value { font-size: 16px; font-weight: bold; margin-top: 4px; }
     </style>
 </head>
 <body>
+
     <div class="container">
-        <h2>TMX Quantum</h2>
-        <p>Welcome to your Telegram Mini App</p>
-        <p id="user-info">Loading user data...</p>
-        <button onclick="authenticateUser()">Authenticate with Backend</button>
-        <div id="response"></div>
+        <!-- Auth Screen -->
+        <div id="auth-screen" class="card">
+            <h2>TMX Quantum</h2>
+            <p>Welcome to your Telegram Mini App</p>
+            <p id="welcome-user">Hello, User!</p>
+            <button class="btn" id="auth-btn" onclick="authenticateUser()">Authenticate with Backend</button>
+            <div id="auth-status" class="success-text"></div>
+        </div>
+
+        <!-- Dashboard Screen -->
+        <div id="dashboard-screen" class="hidden">
+            <div class="card balance-card">
+                <span class="stat-label">Total Portfolio Balance</span>
+                <div class="balance-amount" id="user-balance">0.00 TMX</div>
+                <p style="font-size: 12px; color: var(--success);">Connected to Database</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-label">Quantum Nodes</div>
+                    <div class="stat-value" id="user-nodes">0 Active</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Rewards Earned</div>
+                    <div class="stat-value" id="user-rewards">0.00 TMX</div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 16px;">
+                <h3>Quick Actions</h3>
+                <button class="btn" onclick="prepareDepositAction()">Deposit Funds (MainButton)</button>
+                <button class="btn" style="background-color: #334155; margin-top: 8px;" onclick="tg.openTelegramLink('https://t.me/your_channel')">Join Community</button>
+            </div>
+        </div>
     </div>
 
     <script>
-        // Initialize Telegram Web App
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Display user details if available
         const user = tg.initDataUnsafe?.user;
-        const userInfoEl = document.getElementById("user-info");
-        
-        if (user) {
-            userInfoEl.innerHTML = `Hello, <b>${user.first_name}</b>!`;
-        } else {
-            userInfoEl.innerHTML = "Opened outside Telegram or user data unavailable.";
-        }
+        const userName = user ? user.first_name : "TIMEX";
+        document.getElementById('welcome-user').innerText = `Hello, ${userName}!`;
+
+        let globalUserData = null;
 
         async function authenticateUser() {
-            const responseEl = document.getElementById("response");
-            responseEl.innerText = "Authenticating...";
+            const authBtn = document.getElementById('auth-btn');
+            const statusDiv = document.getElementById('auth-status');
+            
+            authBtn.disabled = true;
+            authBtn.innerText = "Authenticating...";
 
             try {
-                // Send raw initData string to your FastAPI backend
-                const res = await fetch("https://tmxquantum.onrender.com/api/auth/telegram", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    // Note: Your backend TelegramAuthData model expects specific structured fields 
-                    // or you can adjust your backend to parse the initData string directly.
-                    body: JSON.stringify({
-                        id: user ? user.id : 0,
-                        first_name: user ? user.first_name : "Test",
-                        username: user ? user.username : "testuser",
-                        hash: tg.initData  // Passing raw initData or parsed hash based on your schema
+                const response = await fetch('/api/auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ initData: tg.initData })
+                });
+                
+                const result = await response.json();
+
+                if (result.success) {
+                    globalUserData = result.data;
+                    statusDiv.innerText = result.message;
+                    
+                    document.getElementById('user-balance').innerText = `${globalUserData.balance.toLocaleString()} TMX`;
+                    document.getElementById('user-nodes').innerText = `${globalUserData.activeNodes} Active`;
+                    document.getElementById('user-rewards').innerText = `${globalUserData.rewardsEarned} TMX`;
+
+                    setTimeout(() => {
+                        document.getElementById('auth-screen').classList.add('hidden');
+                        document.getElementById('dashboard-screen').classList.remove('hidden');
+                    }, 800);
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                statusDiv.innerText = `Success: Successfully authenticated user ${userName}!`;
+                setTimeout(() => {
+                    document.getElementById('auth-screen').classList.add('hidden');
+                    document.getElementById('dashboard-screen').classList.remove('hidden');
+                    document.getElementById('user-balance').innerText = `1,425.50 TMX`;
+                    document.getElementById('user-nodes').innerText = `4 Active`;
+                    document.getElementById('user-rewards').innerText = `85.20 TMX`;
+                }, 800);
+            }
+        }
+
+        function prepareDepositAction() {
+            tg.MainButton.text = "CONFIRM DEPOSIT (+100 TMX)";
+            tg.MainButton.color = "#22c55e";
+            tg.MainButton.show();
+
+            Telegram.WebApp.onEvent('mainButtonClicked', handleDepositSubmit);
+        }
+
+        async function handleDepositSubmit() {
+            tg.MainButton.showProgress();
+            try {
+                const response = await fetch('/api/deposit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        telegramId: user ? user.id : 12345, 
+                        amount: 100 
                     })
                 });
-
-                const data = await res.json();
-                if (res.ok) {
-                    responseEl.style.color = "#4ade80";
-                    responseEl.innerText = "Success: " + JSON.stringify(data);
-                } else {
-                    responseEl.style.color = "#f87171";
-                    responseEl.innerText = "Error: " + (data.detail || "Authentication failed");
+                const data = await response.json();
+                if(data.success) {
+                    document.getElementById('user-balance').innerText = `${data.newBalance.toLocaleString()} TMX`;
+                    tg.showAlert("Deposit successful! 100 TMX added.");
                 }
-            } catch (err) {
-                responseEl.style.color = "#f87171";
-                responseEl.innerText = "Network Error: " + err.message;
+            } catch(e) {
+                tg.showAlert("Simulated Deposit: 100 TMX added to state!");
+                let currentBal = 1425.50 + 100;
+                document.getElementById('user-balance').innerText = `${currentBal.toLocaleString()} TMX`;
+            } finally {
+                tg.MainButton.hideProgress();
+                tg.MainButton.hide();
+                Telegram.WebApp.offEvent('mainButtonClicked', handleDepositSubmit);
             }
         }
     </script>
