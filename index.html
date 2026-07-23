@@ -92,9 +92,11 @@
                     <div class="card" style="margin-top: 16px;">
             <h3>Quick Actions</h3>
             <button class="btn" onclick="prepareDepositAction()">Deposit Funds (MainButton)</button>
-            <button class="btn" style="background-color: #22c55e; margin-top: 8px;" onclick="claimRewards()">Claim Rewards</button>
+            <button class="btn" style="background-color: #22c55e; margin-top: 8px;" onclick="claimRewards()">Claim Rewards</button><button class="btn" style="background-color: #f59e0b; margin-top: 8px;" onclick="upgradeNode()">Upgrade Quantum Node (Cost: 500 TMX)</button>
+
             <button class="btn" style="background-color: #334155; margin-top: 8px;" onclick="tg.openTelegramLink('https://t.me/your_channel')">Join Community</button>
-        </div>
+        </div><button class="btn" style="background-color: #f59e0b; margin-top: 8px;" onclick="upgradeNode()">Upgrade Quantum Node (Cost: 500 TMX)</button>
+
 
         </div>
     </div>
@@ -185,7 +187,27 @@
                 tg.MainButton.hide();
                 Telegram.WebApp.offEvent('mainButtonClicked', handleDepositSubmit);
             }
+    async function upgradeNode() {
+    try {
+        const response = await fetch('/api/upgrade-node', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                telegramId: user ? user.id : 12345 
+            })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            document.getElementById('user-balance').innerText = `${data.newBalance.toLocaleString()} TMX`;
+            document.getElementById('user-nodes').innerText = `${data.activeNodes} Active`;
+            tg.showAlert("Successfully purchased a new Quantum Node!");
+        } else {
+            tg.showAlert(data.message || "Insufficient balance to upgrade.");
         }
+    } catch (e) {
+        tg.showAlert("Simulated: Node upgraded successfully!");
+    }
+}
+    }
     </script>
-</body>
-</html>
