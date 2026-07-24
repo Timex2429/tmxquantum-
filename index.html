@@ -3,111 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TMX Quantum</title>
-    <!-- Include Telegram WebApp SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Include Adsgram SDK (Target Block ID: 39504) -->
-    <script src="https://sad.adsgram.ai/js/adsgram.js"></script>
+    <title>TMX Quantum Mining</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
-            text-align: center;
-            padding: 20px;
+            background-color: #0b0f19;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
         }
-        .container {
-            max-width: 400px;
-            margin: 0 auto;
-            background: #1e293b;
-            padding: 20px;
+        .card {
+            background: #131b2e;
+            padding: 24px;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
-        button {
-            background-color: #3b82f6;
+        h2 { font-size: 20px; margin-bottom: 8px; }
+        p { color: #94a3b8; font-size: 14px; margin-bottom: 24px; }
+        .btn {
+            background-color: #1d4ed8;
             color: white;
             border: none;
-            padding: 12px 20px;
+            width: 100%;
+            padding: 12px;
             font-size: 16px;
+            font-weight: 600;
             border-radius: 8px;
             cursor: pointer;
-            margin-top: 15px;
-            width: 100%;
+            transition: background 0.2s;
         }
-        button:hover {
-            background-color: #2563eb;
+        .btn:disabled {
+            background-color: #334155;
+            cursor: not-allowed;
         }
-        #status {
-            margin-top: 15px;
-            font-size: 14px;
-            color: #94a3b8;
+        .status-msg {
+            margin-top: 12px;
+            font-size: 13px;
+            color: #f87171; /* Soft red for errors/warnings */
+            min-height: 20px;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <div class="card">
         <h2>TMX Quantum Mining</h2>
         <p>Watch a rewarded ad to mine and claim your TMX tokens securely!</p>
         
-        <button onclick="watchAdAndClaim()">Watch Ad & Claim TMX</button>
-        <div id="status"></div>
+        <!-- Interactive Claim Button -->
+        <button id="claim-btn" class="btn">Watch Ad & Claim TMX</button>
+        
+        <!-- Dynamic Status/Error Message Container -->
+        <div id="status-msg" class="status-msg"></div>
     </div>
 
-    <script>
-        // Initialize Telegram WebApp context
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-
-        // Initialize Adsgram controller with your specific Block ID
-        const adControllerwindow = window.Adsgram ? window.Adsgram.init({ blockId: "39504" }) : null;
-
-        async function watchAdAndClaim() {
-            const statusDiv = document.getElementById("status");
-            statusDiv.innerText = "Loading ad...";
-
-            if (!adControllerwindow) {
-                statusDiv.innerText = "Adsgram SDK failed to load.";
-                return;
-            }
-
-            try {
-                // Show the rewarded ad block
-                const result = await adControllerwindow.show();
-                
-                if (result.done) {
-                    statusDiv.innerText = "Ad watched successfully! Verifying claim...";
-                    
-                    // Send validation request to your FastAPI backend
-                    const initData = tg.initData || "";
-                    
-                    const response = await fetch("/api/tmx/claim", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            init_data: initData,
-                            reward_amount: 10.0
-                        })
-                    });
-
-                    const data = await response.json();
-
-                    if (response.ok) {
-                        statusDiv.innerText = data.message || "Successfully claimed TMX!";
-                    } else {
-                        statusDiv.innerText = "Error: " + (data.detail || "Unauthorized request.");
-                    }
-                } else {
-                    statusDiv.innerText = "Ad was skipped. No reward granted.";
-                }
-            } catch (err) {
-                console.error("Ad error:", err);
-                statusDiv.innerText = "Error showing ad or network failed.";
-            }
-        }
-    </script>
+    <!-- Include your script handler -->
+    <script src="app.js"></script>
 </body>
 </html>
