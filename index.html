@@ -3,245 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TMX Quantum Dashboard</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script><script src="https://sad.adsgram.ai/js/adsgram.min.js"></script>
-
-
+    <title>TMX Quantum</title>
+    <!-- Include Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Include Adsgram SDK (Target Block ID: 39504) -->
+    <script src="https://sad.adsgram.ai/js/adsgram.js"></script>
     <style>
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --accent: #3b82f6;
-            --success: #22c55e;
-            --text: #f8fafc;
-            --text-secondary: #94a3b8;
-        }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text);
-            margin: 0;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .container { width: 100%; max-width: 400px; }
-        .card {
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            margin-bottom: 16px;
+            font-family: Arial, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
             text-align: center;
+            padding: 20px;
         }
-        .hidden { display: none !important; }
-        .btn {
-            background-color: var(--accent);
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        button {
+            background-color: #3b82f6;
             color: white;
             border: none;
             padding: 12px 20px;
-            border-radius: 8px;
             font-size: 16px;
-            font-weight: 600;
+            border-radius: 8px;
             cursor: pointer;
+            margin-top: 15px;
             width: 100%;
-            margin-top: 10px;
         }
-        .success-text { color: var(--success); font-size: 14px; margin-top: 10px; }
-        .balance-card {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            border: 1px solid #334155;
+        button:hover {
+            background-color: #2563eb;
         }
-        .balance-amount { font-size: 28px; font-weight: bold; margin: 10px 0; color: #60a5fa; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
-        .stat-box { background-color: #0f172a; padding: 12px; border-radius: 8px; text-align: center; }
-        .stat-label { font-size: 12px; color: var(--text-secondary); }
-        .stat-value { font-size: 16px; font-weight: bold; margin-top: 4px; }
+        #status {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <!-- Auth Screen -->
-        <div id="auth-screen" class="card">
-            <h2>TMX Quantum</h2>
-            <p>Welcome to your Telegram Mini App</p>
-            <p id="welcome-user">Hello, User!</p>
-            <button class="btn" id="auth-btn" onclick="authenticateUser()">Authenticate with Backend</button>
-            <div id="auth-status" class="success-text"></div>
-        </div>
-
-        <!-- Dashboard Screen -->
-        <div id="dashboard-screen" class="hidden">
-            <div class="card balance-card">
-                <span class="stat-label">Total Portfolio Balance</span>
-                <div class="balance-amount" id="user-balance">0.00 TMX</div>
-                <p style="font-size: 12px; color: var(--success);">Connected to Database</p>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <div class="stat-label">Quantum Nodes</div>
-                    <div class="stat-value" id="user-nodes">0 Active</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">Rewards Earned</div>
-                    <div class="stat-value" id="user-rewards">0.00 TMX</div>
-                </div>
-            </div>
-
-                    <div class="card" style="margin-top: 16px;">
-            <h3>Quick Actions</h3>
-            <button class="btn" onclick="prepareDepositAction()">Deposit Funds (MainButton)</button>
-                        <button class="btn" style="background-color: #f59e0b; margin-top: 8px;" onclick="upgradeNode()">Upgrade Quantum Node (Cost: 500 TMX)</button>
-<button class="btn" style="background-color: #3b82f6; margin-top: 8px;" onclick="openReferralModal()">Invite Friends (Earn 100 TMX)</button>
-
-            <button class="btn" style="background-color: #22c55e; margin-top: 8px;" onclick="claimRewards()">Claim Rewards</button><button class="btn" style="background-color: #f59e0b; margin-top: 8px;" onclick="upgradeNode()">Upgrade Quantum Node (Cost: 500 TMX)</button>
-
-            <button class="btn" style="background-color: #334155; margin-top: 8px;" onclick="tg.openTelegramLink('https://t.me/your_channel')">Join Community</button>
-        </div><button class="btn" style="background-color: #f59e0b; margin-top: 8px;" onclick="upgradeNode()">Upgrade Quantum Node (Cost: 500 TMX)</button>
-
-
-        </div>
+        <h2>TMX Quantum Mining</h2>
+        <p>Watch a rewarded ad to mine and claim your TMX tokens securely!</p>
+        
+        <button onclick="watchAdAndClaim()">Watch Ad & Claim TMX</button>
+        <div id="status"></div>
     </div>
 
     <script>
+        // Initialize Telegram WebApp context
         const tg = window.Telegram.WebApp;
-        tg.expand();
+        tg.ready();
 
-        const user = tg.initDataUnsafe?.user;
-        const userName = user ? user.first_name : "TIMEX";
-        document.getElementById('welcome-user').innerText = `Hello, ${userName}!`;
+        // Initialize Adsgram controller with your specific Block ID
+        const adControllerwindow = window.Adsgram ? window.Adsgram.init({ blockId: "39504" }) : null;
 
-        let globalUserData = null;
+        async function watchAdAndClaim() {
+            const statusDiv = document.getElementById("status");
+            statusDiv.innerText = "Loading ad...";
 
-        async function authenticateUser() {
-            const authBtn = document.getElementById('auth-btn');
-            const statusDiv = document.getElementById('auth-status');
-            
-            authBtn.disabled = true;
-            authBtn.innerText = "Authenticating...";
+            if (!adControllerwindow) {
+                statusDiv.innerText = "Adsgram SDK failed to load.";
+                return;
+            }
 
             try {
-                const response = await fetch('/api/auth', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ initData: tg.initData })
-                });
+                // Show the rewarded ad block
+                const result = await adControllerwindow.show();
                 
-                const result = await response.json();
-
-                if (result.success) {
-                    globalUserData = result.data;
-                    statusDiv.innerText = result.message;
+                if (result.done) {
+                    statusDiv.innerText = "Ad watched successfully! Verifying claim...";
                     
-                    document.getElementById('user-balance').innerText = `${globalUserData.balance.toLocaleString()} TMX`;
-                    document.getElementById('user-nodes').innerText = `${globalUserData.activeNodes} Active`;
-                    document.getElementById('user-rewards').innerText = `${globalUserData.rewardsEarned} TMX`;
+                    // Send validation request to your FastAPI backend
+                    const initData = tg.initData || "";
+                    
+                    const response = await fetch("/api/tmx/claim", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            init_data: initData,
+                            reward_amount: 10.0
+                        })
+                    });
 
-                    setTimeout(() => {
-                        document.getElementById('auth-screen').classList.add('hidden');
-                        document.getElementById('dashboard-screen').classList.remove('hidden');
-                    }, 800);
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        statusDiv.innerText = data.message || "Successfully claimed TMX!";
+                    } else {
+                        statusDiv.innerText = "Error: " + (data.detail || "Unauthorized request.");
+                    }
                 } else {
-                    throw new Error(result.message);
+                    statusDiv.innerText = "Ad was skipped. No reward granted.";
                 }
-            } catch (error) {
-                statusDiv.innerText = `Success: Successfully authenticated user ${userName}!`;
-                setTimeout(() => {
-                    document.getElementById('auth-screen').classList.add('hidden');
-                    document.getElementById('dashboard-screen').classList.remove('hidden');
-                    document.getElementById('user-balance').innerText = `1,425.50 TMX`;
-                    document.getElementById('user-nodes').innerText = `4 Active`;
-                    document.getElementById('user-rewards').innerText = `85.20 TMX`;
-                }, 800);
+            } catch (err) {
+                console.error("Ad error:", err);
+                statusDiv.innerText = "Error showing ad or network failed.";
             }
         }
-
-        function prepareDepositAction() {
-            tg.MainButton.text = "CONFIRM DEPOSIT (+100 TMX)";
-            tg.MainButton.color = "#22c55e";
-            tg.MainButton.show();
-
-            Telegram.WebApp.onEvent('mainButtonClicked', handleDepositSubmit);
-        }
-
-        async function handleDepositSubmit() {
-            tg.MainButton.showProgress();
-            try {
-                const response = await fetch('/api/deposit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        telegramId: user ? user.id : 12345, 
-                        amount: 100 
-                    })
-                });
-                const data = await response.json();
-                if(data.success) {
-                    document.getElementById('user-balance').innerText = `${data.newBalance.toLocaleString()} TMX`;
-                    tg.showAlert("Deposit successful! 100 TMX added.");
-                }
-            } catch(e) {
-                tg.showAlert("Simulated Deposit: 100 TMX added to state!");
-                let currentBal = 1425.50 + 100;
-                document.getElementById('user-balance').innerText = `${currentBal.toLocaleString()} TMX`;
-            } finally {
-                tg.MainButton.hideProgress();
-                tg.MainButton.hide();
-                Telegram.WebApp.offEvent('mainButtonClicked', handleDepositSubmit);
-            }
-    async function upgradeNode() {
-    try {
-        const response = await fetch('/api/upgrade-node', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                telegramId: user ? user.id : 12345 
-            })
-        });
-        const data = await response.json();
-
-        if (data.success) {
-            document.getElementById('user-balance').innerText = `${data.newBalance.toLocaleString()} TMX`;
-            document.getElementById('user-nodes').innerText = `${data.activeNodes} Active`;
-            tg.showAlert("Successfully purchased a new Quantum Node!");
-        } else {
-            tg.showAlert(data.message || "Insufficient balance to upgrade.");
-        }
-    } catch (e) {
-        tg.showAlert("Simulated: Node upgraded successfully!");
-   function openReferralModal() {
-    const telegramId = user ? user.id : 12345;
-    const botUsername = "tmxquantum_bot"; // Replace with your actual Telegram Bot username
-    const inviteLink = `https://t.me/${botUsername}?start=ref_${telegramId}`;
-
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(inviteLink);
-        tg.showAlert("Invite link copied to clipboard!\n\n" + inviteLink);
-    } else {
-        tg.showAlert("Your invite link: " + inviteLink);
-    }
-}
- }
-}
-    }
-        <script>
- const adController = window.Adsgram.init({ blockId: "39504" });
-
-    async function showRewardedAd() {
-        try {
-            const result = await adController.show();
-            if (result.done) {<button onclick="showRewardedAd()" class="btn-ad">Watch Ad & Earn TMX</button>
-
-                alert("Reward granted successfully!");
-            }
-        } catch (error) {
-            console.log("Ad error or skipped:", error);
-        }
-    }
-</script>
-
+    </script>
+</body>
 </html>
-
