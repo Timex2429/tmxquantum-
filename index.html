@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TMX Quantum Dashboard</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script><script src="https://sad.adsgram.ai/js/adsgram.min.js"></script>
+
+
     <style>
         :root {
             --bg-color: #0f172a;
@@ -225,4 +227,21 @@
  }
 }
     }
+        <script>
+    const adController = window.Adsgram.init({ blockId: "39504" });
+
+    async function showRewardedAd() {
+        try {
+            const result = await adController.show();
+            if (result.done) {
+                alert("Reward granted successfully!");
+            }
+        } catch (error) {
+            console.log("Ad error or skipped:", error);
+        }
+    }
+</script>
+
     </script>
+</html>
+
