@@ -233,7 +233,8 @@
     async function showRewardedAd() {
         try {
             const result = await adController.show();
-            if (result.done) {
+            if (result.done) {<button onclick="showRewardedAd()" class="btn-ad">Watch Ad & Earn TMX</button>
+
                 alert("Reward granted successfully!");
             }
         } catch (error) {
