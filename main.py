@@ -3,10 +3,13 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
+import hashlib
+import hmac
+from urllib.parse import parse_qsl
 
 app = FastAPI()
 
-# Enable CORS so your frontend and backend communicate without blocks
+# Enable CORS so your frontend and backend communicate smoothly
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,79 +18,50 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 1. Route to serve your index.html frontend file at the root URL
+# ==========================================
+# Telegram Authentication & Validation Setup
+# ==========================================
+
+# Your actual Telegram Bot Token from @BotFather
+TELEGRAM_BOT_TOKEN = "8792544712:AAE8jprlzjBnrDJpbVpCKDAOwxFS-NGHOQc"
+
+def verify_telegram_init_data(init_data: str, bot_token: str) -> bool:
+    """Validates the initData string sent from Telegram WebApp SDK."""
+    try:
+        parsed_data = dict(parse_qsl(init_data, strict_parsing=True))
+        if "hash" not in parsed_data:
+            return False
+        received_hash = parsed_data.pop("hash")
+
+        # Sort remaining keys alphabetically and construct the data check string
+        sorted_pairs = sorted(parsed_data.items())
+        data_check_string = "\n".join(f"{k}={v}" for k, v in sorted_pairs)
+
+        # Generate HMAC-SHA256 signature using "WebAppData" as the key
+        secret_key = hmac.new(
+            key=b"WebAppData", 
+            msg=bot_token.encode(), 
+            digestmod=hashlib.sha256
+        ).digest()
+        
+        calculated_hash = hmac.new(
+            key=secret_key, 
+            msg=data_check_string.encode(), 
+            digestmod=hashlib.sha256
+        ).hexdigest()
+
+        # Securely compare hashes to prevent timing attacks
+        return hmac.compare_digest(calculated_hash, received_hash)
+    except Exception:
+        return False
+
+
+# ==========================================
+# Routes & Endpoints
+# ==========================================
+
 @app.get("/")
 async def serve_frontend():
     if os.path.exists("index.html"):
         return FileResponse("index.html")
-    return {"status": "Online", "message": "Backend is running, but index.html was not found."}
-
-# 2. Example model for your Telegram authentication payload
-class TelegramAuthData(BaseModel):
-    id: int
-    first_name: str
-    username: str | None = None
-    hash: str
-
-# 3. Your Telegram authentication endpoint
-@app.post("/api/auth/telegram")
-async def authenticate_telegram(data: TelegramAuthData):
-    # Add your telegram validation / token verification logic here
-    return {
-        "success": True,
-        "message": f"Successfully authenticated user {data.first_name}!"
-    }
-    
-@app.post("/api/claim-rewards")
-async def claim_rewards(data: dict):
-        telegram_id = data.get("telegramId")
-
-    telegram_id = data.get("telegramId")
-    
-    # Find user in MongoDB and transfer rewards to balance
-    user = await users_collection.find_one({"telegramId": telegram_id})
-    if not user or user.get("rewardsEarned", 0) <= 0:
-        raise HTTPException(status_code=400, detail="No rewards available to claim")
-    
-    claimed_amount = user["rewardsEarned"]
-    new_balance = user.get("balance", 0) + claimed_amount
-    
-    # Update database: add to balance, reset rewards to 0
-    await users_collection.update_one(
-        {"telegramId": telegram_id},
-        {"$set": {"balance": new_balance, "rewardsEarned": 0}}
-    )
-    
-    return {
-        "success": True, 
-        "newBalance": new_balance, 
-        "claimedAmount": claimed_amount
-    }
-    @app.post("/api/process-referral")
-async def process_referral(data: dict):
-    telegram_id = data.get("telegramId")
-    referrer_id = data.get("referrerId")
-
-    if not referrer_id or telegram_id == referrer_id:
-        return {"success": False, "message": "Invalid referral"}
-
-    # Check if this user already registered a referral
-    user = await users_collection.find_one({"telegramId": telegram_id})
-    if user and user.get("referredBy"):
-        return {"success": False, "message": "Already referred"}
-
-    # Mark user as referred and reward referrer
-    await users_collection.update_one(
-        {"telegramId": telegram_id},
-        {"$set": {"referredBy": referrer_id}},
-        upsert=True
-    )
-
-    # Give bonus to the referrer (e.g., 100 TMX)
-    await users_collection.update_one(
-        {"telegramId": referrer_id},
-        {"$inc": {"balance": 100.0}}
-    )
-
-    return {"success": True, "message": "Referral processed successfully"}
-
+    return {"status": "Online", "message": "Backend is running!"}
