@@ -5,6 +5,7 @@ from pydantic import BaseModel
 import os
 import hashlib
 import hmac
+import json
 from urllib.parse import parse_qsl
 
 app = FastAPI()
@@ -57,8 +58,42 @@ def verify_telegram_init_data(init_data: str, bot_token: str) -> bool:
 
 
 # ==========================================
-# Routes & Endpoints
+# Models & Endpoints
 # ==========================================
+
+class ClaimRequest(BaseModel):
+    init_data: str
+    reward_amount: float
+
+@app.post("/api/tmx/claim")
+async def claim_tmx_rewards(payload: ClaimRequest):
+    # 1. Security Check: Verify request comes legitimately from Telegram
+    if not verify_telegram_init_data(payload.init_data, TELEGRAM_BOT_TOKEN):
+        raise HTTPException(
+            status_code=401,
+            detail="Unauthorized: Invalid Telegram signature."
+        )
+    
+    # 2. Extract user details safely from the validated init_data
+    parsed_data = dict(parse_qsl(payload.init_data))
+    user_json = parsed_data.get("user")
+    
+    if not user_json:
+        raise HTTPException(
+            status_code=400,
+            detail="User data missing from session."
+        )
+        
+    user_data = json.loads(user_json)
+    telegram_user_id = user_data.get("id")
+    username = user_data.get("username", "Unknown")
+
+    # 3. Process your database update here (e.g., add tokens for telegram_user_id)
+    
+    return {
+        "success": True,
+        "message": f"Successfully credited {payload.reward_amount} TMX to user @{username}!"
+    }
 
 @app.get("/")
 async def serve_frontend():
