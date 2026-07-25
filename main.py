@@ -1,3 +1,10 @@
+from flask import Flask
+app = Flask(__name__) # Make sure this variable is called 'app'
+
+@app.route("/")
+def hello_world():
+    return "Hello from Flask on Vercel!"
+
 import httpx
 from fastapi import Request
 
