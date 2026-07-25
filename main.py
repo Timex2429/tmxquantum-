@@ -98,7 +98,6 @@ async def claim_tmx_rewards(payload: ClaimRequest):
         "success": True,
         "message": f"Successfully credited {payload.reward_amount} TMX to user @{username}!"
     }
-
 async def telegram_webhook(request: Request):
     data = await request.json()
     message = data.get("message", {})
@@ -107,7 +106,7 @@ async def telegram_webhook(request: Request):
     
     # Your task handling logic goes here
     
-    return {"status": "ok"}
+    return {"status":
     @app.post("/webhook")
 async def telegram_webhook(request: Request):
     data = await request.json()
