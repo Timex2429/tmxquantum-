@@ -22,12 +22,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+from fastapi.responses import HTMLResponse
+
 @app.get("/")
 async def serve_frontend():
     if os.path.exists("index.html"):
-        return FileResponse("index.html")
+        with open("index.html", "r", encoding="utf-8") as f:
+            html_content = f.read()
+        return HTMLResponse(content=html_content, status_code=200)
     return {"status": "Online", "message": "Backend is running!"}
-
 
 # ==========================================
 # Telegram Authentication & Validation Setup
