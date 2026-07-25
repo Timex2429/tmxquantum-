@@ -119,6 +119,9 @@ async def telegram_webhook(request: Request):
 def read_root():
     return {"status": "running"}
 
+def read_root():
+    return {"status": "running"}
+
     @app.post("/webhook")
 async def telegram_webhook(request: Request):
     data = await request.json()
