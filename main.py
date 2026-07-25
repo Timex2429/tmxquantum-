@@ -100,3 +100,16 @@ async def serve_frontend():
     if os.path.exists("index.html"):
         return FileResponse("index.html")
     return {"status": "Online", "message": "Backend is running!"}
+    from fastapi import Request
+
+@app.post("/webhook")
+async def telegram_webhook(request: Request):
+    data = await request.json()
+    message = data.get("message", {})
+    chat_id = message.get("chat", {}).get("id")
+    text = message.get("text", "")
+    
+    # Your task handling logic goes here
+    
+    return {"status": "ok"}
+
