@@ -22,6 +22,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+@app.get("/")
+async def serve_frontend():
+    if os.path.exists("index.html"):
+        return FileResponse("index.html")
+    return {"status": "Online", "message": "Backend is running!"}
+
 
 # ==========================================
 # Telegram Authentication & Validation Setup
