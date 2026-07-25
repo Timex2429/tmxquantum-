@@ -95,14 +95,6 @@ async def claim_tmx_rewards(payload: ClaimRequest):
         "message": f"Successfully credited {payload.reward_amount} TMX to user @{username}!"
     }
 
-@app.get("/")
-async def serve_frontend():
-    if os.path.exists("index.html"):
-        return FileResponse("index.html")
-    return {"status": "Online", "message": "Backend is running!"}
-    from fastapi import Request
-
-@app.post("/webhook")
 async def telegram_webhook(request: Request):
     data = await request.json()
     message = data.get("message", {})
@@ -112,4 +104,27 @@ async def telegram_webhook(request: Request):
     # Your task handling logic goes here
     
     return {"status": "ok"}
+    import httpx
+from fastapi import Request
+
+TELEGRAM_TOKEN = "8792544712:AAEfGBLNjyCTBQrnNifNfgZUsVaqYdbvuDE"
+
+@app.post("/webhook")
+async def telegram_webhook(request: Request):
+    data = await request.json()
+    message = data.get("message", {})
+    chat_id = message.get("chat", {}).get("id")
+    text = message.get("text", "")
+    
+    if chat_id and text:
+        # What the bot will reply with
+        reply_text = f"Received your message: '{text}'"
+        
+        # Send message back via Telegram API
+        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+        async with httpx.AsyncClient() as client:
+            await client.post(url, json={"chat_id": chat_id, "text": reply_text})
+            
+    return {"status": "ok"}
+
 
