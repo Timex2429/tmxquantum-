@@ -7,7 +7,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    PROJECT_NAME: str = "Vercel + FastAPI"
+    PROJECT_NAME: str = "TMX Quantum API"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
 
