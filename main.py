@@ -1,22 +1,21 @@
-import os
-import json
-import hmac
 import hashlib
-import httpx
+import hmac
+import json
+import os
 from urllib.parse import parse_qsl
-
+import httpx
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, FileResponse
 from pydantic import BaseModel
 
-# Retrieve token securely from environment variables
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "YOUR_FALLBACK_TOKEN_IF_NEEDED")
+# 1. Fetch Telegram Bot Token safely from Vercel Environment Variables
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 
-# Initialize FastAPI app
-app = FastAPI()
+# 2. Initialize FastAPI Application
+app = FastAPI(title="TMX Quantum API", version="1.0.0")
 
-# Enable CORS for frontend requests
+# 3. Enable CORS (Allows your frontend to communicate with this backend)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -25,151 +24,83 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
-async def serve_frontend():
-    return {"status": "ok", "message": "TMX Quantum API is running"}
+# --- Pydantic Data Models ---
+class RewardRequest(BaseModel):
+    initData: str  # Raw initData query string sent from Telegram WebApp SDK
 
 
+# --- Helper Functions ---
+def verify_telegram_data(init_data: str) -> bool:
+    """
+    Validates initData hash using HMAC-SHA256 and TELEGRAM_TOKEN.
+    """
+    if not TELEGRAM_TOKEN:
+        print("Error: TELEGRAM_TOKEN environment variable is missing.")
+        return False
 
-import httpx
-from fastapi import Request
-
-TELEGRAM_TOKEN = "8792544712:AAEfGBLNjyCTBQrnNifNfgZUsVaqYdbvuDE"
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-import os
-import hashlib
-import hmac
-import json
-from urllib.parse import parse_qsl
-
-app = FastAPI()
-
-# Enable CORS so your frontend and backend communicate smoothly
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-from fastapi.responses import HTMLResponse
-
-@app.get("/")
-async def serve_frontend():
-    if os.path.exists("index.html"):
-        with open("index.html", "r", encoding="utf-8") as f:
-            html_content = f.read()
-        return HTMLResponse(content=html_content, status_code=200)
-    return {"status": "Online", "message": "Backend is running!"}
-
-
-# ==========================================
-# Telegram Authentication & Validation Setup
-# ==========================================
-
-# Your actual Telegram Bot Token from @BotFather
-TELEGRAM_BOT_TOKEN = "8792544712:AAE8jprlzjBnrDJpbVpCKDAOwxFS-NGHOQc"
-
-def verify_telegram_init_data(init_data: str, bot_token: str) -> bool:
-    """Validates the initData string sent from Telegram WebApp SDK."""
     try:
-        parsed_data = dict(parse_qsl(init_data, strict_parsing=True))
+        parsed_data = dict(parse_qsl(init_data))
         if "hash" not in parsed_data:
             return False
+
         received_hash = parsed_data.pop("hash")
-
-        # Sort remaining keys alphabetically and construct the data check string
-        sorted_pairs = sorted(parsed_data.items())
-        data_check_string = "\n".join(f"{k}={v}" for k, v in sorted_pairs)
-
-        # Generate HMAC-SHA256 signature using "WebAppData" as the key
-        secret_key = hmac.new(
-            key=b"WebAppData", 
-            msg=bot_token.encode(), 
-            digestmod=hashlib.sha256
-        ).digest()
         
+        # Sort key-value pairs alphabetically
+        data_check_string = "\n".join(
+            f"{key}={value}" for key, value in sorted(parsed_data.items())
+        )
+
+        # Generate HMAC-SHA256 secret key from token
+        secret_key = hmac.new(
+            b"WebAppData", TELEGRAM_TOKEN.encode("utf-8"), hashlib.sha256
+        ).digest()
+
+        # Calculate expected hash
         calculated_hash = hmac.new(
-            key=secret_key, 
-            msg=data_check_string.encode(), 
-            digestmod=hashlib.sha256
+            secret_key, data_check_string.encode("utf-8"), hashlib.sha256
         ).hexdigest()
 
-        # Securely compare hashes to prevent timing attacks
         return hmac.compare_digest(calculated_hash, received_hash)
-    except Exception:
+    except Exception as e:
+        print(f"Validation error: {e}")
         return False
 
 
-# ==========================================
-# Models & Endpoints
-# ==========================================
+# --- Routes ---
 
-class ClaimRequest(BaseModel):
-    init_data: str
-    reward_amount: float
+@app.get("/")
+async def root():
+    """Health check endpoint to verify backend status."""
+    return {
+        "status": "online",
+        "service": "TMX Quantum API",
+        "message": "FastAPI engine is running smoothly!"
+    }
 
-@app.post("/api/tmx/claim")
-async def claim_tmx_rewards(payload: ClaimRequest):
-    # 1. Security Check: Verify request comes legitimately from Telegram
-    if not verify_telegram_init_data(payload.init_data, TELEGRAM_BOT_TOKEN):
-        raise HTTPException(
-            status_code=401,
-            detail="Unauthorized: Invalid Telegram signature."
-        )
-    
-    # 2. Extract user details safely from the validated init_data
-    parsed_data = dict(parse_qsl(payload.init_data))
-    user_json = parsed_data.get("user")
-    
-    if not user_json:
-        raise HTTPException(
-            status_code=400,
-            detail="User data missing from session."
-        )
-        
-    user_data = json.loads(user_json)
-    telegram_user_id = user_data.get("id")
-    username = user_data.get("username", "Unknown")
 
-    # 3. Process your database update here (e.g., add tokens for telegram_user_id)
+@app.post("/api/grant-reward")
+async def grant_reward(payload: RewardRequest):
+    """
+    Validates Telegram user authentication and processes ad rewards.
+    """
+    if not payload.initData:
+        raise HTTPException(status_code=400, detail="Missing initData in request payload.")
+
+    # Validate hash signature against Telegram Bot Token
+    is_valid = verify_telegram_data(payload.initData)
+    if not is_valid:
+        raise HTTPException(status_code=403, detail="Invalid Telegram authentication payload.")
+
+    # Parse user details safely
+    parsed_data = dict(parse_qsl(payload.initData))
+    user_info = json.loads(parsed_data.get("user", "{}"))
+    user_id = user_info.get("id")
+
+    # TODO: Add your database/token minting logic here (e.g., increment user balance)
     
     return {
         "success": True,
-        "message": f"Successfully credited {payload.reward_amount} TMX to user @{username}!"
+        "message": "Reward claimed successfully!",
+        "user_id": user_id,
+        "amount_earned": 100  # Adjust as needed
     }
-async def telegram_webhook(request: Request):
-    data = await request.json()
-    message = data.get("message", {})
-    chat_id = message.get("chat", {}).get("id")
-    text = message.get("text", "")
-    
-    # Your task handling logic goes here
-    
-    @app.get("/")
-def read_root():
-    return {"status": "running"}
-
-def read_root():
-    return {"status": "running"}
-
-    @app.post("/webhook")
-async def telegram_webhook(request: Request):
-    data = await request.json()
-    message = data.get("message", {})
-    chat_id = message.get("chat", {}).get("id")
-    text = message.get("text", "")
-
-    if chat_id and text:
-        reply_text = f"Received your message: '{text}'"
-        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-        async with httpx.AsyncClient() as client:
-            await client.post(url, json={"chat_id": chat_id, "text": reply_text})
-
-    return {"status": "ok"}
-
-    
-    
