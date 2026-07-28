@@ -154,7 +154,7 @@
         }
 
         // Config
-        const ADSGRAM_BLOCK_ID = "YOUR_ACTUAL_ADSGRAM_BLOCK_ID"; // Replace with your numeric ID from publisher.adsgram.ai
+        const ADSGRAM_BLOCK_ID = "40165"; // Replace with your numeric ID from publisher.adsgram.ai
         const BACKEND_URL = "https://tmx-quantum-api.vercel.app/api/grant-reward";
 
         let currentBalance = 0;
@@ -178,7 +178,7 @@
                 btn.textContent = "Loading Ad...";
 
                 // Trigger Adsgram player
-                const AdController = Adsgram.init({40165});
+                const AdController = Adsgram.init({BLOCK_ID});
                 const result = await AdController.show();
 
                 if (result.done) {
