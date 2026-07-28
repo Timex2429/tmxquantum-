@@ -178,7 +178,7 @@
                 btn.textContent = "Loading Ad...";
 
                 // Trigger Adsgram player
-                const AdController = Adsgram.init({BLOCK_ID});
+                const AdController = Adsgram.init({ blockId: "40165" });
                 const result = await AdController.show();
 
                 if (result.done) {
