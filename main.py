@@ -9,13 +9,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, FileResponse
 from pydantic import BaseModel
 
-# 1. Fetch Telegram Bot Token safely from Vercel Environment Variables
+# 1. Retrieve Telegram Bot Token safely from Vercel Environment Variables
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 
 # 2. Initialize FastAPI Application
-app = FastAPI(title="TMX Quantum API", version="1.0.0")
+app = FastAPI(
+    title="TMX Quantum API",
+    description="Backend API for TMX-QUANTUM Telegram Mini App",
+    version="1.0.0"
+)
 
-# 3. Enable CORS (Allows your frontend to communicate with this backend)
+# 3. Configure CORS Middleware (Allows your Vercel frontend to communicate with this backend)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -25,17 +29,17 @@ app.add_middleware(
 )
 
 # --- Pydantic Data Models ---
-class RewardRequest(BaseModel):
-    initData: str  # Raw initData query string sent from Telegram WebApp SDK
+class RewardClaimRequest(BaseModel):
+    initData: str  # Raw initData string sent from Telegram WebApp SDK
 
 
 # --- Helper Functions ---
 def verify_telegram_data(init_data: str) -> bool:
     """
-    Validates initData hash using HMAC-SHA256 and TELEGRAM_TOKEN.
+    Validates Telegram initData hash using HMAC-SHA256 and TELEGRAM_TOKEN.
     """
     if not TELEGRAM_TOKEN:
-        print("Error: TELEGRAM_TOKEN environment variable is missing.")
+        print("Warning: TELEGRAM_TOKEN environment variable is missing.")
         return False
 
     try:
@@ -66,10 +70,10 @@ def verify_telegram_data(init_data: str) -> bool:
         return False
 
 
-# --- Routes ---
+# --- API Endpoints ---
 
 @app.get("/")
-async def root():
+async def read_root():
     """Health check endpoint to verify backend status."""
     return {
         "status": "online",
@@ -79,28 +83,40 @@ async def root():
 
 
 @app.post("/api/grant-reward")
-async def grant_reward(payload: RewardRequest):
+async def grant_reward(payload: RewardClaimRequest):
     """
-    Validates Telegram user authentication and processes ad rewards.
+    Validates Telegram user authentication and processes Adsgram ad rewards.
     """
     if not payload.initData:
-        raise HTTPException(status_code=400, detail="Missing initData in request payload.")
+        raise HTTPException(status_code=400, detail="Missing initData string in request body.")
 
-    # Validate hash signature against Telegram Bot Token
+    # Validate signature against Telegram Bot Token
     is_valid = verify_telegram_data(payload.initData)
     if not is_valid:
         raise HTTPException(status_code=403, detail="Invalid Telegram authentication payload.")
 
-    # Parse user details safely
+    # Extract user information from validated initData
     parsed_data = dict(parse_qsl(payload.initData))
     user_info = json.loads(parsed_data.get("user", "{}"))
-    user_id = user_info.get("id")
+    telegram_id = user_info.get("id")
 
-    # TODO: Add your database/token minting logic here (e.g., increment user balance)
-    
+    # TODO: Add your database/token minting logic here (e.g., update user balance)
+
     return {
         "success": True,
         "message": "Reward claimed successfully!",
-        "user_id": user_id,
-        "amount_earned": 100  # Adjust as needed
+        "telegram_id": telegram_id,
+        "reward_amount": 100
+    }
+
+
+@app.get("/api/user-balance/{telegram_id}")
+async def get_user_balance(telegram_id: int):
+    """
+    Retrieves the current token balance for a user.
+    """
+    # TODO: Fetch balance from your database (e.g., Supabase, PostgreSQL)
+    return {
+        "telegram_id": telegram_id,
+        "balance": 500  # Replace with actual DB lookup value
     }
