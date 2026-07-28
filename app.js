@@ -1,5 +1,5 @@
 // Block ID 39504 integrated
-const BLOCK_ID = "39504"; 
+const BLOCK_ID = "40165"; 
 
 function loadAdsgramSDK() {
     return new Promise((resolve, reject) => {
