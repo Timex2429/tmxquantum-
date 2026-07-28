@@ -1,222 +1,243 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TMX-QUANTUM Mining</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TMX-QUANTUM Mining</title>
 
-    <!-- Telegram WebApp SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Adsgram SDK -->
-    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  
+  <!-- Adsgram SDK -->
+  <script src="https://sad.adsgram.ai/js/sad-b.js"></script>
 
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
 
-        body {
-            background-color: #0b132b;
-            color: #ffffff;
-            min-height: 100vh;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+    body {
+      background-color: #0b132b;
+      color: #ffffff;
+      min-height: 100vh;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
-        /* Header / App Container */
-        .app-container {
-            width: 100%;
-            max-width: 420px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
+    /* App Container */
+    .app-container {
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
 
-        .header-card {
-            background: linear-gradient(135deg, #1c2541 0%, #0b132b 100%);
-            border: 1px solid #3a506b;
-            border-radius: 20px;
-            padding: 24px;
-            text-align: center;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-        }
+    /* Balance Card */
+    .balance-card {
+      background: #1c2541;
+      border: 1px solid #3a506b;
+      border-radius: 16px;
+      padding: 24px 16px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
 
-        .header-card h2 {
-            font-size: 0.85rem;
-            color: #5bc0be;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-        }
+    .balance-title {
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      color: #6fffe9;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
 
-        .balance-display {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: #ffffff;
-            margin-bottom: 4px;
-        }
+    .balance-amount {
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: #ffffff;
+    }
 
-        .balance-subtitle {
-            font-size: 0.85rem;
-            color: #6fffe9;
-        }
+    .balance-subtext {
+      font-size: 0.85rem;
+      color: #5bc0be;
+      margin-top: 4px;
+    }
 
-        /* Action Card */
-        .action-card {
-            background-color: #1c2541;
-            border: 1px solid #3a506b;
-            border-radius: 20px;
-            padding: 20px;
-            text-align: center;
-        }
+    /* Action Card */
+    .action-card {
+      background: #1c2541;
+      border: 1px solid #3a506b;
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
 
-        .action-card h3 {
-            font-size: 1.2rem;
-            margin-bottom: 8px;
-            color: #ffffff;
-        }
+    .action-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
 
-        .action-card p {
-            font-size: 0.875rem;
-            color: #a3b1c6;
-            margin-bottom: 20px;
-            line-height: 1.4;
-        }
+    .action-desc {
+      font-size: 0.85rem;
+      color: #a0aec0;
+      line-height: 1.4;
+    }
 
-        .btn-claim {
-            background: linear-gradient(90deg, #4895ef 0%, #4361ee 100%);
-            color: #ffffff;
-            border: none;
-            border-radius: 14px;
-            padding: 16px;
-            font-size: 1rem;
-            font-weight: 700;
-            width: 100%;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4);
-            transition: transform 0.1s ease;
-        }
+    /* Mining Button */
+    .claim-btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #4d7cff 0%, #3b82f6 100%);
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
 
-        .btn-claim:active {
-            transform: scale(0.98);
-        }
+    .claim-btn:disabled {
+      background: #3a506b;
+      cursor: not-allowed;
+      box-shadow: none;
+      opacity: 0.7;
+    }
 
-        .btn-claim:disabled {
-            background: #3a506b;
-            box-shadow: none;
-            cursor: not-allowed;
-        }
+    /* Status Messages */
+    .status-msg {
+      font-size: 0.85rem;
+      font-weight: 600;
+      min-height: 20px;
+      margin-top: 4px;
+    }
 
-        .status-msg {
-            margin-top: 14px;
-            font-size: 0.875rem;
-            min-height: 20px;
-        }
+    .status-msg.error {
+      color: #ff6b6b;
+    }
 
-        .success { color: #4ade80; }
-        .error { color: #f87171; }
-    </style>
+    .status-msg.success {
+      color: #51cf66;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="app-container">
-        <!-- Dashboard Balance Header -->
-        <div class="header-card">
-            <h2>TMX Quantum Balance</h2>
-            <div id="tokenBalance" class="balance-display">0.00</div>
-            <div class="balance-subtitle">$TMX Tokens Mined</div>
-        </div>
-
-        <!-- Mining & Ads Action Card -->
-        <div class="action-card">
-            <h3>Rewarded Ad Mining</h3>
-            <p>Watch a short ad to trigger the quantum miner and credit $TMX directly to your wallet.</p>
-            
-            <button id="adBtn" class="btn-claim" onclick="handleWatchAdAndClaim()">
-                ⚡ Mine & Claim TMX
-            </button>
-
-            <div id="statusMsg" class="status-msg"></div>
-        </div>
+  <div class="app-container">
+    <!-- Balance Header -->
+    <div class="balance-card">
+      <div class="balance-title">TMX QUANTUM BALANCE</div>
+      <div id="tokenBalance" class="balance-amount">0.00</div>
+      <div class="balance-subtext">$TMX Tokens Mined</div>
     </div>
 
-    <script>
-        // Telegram WebApp Setup
-        const tg = window.Telegram?.WebApp;
-        if (tg) {
-            tg.ready();
-            tg.expand();
+    <!-- Rewarded Ad Mining Box -->
+    <div class="action-card">
+      <div class="action-title">Rewarded Ad Mining</div>
+      <div class="action-desc">
+        Watch a short ad to trigger the quantum miner and credit $TMX directly to your wallet.
+      </div>
+
+      <button id="adBtn" class="claim-btn" onclick="handleWatchAdAndClaim()">
+        ⚡ Mine & Claim TMX
+      </button>
+
+      <div id="statusMsg" class="status-msg"></div>
+    </div>
+  </div>
+
+  <script>
+    // 1. Telegram WebApp Setup
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+    }
+
+    // 2. Configuration Settings
+    const ADSGRAM_BLOCK_ID = "40165";
+    // NOTE: Replace '/claim' below with your exact FastAPI endpoint route if different
+    const BACKEND_URL = "https://tmx-quantum-api.vercel.app/claim"; 
+
+    let currentBalance = 0;
+
+    // 3. Mining & Ad Claim Function
+    async function handleWatchAdAndClaim() {
+      const btn = document.getElementById("adBtn");
+      const status = document.getElementById("statusMsg");
+      const balanceEl = document.getElementById("tokenBalance");
+
+      status.textContent = "";
+      status.className = "status-msg";
+
+      // Verify Adsgram SDK availability
+      if (typeof Adsgram === "undefined") {
+        status.textContent = "Adsgram SDK failed to load";
+        status.className = "status-msg error";
+        return;
+      }
+
+      try {
+        btn.disabled = true;
+        btn.textContent = "Loading Ad...";
+
+        // Initialize Adsgram Player with valid Block ID string
+        const AdController = Adsgram.init({ blockId: ADSGRAM_BLOCK_ID });
+        const result = await AdController.show();
+
+        // Check if user completed watching the ad
+        if (result.done) {
+          status.textContent = "Ad finished! Claiming tokens...";
+          btn.textContent = "Verifying...";
+
+          // Contact FastAPI Backend
+          const response = await fetch(BACKEND_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              initData: tg?.initData || ""
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error(`Server returned HTTP status ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          if (data.success) {
+            const reward = data.reward_amount || 10;
+            currentBalance += reward;
+            balanceEl.textContent = currentBalance.toFixed(2);
+
+            status.textContent = "🎉 Success! Mined TMX Tokens!";
+            status.className = "status-msg success";
+          } else {
+            status.textContent = data.detail || "Failed to process reward on server.";
+            status.className = "status-msg error";
+          }
         }
-
-        // Config
-        const ADSGRAM_BLOCK_ID = "40165"; // Replace with your numeric ID from publisher.adsgram.ai
-        const BACKEND_URL = "https://tmx-quantum-api.vercel.app/api/grant-reward";
-
-        let currentBalance = 0;
-
-        async function handleWatchAdAndClaim() {
-            const btn = document.getElementById("adBtn");
-            const status = document.getElementById("statusMsg");
-            const balanceEl = document.getElementById("tokenBalance");
-
-            status.textContent = "";
-            status.className = "status-msg";
-
-            if (typeof Adsgram === "undefined") {
-                status.textContent = "Adsgram SDK failed to load. Check ad blocker or network connection.";
-                status.className = "status-msg error";
-                return;
-            }
-
-            try {
-                btn.disabled = true;
-                btn.textContent = "Loading Ad...";
-
-                // Trigger Adsgram player
-                const AdController = Adsgram.init({ blockId: "40165" });
-                const result = await AdController.show();
-
-                if (result.done) {
-                    status.textContent = "Ad finished! Claiming reward...";
-                    btn.textContent = "Verifying...";
-
-                    // Contact FastAPI Backend
-                    const response = await fetch(BACKEND_URL, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            initData: tg?.initData || ""
-                        })
-                    });
-
-                    const data = await response.json();
-
-                    if (response.ok && data.success) {
-                        const reward = data.reward_amount || 100;
-                        currentBalance += reward;
-                        balanceEl.textContent = currentBalance.toFixed(2);
-
-                        status.textContent = `🎉 Success! Mined +${reward} TMX!`;
-                        status.className = "status-msg success";
-                    } else {
-                        status.textContent = data.detail || "Backend verification failed.";
-                        status.className = "status-msg error";
-                    }
-                }
-            } catch (err) {
-                console.error("Adsgram Execution Error:", err);
-                status.textContent = err?.description || err?.message || "Error showing ad or claiming reward.";
-                status.className = "status-msg error";
-            } finally {
-                btn.disabled = false;
-                btn.textContent = "⚡ Mine & Claim TMX";
-            }
-        }
-    </script>
+      } catch (err) {
+        console.error("Adsgram / Fetch Execution Error:", err);
+        status.textContent = err?.description || err?.message || "Failed to fetch";
+        status.className = "status-msg error";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "⚡ Mine & Claim TMX";
+      }
+    }
+  </script>
 </body>
 </html>
