@@ -62,7 +62,7 @@ function loadAdsgramSDK() {
     const Adsgram = await loadAdsgramSDK();
 
     statusText.innerText = "Loading ad...";
-    const adController = Adsgram.init({ blockId: "YOUR_BLOCK_ID" }); // Ensure blockId is set
+    const adController = Adsgram.init({ blockId: "40165" }); // Ensure blockId is set
 
     statusText.innerText = "";
     const result = await adController.show();
