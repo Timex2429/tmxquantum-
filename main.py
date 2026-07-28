@@ -1,9 +1,35 @@
-from flask import Flask
-app = Flask(__name__) # Make sure this variable is called 'app'
+import os
+import json
+import hmac
+import hashlib
+import httpx
+from urllib.parse import parse_qsl
 
-@app.route("/")
-def hello_world():
-    return "Hello from Flask on Vercel!"
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
+# Retrieve token securely from environment variables
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "YOUR_FALLBACK_TOKEN_IF_NEEDED")
+
+# Initialize FastAPI app
+app = FastAPI()
+
+# Enable CORS for frontend requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/")
+async def serve_frontend():
+    return {"status": "ok", "message": "TMX Quantum API is running"}
+
+
 
 import httpx
 from fastapi import Request
