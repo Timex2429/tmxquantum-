@@ -46,38 +46,52 @@ function loadAdsgramSDK() {
         document.head.appendChild(script);
     });
 }
+{async function handleWatchAdAndClaim() {
+  const claimButton = document.getElementById('claimButton'); // ensure ID matches
+  const statusText = document.getElementById('statusText');   // ensure ID matches
 
-async function handleWatchAdAndClaim() {
-    const claimButton = document.getElementById('claim-btn');
-    const statusText = document.getElementById('status-msg');
+  try {
+    claimButton.disabled = true;
+    statusText.style.color = "#94a3b8";
+    statusText.innerText = "Initializing ad engine...";
 
-    try {
-        claimButton.disabled = true;
-        statusText.style.color = "#94a3b8";
-        statusText.innerText = "Initializing ad environment...";
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.ready();
+    }
 
-        if (window.Telegram && window.Telegram.WebApp) {
-            window.Telegram.WebApp.ready();
-        }
+    const Adsgram = await loadAdsgramSDK();
 
-        const Adsgram = await loadAdsgramSDK();
-        
-        statusText.innerText = "Loading ad...";
-        const adController = Adsgram.init({ blockId: BLOCK_ID });
+    statusText.innerText = "Loading ad...";
+    const adController = Adsgram.init({ blockId: "YOUR_BLOCK_ID" }); // Ensure blockId is set
 
-        statusText.innerText = "";
-        const result = await adController.show();
-        
-        console.log("Ad completed successfully:", result);
-        await grantRewardOnBackend();
+    statusText.innerText = "";
+    const result = await adController.show();
 
-    } catch (error) {
-        console.warn("Adsgram execution workflow failed:", error.message);
-        statusText.style.color = "#f87171";
-        statusText.innerText = error.message.includes("Adsgram") 
-            ? "Ad provider blocked or unavailable. Please disable ad-blockers and try again." 
-            : "An error occurred. Please check your connection.";
-    } finally {
+    // Check if the user actually completed watching the ad
+    if (result && result.done) {
+      console.log("Ad completed successfully:", result);
+      statusText.style.color = "#4ade80";
+      statusText.innerText = "Ad complete! Claiming reward...";
+      await grantRewardOnBackend();
+    } else {
+      console.warn("Ad skipped or closed early:", result);
+      statusText.style.color = "#f87171";
+      statusText.innerText = "Ad was not fully completed.";
+    }
+
+  } catch (error) {
+    console.warn("Adsgram execution workflow failed:", error);
+    statusText.style.color = "#f87171";
+    const errorMsg = error?.message || "";
+    statusText.innerText = errorMsg.includes("block") || errorMsg.includes("network")
+      ? "Ad provider blocked or unavailable."
+      : (errorMsg || "Failed to load advertisement.");
+  } finally {
+    // Re-enable button so the user can try again
+    claimButton.disabled = false;
+  }
+}
+
         claimButton.disabled = false;
     }
 }
