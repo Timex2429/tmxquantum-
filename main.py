@@ -15,12 +15,11 @@ app = FastAPI(title="TMX-QUANTUM API")
 # --- 1. ENABLE CORS (Fixes "Failed to fetch") ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows requests from any frontend domain
-    allow_credentials=True,
-    allow_methods=["*"],  # Allows POST, GET, OPTIONS, etc.
+    allow_origins=["*"],
+    allow_credentials=False,  # Set this to False
+    allow_methods=["*"],
     allow_headers=["*"],
 )
-
 BOT_TOKEN = os.getenv("TELEGRAM_TOKEN", "")
 
 class RewardClaimRequest(BaseModel):
