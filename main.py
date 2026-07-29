@@ -55,17 +55,17 @@ async def read_root():
         "message": "FastAPI engine is running smoothly"
     }
 
-@app.post("/api/grant-reward")
+@app.post("/api/claim-reward")
 async def grant_reward(payload: RewardClaimRequest):
-    # Allow bypass during development if initData is empty, or validate signature
+    # Allow bypass during development if initData is sent
     if payload.initData:
         is_valid = verify_telegram_data(payload.initData)
         if not is_valid:
-            raise HTTPException(status_code=403, detail="Invalid Telegram signature authentication")
+            raise HTTPException(status_code=403, detail="Invalid Telegram authentication data")
 
     # Grant default reward amount
     return {
         "success": True,
-        "message": "Reward claimed successfully!",
+        "message": "Reward claimed successfully",
         "reward_amount": 100
     }
