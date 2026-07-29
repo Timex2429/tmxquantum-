@@ -153,107 +153,103 @@
 
     <script>
         // Production FastAPI Backend Endpoint
-        const BACKEND_URL = "https://tmxquantum-9g87rdznr-apex-tmx.vercel.app/api/claim-reward"; 
+    const BACKEND_URL = "https://tmxquantum-9g87rdznr-apex-tmx.vercel.app/api/claim-reward";
 
-        // Initialize Telegram WebApp SDK
-        document.addEventListener("DOMContentLoaded", () => {
-            if (window.Telegram?.WebApp) {
-                window.Telegram.WebApp.ready();
-                window.Telegram.WebApp.expand();
-            }
-        });
+    // Telegram WebApp Init
+    document.addEventListener("DOMContentLoaded", () => {
+        if (window.Telegram?.WebApp) {
+            window.Telegram.WebApp.ready();
+            window.Telegram.WebApp.expand();
+        }
 
-        // Helper to safely load Adsgram SDK
-        async function loadAdsgramAsync() {
-            return new Promise((resolve, reject) => {
+                // Attach click listener programmatically
+        const mineBtn = document.getElementById("mine-btn");
+        if (mineBtn) {
+            mineBtn.addEventListener("click", handleMineAndClaim);
+        }
+    });
+
+    // Safe Adsgram SDK Loader with Timeout
+    function loadAdsgramAsync() {
+        return new Promise((resolve, reject) => {
+            if (window.Adsgram) return resolve();
+
+            let checkCount = 0;
+            const interval = setInterval(() => {
+                checkCount++;
                 if (window.Adsgram) {
+                    clearInterval(interval);
                     resolve();
-                } else {
-                    let checkCount = 0;
-                    const interval = setInterval(() => {
-                        checkCount++;
-                        if (window.Adsgram) {
-                            clearInterval(interval);
-                            resolve();
-                        } else if (checkCount > 20) {
-                            clearInterval(interval);
-             });
-}
+                } else if (checkCount > 15) { // 1.5 second timeout limit
+                    clearInterval(interval);
+                    reject(new Error("Adsgram SDK network load timeout (check AdBlock/VPN)"));
+                }
+            }, 100);
+        });
+    }
 
-// Production FastAPI Backend Endpoint
-const BACKEND_URL = "https://tmxquantum-9g87rdznr-apex-tmx.vercel.app/api/claim-reward";
+    // Main Mining Handler
+    async function handleMineAndClaim() {
+        const btn = document.getElementById("mine-btn");
+        const status = document.getElementById("status-msg");
+        const balanceEl = document.getElementById("balance-el");
 
-// Main Mining Handler
-async function handleMineAndClaim() {
-    const btn = document.getElementById("mine-btn");
-    const status = document.getElementById("status-msg");
-    const balanceEl = document.getElementById("balance-el");
+        btn.disabled = true;
+        btn.textContent = "Loading Ad...";
+        status.textContent = "Connecting to ad network...";
+        status.className = "status-msg";
 
-    // Disable UI button during action
-    btn.disabled = true;
-    status.textContent = "";
-    status.className = "status-msg";
+        try {
+            // 1. Load SDK
+            await loadAdsgramAsync();
 
-                // 1. Ensure Adsgram SDK is available
-                btn.textContent = "Loading Ad...";
-                await loadAdsgramAsync();
+            // 2. Trigger Adsgram Block 40165
+            const AdController = window.Adsgram.init({ blockId: "40165" });
+            const result = await AdController.show();
 
-                // 2. Initialize Adsgram with Block ID 40165
-                const AdController = window.Adsgram.init({ blockId: "40165" });
-                const result = await AdController.show();
+            if (result && result.done) {
+                status.textContent = "Ad finished! Claiming reward...";
+                btn.textContent = "Verifying...";
 
-                // 3. Verify Ad completion state
-                if (result && result.done) {
-                    status.textContent = "Ad finished! Claiming reward...";
-                    btn.textContent = "Verifying...";
+                const initData = window.Telegram?.WebApp?.initData || "";
 
-                    // Get Telegram initData
-                    const initData = window.Telegram?.WebApp?.initData || "";
+                // 3. Call Backend
+                const response = await fetch(BACKEND_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ initData: initData })
+                });
 
-                    // 4. Send request to FastAPI backend
-                    const response = await fetch(BACKEND_URL, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            initData: initData
-                        })
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP Error status: ${response.status}`);
-                    }
-
-                    const data = await response.json();
-
-                    // 5. Update user balance on success
-                    if (data.success) {
-                        const reward = data.reward_amount || 100;
-                        let currentBalance = parseFloat(balanceEl.textContent) || 0;
-                        currentBalance += reward;
-
-                        balanceEl.textContent = currentBalance.toFixed(2);
-                        status.textContent = `🎉 Success! Mined +$${reward}`;
-                        status.className = "status-msg success";
-                    } else {
-                        status.textContent = data.detail || "Backend verification failed.";
-                        status.className = "status-msg error";
-                    }
-                } else {
-                    status.textContent = "Ad was closed early. Watch full ad to mine TMX.";
-                    status.className = "status-msg error";
+                if (!response.ok) {
+                    throw new Error(`Server returned HTTP status ${response.status}`);
                 }
 
-            } catch (error) {
-                console.error("Mining error:", error);
-                status.textContent = "Failed to fetch response. Check server connection.";
+                const data = await response.json();
+
+                if (data.success) {
+                    const reward = data.reward_amount || 100;
+                    let currentBalance = parseFloat(balanceEl.textContent) || 0;
+                    currentBalance += reward;
+
+                    balanceEl.textContent = currentBalance.toFixed(2);
+                    status.textContent = `🎉 Success! Mined +$${reward}`;
+                    status.className = "status-msg success";
+                } else {
+                    status.textContent = data.detail || "Reward verification failed.";
+                    status.className = "status-msg error";
+                }
+            } else {
+                status.textContent = "Ad was closed early. Watch full ad to mine.";
                 status.className = "status-msg error";
-            } finally {
-                btn.disabled = false;
-                btn.textContent = "⚡ Mine & Claim TMX";
             }
+
+        } catch (error) {
+            console.error(error);
+            status.textContent = error.message || "Network Error: Could not show ad.";
+            status.className = "status-msg error";
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "⚡ Mine & Claim TMX";
         }
-    </script>
-</body>
-</html>
+    }
+</script>
