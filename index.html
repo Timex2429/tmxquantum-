@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TMX-QUANTUM Mining</title>
 
-    <!-- Telegram WebApp SDK (Loads critical Telegram context) -->
+    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
     <style>
@@ -112,6 +112,7 @@
             margin-top: 14px;
             font-size: 0.875rem;
             min-height: 20px;
+            word-wrap: break-word;
         }
 
         .success { color: #4ade80; }
@@ -142,20 +143,14 @@
     </div>
 
     <script>
-        // Telegram WebApp Setup
-        const tg = window.Telegram?.WebApp;
-        if (tg) {
-            tg.ready();
-            tg.expand();
-        }
-
-        // Config
-        const ADSGRAM_BLOCK_ID = "40165"; // Replace with your numeric ID from publisher.adsgram.ai
+        // Updated with your active Adsgram Block ID as a string
+        const ADSGRAM_BLOCK_ID = "40165"; 
         const BACKEND_URL = "https://tmx-quantum-api.vercel.app/api/grant-reward";
 
-        let currentBalance = 0;
+        let currentBalance = 0.0;
+        const tg = window.Telegram?.WebApp;
+        if (tg) tg.ready();
 
-        // Dynamic Loader for Adsgram
         function loadAdsgramAsync() {
             return new Promise((resolve, reject) => {
                 if (window.Adsgram) return resolve(window.Adsgram);
@@ -163,7 +158,7 @@
                 const script = document.createElement("script");
                 script.src = "https://sad.adsgram.ai/js/sad.min.js";
                 script.onload = () => resolve(window.Adsgram);
-                script.onerror = () => reject(new Error("Unable to connect to Adsgram ad network. Check connection or VPN."));
+                script.onerror = () => reject(new Error("Unable to load Adsgram SDK. Please check connection."));
                 document.head.appendChild(script);
             });
         }
@@ -180,21 +175,20 @@
                 btn.disabled = true;
                 btn.textContent = "Connecting to Ad Network...";
 
-                // Fetch Adsgram script dynamically without blocking page load
+                // Load SDK dynamically without crashing page startup
                 await loadAdsgramAsync();
 
                 btn.textContent = "Loading Ad...";
 
-                // Initialize Adsgram controller
-                const AdController = window.Adsgram.init({ blockId: String(40165 });
-
+                // Pass strictly formatted Block ID string to Adsgram controller
+                const AdController = window.Adsgram.init({ blockId: String(40165).trim() });
                 const result = await AdController.show();
 
                 if (result && result.done) {
                     status.textContent = "Ad finished! Claiming reward...";
                     btn.textContent = "Verifying...";
 
-                    // Contact FastAPI Backend
+                    // Contact FastAPI Backend to grant reward
                     const response = await fetch(BACKEND_URL, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -213,13 +207,13 @@
                         status.textContent = `🎉 Success! Mined +${reward} TMX!`;
                         status.className = "status-msg success";
                     } else {
-                        status.textContent = data.detail || "Backend verification failed.";
+                        status.textContent = data.detail || "Backend reward verification failed.";
                         status.className = "status-msg error";
                     }
                 }
             } catch (err) {
                 console.error("Adsgram Execution Error:", err);
-                status.textContent = err?.description || err?.message || "Error showing ad or claiming reward.";
+                status.textContent = err?.description || err?.message || "Error displaying rewarded ad.";
                 status.className = "status-msg error";
             } finally {
                 btn.disabled = false;
