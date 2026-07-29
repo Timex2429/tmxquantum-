@@ -3,42 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TMX-QUANTUM</title>
-    <!-- Telegram WebApp SDK -->
+    <title>TMX-QUANTUM Mining</title>
+
+    <!-- Telegram WebApp SDK (Loads critical Telegram context) -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Adsgram SDK direct load -->
-    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: #0b132b;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .header-card {
+            background: linear-gradient(135deg, #1c2541 0%, #0b132b 100%);
+            border: 1px solid #3a506b;
+            border-radius: 20px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+
+        .header-card h2 {
+            font-size: 0.85rem;
+            color: #5bc0be;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .balance-display {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .balance-subtitle {
+            font-size: 0.85rem;
+            color: #6fffe9;
+        }
+
+        .action-card {
+            background-color: #1c2541;
+            border: 1px solid #3a506b;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .action-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            color: #ffffff;
+        }
+
+        .action-card p {
+            font-size: 0.875rem;
+            color: #a3b1c6;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .btn-claim {
+            background: linear-gradient(90deg, #4895ef 0%, #4361ee 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 14px;
+            padding: 16px;
+            font-size: 1rem;
+            font-weight: 700;
+            width: 100%;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4);
+            transition: transform 0.1s ease;
+        }
+
+        .btn-claim:active {
+            transform: scale(0.98);
+        }
+
+        .btn-claim:disabled {
+            background: #3a506b;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .status-msg {
+            margin-top: 14px;
+            font-size: 0.875rem;
+            min-height: 20px;
+        }
+
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+    </style>
 </head>
 <body>
 
-    <!-- Your HTML structure here -->
+    <div class="app-container">
+        <!-- Dashboard Balance Header -->
+        <div class="header-card">
+            <h2>TMX Quantum Balance</h2>
+            <div id="tokenBalance" class="balance-display">0.00</div>
+            <div class="balance-subtitle">$TMX Tokens Mined</div>
+        </div>
+
+        <!-- Mining & Ads Action Card -->
+        <div class="action-card">
+            <h3>Rewarded Ad Mining</h3>
+            <p>Watch a short ad to trigger the quantum miner and credit $TMX directly to your wallet.</p>
+            
+            <button id="adBtn" class="btn-claim" onclick="handleWatchAdAndClaim()">
+                ⚡ Mine & Claim TMX
+            </button>
+
+            <div id="statusMsg" class="status-msg"></div>
+        </div>
+    </div>
 
     <script>
-        const ADSGRAM_BLOCK_ID = "YOUR_ACTUAL_BLOCK_ID_HERE"; // Replace with your Adsgram Block ID
+        // Telegram WebApp Setup
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
+
+        // Config
+        const ADSGRAM_BLOCK_ID = "YOUR_ACTUAL_ADSGRAM_BLOCK_ID"; // Replace with your numeric ID from publisher.adsgram.ai
         const BACKEND_URL = "https://tmx-quantum-api.vercel.app/api/grant-reward";
 
-        let currentBalance = 0.0;
-        const tg = window.Telegram?.WebApp;
-        if (tg) tg.ready();
+        let currentBalance = 0;
 
-        // Helper function to dynamically load Adsgram if it wasn't preloaded
-        function loadAdsgramScript() {
+        // Dynamic Loader for Adsgram
+        function loadAdsgramAsync() {
             return new Promise((resolve, reject) => {
-                if (window.Adsgram) {
-                    return resolve(window.Adsgram);
-                }
-                const existingScript = document.querySelector('script[src*="sad.adsgram.ai"]');
-                if (existingScript) {
-                    existingScript.onload = () => resolve(window.Adsgram);
-                    existingScript.onerror = () => reject(new Error("Adsgram script failed to load"));
-                } else {
-                    const script = document.createElement("script");
-                    script.src = "https://sad.adsgram.ai/js/sad.min.js";
-                    script.async = true;
-                    script.onload = () => resolve(window.Adsgram);
-                    script.onerror = () => reject(new Error("Adsgram CDN blocked or offline"));
-                    document.head.appendChild(script);
-                }
+                if (window.Adsgram) return resolve(window.Adsgram);
+                
+                const script = document.createElement("script");
+                script.src = "https://sad.adsgram.ai/js/sad.min.js";
+                script.onload = () => resolve(window.Adsgram);
+                script.onerror = () => reject(new Error("Unable to connect to Adsgram ad network. Check connection or VPN."));
+                document.head.appendChild(script);
             });
         }
 
@@ -52,49 +178,47 @@
 
             try {
                 btn.disabled = true;
-                btn.textContent = "Loading Ad Provider...";
+                btn.textContent = "Connecting to Ad Network...";
 
-                // Ensure window.Adsgram exists
-                if (typeof window.Adsgram === "undefined") {
-                    await loadAdsgramScript();
-                }
+                // Fetch Adsgram script dynamically without blocking page load
+                await loadAdsgramAsync();
 
-                if (typeof window.Adsgram === "undefined") {
-                    throw new Error("Adsgram SDK unavailable");
-                }
-
-                btn.textContent = "Showing Ad...";
+                btn.textContent = "Loading Ad...";
 
                 // Initialize Adsgram controller
                 const AdController = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID });
                 const result = await AdController.show();
 
                 if (result && result.done) {
-                    status.textContent = "Ad completed! Granting tokens...";
+                    status.textContent = "Ad finished! Claiming reward...";
                     btn.textContent = "Verifying...";
 
-                    const res = await fetch(BACKEND_URL, {
+                    // Contact FastAPI Backend
+                    const response = await fetch(BACKEND_URL, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ initData: tg?.initData || "" })
+                        body: JSON.stringify({
+                            initData: tg?.initData || ""
+                        })
                     });
 
-                    const data = await res.json();
+                    const data = await response.json();
 
-                    if (res.ok && data.success) {
+                    if (response.ok && data.success) {
                         const reward = data.reward_amount || 100;
                         currentBalance += reward;
                         balanceEl.textContent = currentBalance.toFixed(2);
-                        status.textContent = `🎉 Mined +${reward} TMX successfully!`;
+
+                        status.textContent = `🎉 Success! Mined +${reward} TMX!`;
                         status.className = "status-msg success";
                     } else {
-                        status.textContent = data.detail || "Reward validation failed.";
+                        status.textContent = data.detail || "Backend verification failed.";
                         status.className = "status-msg error";
                     }
                 }
             } catch (err) {
-                console.error("Adsgram Error:", err);
-                status.textContent = err.message || "Adsgram SDK failed to load";
+                console.error("Adsgram Execution Error:", err);
+                status.textContent = err?.description || err?.message || "Error showing ad or claiming reward.";
                 status.className = "status-msg error";
             } finally {
                 btn.disabled = false;
