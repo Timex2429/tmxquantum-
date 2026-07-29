@@ -9,8 +9,8 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
     <!-- Adsgram SDK -->
-    <script src="https://adsgram.ai/js/adv_adsgram.js"></script>
-
+  <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+    
     <style>
         :root {
             --bg-color: #0b1120;
@@ -180,8 +180,9 @@
                 if (window.Adsgram) {
                     clearInterval(interval);
                     resolve();
-                } else if (checkCount > 15) { // 1.5 second timeout limit
-                    clearInterval(interval);
+               } else if (checkCount > 50) { // 5 seconds timeout
+
+                clearInterval(interval);
                     reject(new Error("Adsgram SDK network load timeout (check AdBlock/VPN)"));
                 }
             }, 100);
