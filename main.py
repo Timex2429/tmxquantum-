@@ -11,12 +11,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = FastAPI(title="TMX-QUANTUM API")
+from fastapi.middleware.cors import CORSMiddleware
 
-# --- 1. ENABLE CORS (Fixes "Failed to fetch") ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,  # Set this to False
+    allow_origins=["*"],  https://tmxquantum.vercel.app
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
