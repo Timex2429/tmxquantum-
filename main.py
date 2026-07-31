@@ -10,6 +10,18 @@ from sqlalchemy.orm import Session
 
 app = FastAPI()
 
+# --- PASTE YOUR MIDDLEWARE HERE ---
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    response = await call_next(request)
+    return response
+# -----------------------------------
+
+@app.get("/")
+def read_root():
+    return {"message": "Hello World"}
+
+
 
 @app.get("/")
 def read_root():
