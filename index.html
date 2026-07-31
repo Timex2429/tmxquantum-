@@ -170,6 +170,19 @@
     });
 
     // Safe Adsgram SDK Loader with Timeout
+        const AdController = window.Adsgram.init({ blockId: "40165" });
+
+async function handleMine() {
+  try {
+    const result = await AdController.show();
+    // Call backend to credit TMX after ad succeeds
+    await creditTokens();
+  } catch (error) {
+    console.error("Adsgram Error:", error);
+    alert("Ad failed to load or was closed. Try again!");
+  }
+}
+
     function loadAdsgramAsync() {
         return new Promise((resolve, reject) => {
             if (window.Adsgram) return resolve();
