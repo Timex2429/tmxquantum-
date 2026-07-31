@@ -202,52 +202,53 @@
 
         try {
             // 1. Load SDK
-            await loadAdsgramAsync();
+            async function showAdAndClaimReward() {
+    try {
+        await loadAdsgramAsync();
 
-            // 2. Trigger Adsgram Block 40165
-            const AdController = window.Adsgram.init({ blockId: "40165" });
-            const result = await AdController.show();
+        // 1. Trigger Adsgram Block
+        const AdController = window.Adsgram.init({ blockId: "40165" });
+        const result = await AdController.show();
 
-            if (result && result.done) {
-                status.textContent = "Ad finished! Claiming reward...";
-                btn.textContent = "Verifying...";
+        if (result && result.done) {
+            // Update UI status
+            const status = document.getElementById("status"); // adjust ID if needed
+            const btn = document.getElementById("btn");       // adjust ID if needed
+            if (status) status.textContent = "Ad finished! Claiming...";
+            if (btn) btn.textContent = "Verifying...";
 
-                const initData = window.Telegram?.WebApp?.initData || "";
+            const initData = window.Telegram?.WebApp?.initData || "";
 
-                // 3. Call Backend
-                const response = await fetch(BACKEND_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ initData: initData })
-                });
+            // 2. Call Backend API
+            const response = await fetch("https://tmxquantum-9g87rdznr-apex-tmx.vercel.app/api/reward", {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json" 
+                },
+                body: JSON.stringify({ 
+                    telegram_id: "8518225847", 
+                    initData: initData 
+                })
+            });
 
-                if (!response.ok) {
-                    throw new Error(`Server returned HTTP status ${response.status}`);
-                }
-
-                const data = await response.json();
-
-                if (data.success) {
-                    const reward = data.reward_amount || 100;
-                    let currentBalance = parseFloat(balanceEl.textContent) || 0;
-                    currentBalance += reward;
-
-                    balanceEl.textContent = currentBalance.toFixed(2);
-                    status.textContent = `🎉 Success! Mined +$${reward}`;
-                    status.className = "status-msg success";
-                } else {
-                    status.textContent = data.detail || "Reward verification failed.";
-                    status.className = "status-msg error";
-                }
-            } else {
-                status.textContent = "Ad was closed early. Watch full ad to mine.";
-                status.className = "status-msg error";
+            if (!response.ok) {
+                throw new Error(`Server returned HTTP status ${response.status}`);
             }
 
-        } catch (error) {
-            console.error(error);
-            status.textContent = error.message || "Network Error: Could not show ad.";
-            status.className = "status-msg error";
+            const data = await response.json();
+            console.log("Reward credited successfully:", data);
+            if (status) status.textContent = "Reward claimed!";
+            if (btn) btn.textContent = "Done";
+
+        } else {
+            console.log("Ad skipped or closed early.");
+        }
+    } catch (error) {
+        console.error("Error during ad or reward claim:", error);
+        alert("Failed to claim reward: " + error.message);
+    }
+}
+
         } finally {
             btn.disabled = false;
             btn.textContent = "⚡ Mine & Claim TMX";
