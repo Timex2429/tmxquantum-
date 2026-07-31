@@ -12,3 +12,6 @@
     }
   ]
 }
+git add vercel.json
+git commit -m "fix: add SPA rewrite fallback in vercel.json"
+git push origin main
