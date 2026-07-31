@@ -201,52 +201,69 @@
         status.className = "status-msg";
 
         try {
-            // 1. Load SDK
-            async function showAdAndClaimReward() {
-    try {
-        await loadAdsgramAsync();
+       async function showAdAndClaimReward() {
+    const statusMsg = document.getElementById("status-msg");
+    const balanceEl = document.getElementById("balance-el");
+    const claimBtn = document.getElementById("btn"); // adjust ID if needed
 
-        // 1. Trigger Adsgram Block
+    // 1. Get Telegram WebApp Data dynamically
+    const tg = window.Telegram?.WebApp;
+    const initData = tg?.initData || "";
+    const userId = tg?.initDataUnsafe?.user?.id;
+
+    if (!userId) {
+        if (statusMsg) statusMsg.textContent = "Please open this app inside Telegram.";
+        return;
+    }
+
+    try {
+        if (statusMsg) statusMsg.textContent = "Loading Ad...";
+        
+        // 2. Initialize Adsgram Controller
         const AdController = window.Adsgram.init({ blockId: "40165" });
+        
+        // 3. Show Ad and await user action
         const result = await AdController.show();
 
+        // 4. Check if user fully watched the ad
         if (result && result.done) {
-            // Update UI status
-            const status = document.getElementById("status"); // adjust ID if needed
-            const btn = document.getElementById("btn");       // adjust ID if needed
-            if (status) status.textContent = "Ad finished! Claiming...";
-            if (btn) btn.textContent = "Verifying...";
+            if (statusMsg) statusMsg.textContent = "Ad finished! Claiming...";
+            if (claimBtn) claimBtn.disabled = true;
 
-            const initData = window.Telegram?.WebApp?.initData || "";
-
-            // 2. Call Backend API
-            const response = await fetch("https://tmxquantum-9g87rdznr-apex-tmx.vercel.app/api/reward", {
+            // 5. Send verification request to backend
+            const response = await fetch("https://tmxquantum-9g87rdznr-apex-tmx.vercel.app/claim-reward", {
                 method: "POST",
-                headers: { 
-                    "Content-Type": "application/json" 
+                headers: {
+                    "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ 
-                    const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
-                    initData: initData 
+                body: JSON.stringify({
+                    telegram_id: String(userId),
+                    init_data: initData
                 })
             });
 
-            if (!response.ok) {
-                throw new Error(`Server returned HTTP status ${response.status}`);
-            }
-
             const data = await response.json();
-            console.log("Reward credited successfully:", data);
-            if (status) status.textContent = "Reward claimed!";
-            if (btn) btn.textContent = "Done";
 
+            if (response.ok && data.success) {
+                if (statusMsg) statusMsg.textContent = "Reward claimed successfully!";
+                if (balanceEl && data.new_balance !== undefined) {
+                    balanceEl.textContent = data.new_balance;
+                }
+            } else {
+                if (statusMsg) statusMsg.textContent = data.detail || "Claim failed. Try again.";
+            }
         } else {
-            console.log("Ad skipped or closed early.");
+            // User closed the ad early or skipped
+            if (statusMsg) statusMsg.textContent = "Ad not finished. Watch completely to claim.";
         }
     } catch (error) {
-        console.error("Error during ad or reward claim:", error);
-        alert("Failed to claim reward: " + error.message);
+        console.error("Adsgram / Claim Error:", error);
+        if (statusMsg) statusMsg.textContent = "An error occurred while displaying the ad.";
+    } finally {
+        if (claimBtn) claimBtn.disabled = false;
     }
+}
+
 }
 
         } finally {
