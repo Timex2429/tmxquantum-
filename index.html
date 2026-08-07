@@ -97,7 +97,7 @@
     tg.MainButton.show();
 
     // Handle Main Button / Purchase Click
-    async function handleCheckout() {
+async function handleCheckout() {
   tg.MainButton.showProgress();
 
   try {
@@ -110,6 +110,14 @@
         action: 'checkout'
       })
     });
+
+    // Check if the response is actually JSON before parsing
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      const text = await response.text();
+      tg.showAlert(`Server returned non-JSON error (${response.status}): ${text.substring(0, 100)}`);
+      return;
+    }
 
     const result = await response.json();
 
@@ -125,6 +133,7 @@
     tg.MainButton.hideProgress();
   }
 }
+
     tg.MainButton.onClick(handleCheckout);
     document.getElementById('checkout-btn').addEventListener('click', handleCheckout);
   </script>
