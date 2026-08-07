@@ -1,240 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TMX Quantum Mining</title>
-    
-    <!-- Telegram WebApp SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-    <!-- Adsgram SDK -->
-    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-    
-    <style>
-        :root {
-            --bg-color: #0b1120;
-            --card-bg: #151d30;
-            --primary-blue: #3b82f6;
-            --text-main: #ffffff;
-            --text-sub: #94a3b8;
-            --accent-cyan: #38bdf8;
-            --error-red: #ef4444;
-            --success-green: #22c55e;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            box-sizing: border-box;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 420px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .card {
-            background-color: var(--card-bg);
-            border-radius: 16px;
-            padding: 24px;
-            text-align: center;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .balance-title {
-            color: var(--accent-cyan);
-            font-size: 0.85rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-        }
-
-        .balance-amount {
-            font-size: 2.8rem;
-            font-weight: 800;
-            margin: 8px 0;
-        }
-
-        .balance-sub {
-            color: var(--accent-cyan);
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-
-        .action-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-top: 0;
-            margin-bottom: 12px;
-        }
-
-        .action-desc {
-            color: var(--text-sub);
-            font-size: 0.9rem;
-            line-height: 1.4;
-            margin-bottom: 24px;
-        }
-
-        .btn-mine {
-            width: 100%;
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            color: #ffffff;
-            border: none;
-            padding: 16px;
-            font-size: 1rem;
-            font-weight: 700;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-        }
-
-        .btn-mine:active {
-            transform: scale(0.98);
-        }
-
-        .btn-mine:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .status-msg {
-            margin-top: 16px;
-            font-size: 0.88rem;
-            min-height: 20px;
-        }
-
-        .status-msg.error {
-            color: var(--error-red);
-        }
-
-        .status-msg.success {
-            color: var(--success-green);
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TMX-QUANTUM | Next-Gen Cloud Mining Mini App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #0b0f19;
+      color: #f3f4f6;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+  </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-black">
 
-    <div class="container">
-        <!-- Balance Card -->
-        <div class="card">
-            <div class="balance-title">TMX QUANTUM BALANCE</div>
-            <div class="balance-amount" id="balance-el">0.00</div>
-            <div class="balance-sub">$TMX Tokens Mined</div>
-        </div>
+  <nav class="flex justify-between items-center px-6 py-5 max-w-6xl mx-auto w-full border-b border-gray-800/60">
+    <div class="text-xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+      TMX-QUANTUM
+    </div>
+    <a href="https://t.me/TMXQUANTUM_BOT" target="_blank" class="text-sm font-medium hover:text-cyan-400 transition-colors">
+      Open Bot
+    </a>
+  </nav>
 
-        <!-- Ad Mining Action Card -->
-        <div class="card">
-            <h2 class="action-title">Rewarded Ad Mining</h2>
-            <p class="action-desc">
-                Watch a short ad to trigger the quantum miner and credit $TMX directly to your wallet.
-            </p>
-            
-            <button id="mine-btn" class="btn-mine" onclick="handleMineAndClaim()">
-                ⚡ Mine & Claim TMX
-            </button>
-
-            <div id="status-msg" class="status-msg"></div>
-        </div>
+  <main class="max-w-4xl mx-auto px-6 py-16 text-center flex-grow flex flex-col justify-center items-center">
+    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-950/30 text-cyan-400 text-xs font-semibold uppercase tracking-wider mb-8">
+      <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+      Web3 Mining Live on Telegram
     </div>
 
-    <script>
-        const BACKEND_URL = "https://tmxquantum-9g87rdznr-apex-tmx.vercel.app/api/claim-reward";
-        const ADSGRAM_BLOCK_ID = "40165";
+    <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight">
+      Cloud Mining Meets <br/>
+      <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500">
+        Telegram-Native Web3
+      </span>
+    </h1>
 
-        // Initialize Telegram WebApp UI
-        document.addEventListener("DOMContentLoaded", () => {
-            if (window.Telegram?.WebApp) {
-                window.Telegram.WebApp.ready();
-                window.Telegram.WebApp.expand();
-            }
-        });
+    <p class="text-gray-400 text-base md:text-lg max-w-2xl mb-10 leading-relaxed">
+      Experience effortless cloud mining directly inside Telegram. Mine quantum tokens, complete tasks, and build your yield without leaving your chat app.
+    </p>
 
-        // Main Mining & Ad Handler
-        async function handleMineAndClaim() {
-            const btn = document.getElementById("mine-btn");
-            const status = document.getElementById("status-msg");
-            const balanceEl = document.getElementById("balance-el");
+    <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+      <a href="https://t.me/TMXQUANTUM_BOT" target="_blank" class="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold text-gray-900 bg-gradient-to-r from-cyan-400 to-blue-400 hover:from-cyan-300 hover:to-blue-300 transform hover:-translate-y-0.5 transition-all shadow-lg shadow-cyan-500/20">
+        🚀 Launch Mini App on Telegram
+      </a>
+    </div>
 
-            const tg = window.Telegram?.WebApp;
-            const initData = tg?.initData || "";
-            const userId = tg?.initDataUnsafe?.user?.id;
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-20 text-left w-full">
+      <div class="p-6 rounded-2xl border border-gray-800 bg-gray-900/40 backdrop-blur">
+        <div class="text-2xl mb-3">⚙️</div>
+        <h3 class="text-lg font-bold text-white mb-2">Cloud Mining</h3>
+        <p class="text-gray-400 text-sm">Automated background mining protocol designed for max yield without battery drain.</p>
+      </div>
 
-            if (!userId) {
-                status.textContent = "Please open this app inside Telegram.";
-                status.className = "status-msg error";
-                return;
-            }
+      <div class="p-6 rounded-2xl border border-gray-800 bg-gray-900/40 backdrop-blur">
+        <div class="text-2xl mb-3">💬</div>
+        <h3 class="text-lg font-bold text-white mb-2">Telegram Native</h3>
+        <p class="text-gray-400 text-sm">No downloads or external wallets required to start. Seamless Web3 onboarding.</p>
+      </div>
 
-            btn.disabled = true;
-            btn.textContent = "Loading Ad...";
-            status.textContent = "Connecting to ad network...";
-            status.className = "status-msg";
+      <div class="p-6 rounded-2xl border border-gray-800 bg-gray-900/40 backdrop-blur">
+        <div class="text-2xl mb-3">⚡</div>
+        <h3 class="text-lg font-bold text-white mb-2">Instant Rewards</h3>
+        <p class="text-gray-400 text-sm">Track mining stats live, complete daily quests, and boost your mining rate instantly.</p>
+      </div>
+    </div>
+  </main>
 
-            try {
-                if (!window.Adsgram) {
-                    throw new Error("Adsgram SDK failed to load. Check AdBlock/VPN.");
-                }
+  <footer class="border-t border-gray-800/60 py-6 text-center text-xs text-gray-500">
+    © 2026 TMX-QUANTUM. All rights reserved.
+  </footer>
 
-                // 1. Initialize Adsgram Controller
-                const AdController = window.Adsgram.init({ blockId: ADSGRAM_BLOCK_ID });
-
-                // 2. Show Ad
-                const result = await AdController.show();
-
-                // 3. Process Reward if watched
-                if (result && result.done) {
-                    status.textContent = "Ad finished! Claiming $TMX...";
-
-                    const response = await fetch(BACKEND_URL, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            telegram_id: String(userId),
-                            init_data: initData
-                        })
-                    });
-
-                    const data = await response.json();
-
-                    if (response.ok && data.success) {
-                        status.textContent = "Reward claimed successfully!";
-                        status.className = "status-msg success";
-                        if (balanceEl && data.new_balance !== undefined) {
-                            balanceEl.textContent = data.new_balance;
-                        }
-                    } else {
-                        status.textContent = data.detail || "Claim failed. Try again.";
-                        status.className = "status-msg error";
-                    }
-                } else {
-                    status.textContent = "Ad not finished. Watch completely to claim.";
-                    status.className = "status-msg error";
-                }
-            } catch (error) {
-                console.error("Adsgram / Mining Error:", error);
-                status.textContent = error.message || "An error occurred while displaying the ad.";
-                status.className = "status-msg error";
-            } finally {
-                btn.disabled = false;
-                btn.textContent = "⚡ Mine & Claim TMX";
-            }
-        }
-    </script>
 </body>
 </html>
