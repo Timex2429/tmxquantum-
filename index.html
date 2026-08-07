@@ -98,35 +98,33 @@
 
     // Handle Main Button / Purchase Click
     async function handleCheckout() {
-      tg.MainButton.showProgress();
+  tg.MainButton.showProgress();
 
-      try {
-        // Send order request to your secure Vercel serverless API
-        const response = await fetch('/api/shop', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            initData: tg.initData, // Encrypted payload verified on server
-            userId: user?.id,
-            action: 'checkout'
-          })
-        });
+  try {
+    const response = await fetch('/api/shop', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        initData: tg.initData,
+        userId: user?.id,
+        action: 'checkout'
+      })
+    });
 
-        const result = await response.json();
+    const result = await response.json();
 
-        if (result.success) {
-          tg.showAlert('Order placed successfully!');
-          tg.close(); // Close Mini App after action
-        } else {
-          tg.showAlert('Error: ' + result.message);
-        }
-      } catch (err) {
-        tg.showAlert('Failed to connect to shop server.');
-      } finally {
-        tg.MainButton.hideProgress();
-      }
+    if (response.ok && result.success) {
+      tg.showAlert('Order placed successfully!');
+      tg.close();
+    } else {
+      tg.showAlert('Server Error: ' + (result.message || 'Unknown error'));
     }
-
+  } catch (err) {
+    tg.showAlert('Network Error: ' + err.message);
+  } finally {
+    tg.MainButton.hideProgress();
+  }
+}
     tg.MainButton.onClick(handleCheckout);
     document.getElementById('checkout-btn').addEventListener('click', handleCheckout);
   </script>
