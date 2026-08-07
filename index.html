@@ -1,110 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TMX-QUANTUM Mining</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>TMX Quantum Shop</title>
+  
+  <!-- Telegram Web App SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
   <style>
+    :root {
+      --bg-color: var(--tg-theme-bg-color, #ffffff);
+      --text-color: var(--tg-theme-text-color, #000000);
+      --button-color: var(--tg-theme-button-color, #2481cc);
+      --button-text-color: var(--tg-theme-button-text-color, #ffffff);
+    }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background-color: #121212;
-      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 16px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      margin: 0;
-      padding: 20px;
       box-sizing: border-box;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 400px;
       text-align: center;
     }
+
     .card {
-      background: #1e1e1e;
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-      max-width: 400px;
-      width: 100%;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      background: var(--tg-theme-secondary-bg-color, #f4f4f5);
     }
-    h1 {
-      font-size: 1.5rem;
-      margin-bottom: 8px;
-      color: #0088cc;
-    }
-    p {
-      color: #aaaaaa;
-      font-size: 0.95rem;
-      line-height: 1.5;
-    }
+
     .btn {
-      display: inline-block;
       width: 100%;
-      padding: 14px 0;
-      margin-top: 20px;
-      background-color: #0088cc;
-      color: #ffffff;
-      font-weight: bold;
+      padding: 12px;
+      background-color: var(--button-color);
+      color: var(--button-text-color);
       border: none;
       border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
       cursor: pointer;
-      font-size: 1rem;
+      transition: opacity 0.2s;
+    }
+
+    .btn:active {
+      opacity: 0.8;
     }
   </style>
 </head>
 <body>
 
-  <div class="card">
-    <h1>TMX-QUANTUM Mining</h1>
-    <p>Protocol designed for max yield without battery drain.</p>
+  <div class="container">
+    <h2>TMX Quantum Shop</h2>
     
-    <button class="btn" id="action-btn" onclick="triggerBackendAction()">Perform Secured Action</button>
+    <div class="card">
+      <p id="user-greeting">Loading user data...</p>
+      <p id="status-message">Connected to <strong>@Tmxqunbot</strong></p>
+    </div>
+
+    <button class="btn" id="checkout-btn">Complete Purchase</button>
   </div>
 
   <script>
-    const BOT_USERNAME = 'tmxquantum_bot';
-    const APP_SHORT_NAME = 'app';
-    // Replace with your actual backend URL after deployment
-    const BACKEND_URL = 'https://your-backend-domain.com'; 
+    // Initialize Telegram WebApp SDK
+    const tg = window.Telegram.WebApp;
 
-    if (window.Telegram && window.Telegram.WebApp) {
-      window.Telegram.WebApp.ready();
-      window.Telegram.WebApp.expand();
+    // Expand Mini App to full height
+    tg.expand();
+
+    // Display user information securely provided by Telegram SDK
+    const user = tg.initDataUnsafe?.user;
+    const greetingEl = document.getElementById('user-greeting');
+    
+    if (user) {
+      greetingEl.innerText = `Welcome, ${user.first_name}!`;
+    } else {
+      greetingEl.innerText = `Welcome to TMX Quantum Shop!`;
     }
 
-    async function triggerBackendAction() {
-      const tg = window.Telegram?.WebApp;
-      const user = tg?.initDataUnsafe?.user;
+    // Configure Telegram Main Button
+    tg.MainButton.setText("CHECKOUT NOW");
+    tg.MainButton.show();
 
-      if (!user) {
-        alert("Please open this app inside Telegram.");
-        return;
-      }
+    // Handle Main Button / Purchase Click
+    async function handleCheckout() {
+      tg.MainButton.showProgress();
 
       try {
-        // Send request to your OWN secure backend instead of Telegram directly
-        const response = await fetch(`${BACKEND_URL}/api/send-message`, {
+        // Send order request to your secure Vercel serverless API
+        const response = await fetch('/api/shop', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            initData: tg.initData, // Pass validation payload
-            chatId: user.id,
-            message: `Hello ${user.first_name}, your quantum mining action was received securely!`
+            initData: tg.initData, // Encrypted payload verified on server
+            userId: user?.id,
+            action: 'checkout'
           })
         });
 
         const result = await response.json();
+
         if (result.success) {
-          tg.showAlert("Action completed safely!");
+          tg.showAlert('Order placed successfully!');
+          tg.close(); // Close Mini App after action
         } else {
-          alert("Error: " + result.error);
+          tg.showAlert('Error: ' + result.message);
         }
       } catch (err) {
-        console.error("Backend error:", err);
+        tg.showAlert('Failed to connect to shop server.');
+      } finally {
+        tg.MainButton.hideProgress();
       }
     }
-  </script>
 
+    tg.MainButton.onClick(handleCheckout);
+    document.getElementById('checkout-btn').addEventListener('click', handleCheckout);
+  </script>
 </body>
 </html>
