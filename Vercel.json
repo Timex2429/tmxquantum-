@@ -20,5 +20,13 @@
       "src": "/(.*)",
       "dest": "/public/$1"
     }
+    {
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    }
   ]
 }
+
