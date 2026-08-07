@@ -115,3 +115,36 @@ document.addEventListener('DOMContentLoaded', () => {
         claimButton.addEventListener('click', handleWatchAdAndClaim);
     }
 });
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Retrieve token securely from Vercel Environment Variables
+  const BOT_TOKEN = process.env.BOT_TOKEN;
+
+  const { userId, action } = req.body;
+
+  if (!BOT_TOKEN) {
+    return res.status(500).json({ success: false, message: 'Server configuration error.' });
+  }
+
+  try {
+    // Send a message back to the user via Telegram Bot API
+    const telegramApiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+    
+    await fetch(telegramApiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: userId,
+        text: "✅ Thank you for your purchase on TMX Quantum Shop!"
+      })
+    });
+
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+}
+
