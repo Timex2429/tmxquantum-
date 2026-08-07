@@ -3,17 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>TMX Quantum Shop</title>
+  <title>TMX-QUANTUM Shop</title>
   
   <!-- Telegram Web App SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
     :root {
-      --bg-color: var(--tg-theme-bg-color, #ffffff);
-      --text-color: var(--tg-theme-text-color, #000000);
+      --bg-color: var(--tg-theme-bg-color, #121212);
+      --text-color: var(--tg-theme-text-color, #ffffff);
       --button-color: var(--tg-theme-button-color, #2481cc);
       --button-text-color: var(--tg-theme-button-text-color, #ffffff);
+      --card-bg: var(--tg-theme-secondary-bg-color, #1e1e1e);
     }
 
     body {
@@ -37,16 +38,16 @@
     }
 
     .card {
-      border: 1px solid rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 12px;
       padding: 20px;
       margin-bottom: 20px;
-      background: var(--tg-theme-secondary-bg-color, #f4f4f5);
+      background: var(--card-bg);
     }
 
     .btn {
       width: 100%;
-      padding: 12px;
+      padding: 14px;
       background-color: var(--button-color);
       color: var(--button-text-color);
       border: none;
@@ -65,10 +66,10 @@
 <body>
 
   <div class="container">
-    <h2>TMX Quantum Shop</h2>
+    <h2>TMX-QUANTUM Shop</h2>
     
     <div class="card">
-      <p id="user-greeting">Loading user data...</p>
+      <p id="user-greeting">Loading user profile...</p>
       <p id="status-message">Connected to <strong>@Tmxqunbot</strong></p>
     </div>
 
@@ -76,63 +77,57 @@
   </div>
 
   <script>
-    // Initialize Telegram WebApp SDK
     const tg = window.Telegram.WebApp;
-
-    // Expand Mini App to full height
     tg.expand();
 
-    // Display user information securely provided by Telegram SDK
     const user = tg.initDataUnsafe?.user;
     const greetingEl = document.getElementById('user-greeting');
     
     if (user) {
       greetingEl.innerText = `Welcome, ${user.first_name}!`;
     } else {
-      greetingEl.innerText = `Welcome to TMX Quantum Shop!`;
+      greetingEl.innerText = `Welcome to TMX-QUANTUM Shop!`;
     }
 
-    // Configure Telegram Main Button
     tg.MainButton.setText("CHECKOUT NOW");
     tg.MainButton.show();
 
-    // Handle Main Button / Purchase Click
-async function handleCheckout() {
-  tg.MainButton.showProgress();
+    async function handleCheckout() {
+      tg.MainButton.showProgress();
 
-  try {
-    const response = await fetch('/api/shop', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        initData: tg.initData,
-        userId: user?.id,
-        action: 'checkout'
-      })
-    });
+      try {
+        const response = await fetch('/api/shop', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            initData: tg.initData,
+            userId: user?.id,
+            action: 'checkout'
+          })
+        });
 
-    // Check if the response is actually JSON before parsing
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      const text = await response.text();
-      tg.showAlert(`Server returned non-JSON error (${response.status}): ${text.substring(0, 100)}`);
-      return;
+        // Verify response content-type to avoid HTML parse errors
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          const rawText = await response.text();
+          tg.showAlert(`Server Error (${response.status}): ${rawText.substring(0, 120)}`);
+          return;
+        }
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          tg.showAlert('Purchase completed successfully!');
+          tg.close();
+        } else {
+          tg.showAlert('Error: ' + (result.message || 'Transaction failed'));
+        }
+      } catch (err) {
+        tg.showAlert('Network Error: ' + err.message);
+      } finally {
+        tg.MainButton.hideProgress();
+      }
     }
-
-    const result = await response.json();
-
-    if (response.ok && result.success) {
-      tg.showAlert('Order placed successfully!');
-      tg.close();
-    } else {
-      tg.showAlert('Server Error: ' + (result.message || 'Unknown error'));
-    }
-  } catch (err) {
-    tg.showAlert('Network Error: ' + err.message);
-  } finally {
-    tg.MainButton.hideProgress();
-  }
-}
 
     tg.MainButton.onClick(handleCheckout);
     document.getElementById('checkout-btn').addEventListener('click', handleCheckout);
