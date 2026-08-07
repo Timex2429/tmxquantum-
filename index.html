@@ -1,242 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TMX-QUANTUM | Cloud Mining</title>
-    <style>
-        /* Base styles & dark mode layout */
-        :root {
-            --bg-color: #0b0f19;
-            --card-bg: #111827;
-            --accent-cyan: #38bdf8;
-            --accent-purple: #c084fc;
-            --text-main: #f3f4f6;
-            --text-muted: #9ca3af;
-            --btn-gradient: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding: 16px;
-        }
-
-        /* Top Navigation Bar */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            margin-bottom: 24px;
-        }
-
-        .logo {
-            font-size: 1.25rem;
-            font-weight: 800;
-            letter-spacing: 1px;
-            color: #ffffff;
-        }
-
-        .open-bot-btn {
-            color: var(--text-main);
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 600;
-            opacity: 0.85;
-            transition: opacity 0.2s;
-        }
-
-        .open-bot-btn:hover {
-            opacity: 1;
-        }
-
-        /* Hero Container */
-        .hero {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            max-width: 480px;
-            margin: 0 auto;
-        }
-
-        /* Web3 Mining Badge */
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(56, 189, 248, 0.1);
-            border: 1px solid rgba(56, 189, 248, 0.2);
-            color: var(--accent-cyan);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            margin-bottom: 24px;
-        }
-
-        .dot {
-            width: 7px;
-            height: 7px;
-            background-color: var(--accent-cyan);
-            border-radius: 50%;
-            box-shadow: 0 0 8px var(--accent-cyan);
-        }
-
-        /* Typography */
-        h1 {
-            font-size: 2rem;
-            font-weight: 800;
-            line-height: 1.2;
-            margin-bottom: 16px;
-        }
-
-        .gradient-text {
-            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        p.description {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            line-height: 1.5;
-            margin-bottom: 32px;
-        }
-
-        /* Action Button */
-        .launch-btn {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            background: var(--btn-gradient);
-            color: #0b0f19;
-            font-size: 1rem;
-            font-weight: 700;
-            padding: 16px;
-            border-radius: 12px;
-            border: none;
-            cursor: pointer;
-            text-decoration: none;
-            box-shadow: 0 4px 20px rgba(56, 189, 248, 0.3);
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
-        }
-
-        .launch-btn:active {
-            transform: scale(0.98);
-        }
-
-        /* Feature Section Cards */
-        .features {
-            width: 100%;
-            max-width: 480px;
-            margin: 40px auto 0;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 12px;
-        }
-
-        .card-icon {
-            font-size: 1.5rem;
-            color: var(--accent-cyan);
-        }
-
-        .card h2 {
-            font-size: 1.1rem;
-            font-weight: 700;
-        }
-
-        .card p {
-            color: var(--text-muted);
-            font-size: 0.875rem;
-            line-height: 1.4;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TMX-QUANTUM Mining</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #121212;
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      box-sizing: border-box;
+      text-align: center;
+    }
+    .card {
+      background: #1e1e1e;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      max-width: 400px;
+      width: 100%;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+      color: #0088cc;
+    }
+    p {
+      color: #aaaaaa;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .btn {
+      display: inline-block;
+      width: 100%;
+      padding: 14px 0;
+      margin-top: 20px;
+      background-color: #0088cc;
+      color: #ffffff;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+  </style>
 </head>
 <body>
 
-    <!-- Header Section -->
-    <header>
-        <div class="logo">TMX-QUANTUM</div>
-        <a href="#" id="openBotNav" class="open-bot-btn">Open Bot</a>
-    </header>
+  <div class="card">
+    <h1>TMX-QUANTUM Mining</h1>
+    <p>Protocol designed for max yield without battery drain.</p>
+    
+    <button class="btn" id="action-btn" onclick="triggerBackendAction()">Perform Secured Action</button>
+  </div>
 
-    <!-- Main Content -->
-    <main class="hero">
-        <div class="badge">
-            <span class="dot"></span>
-            WEB3 MINING LIVE ON TELEGRAM
-        </div>
+  <script>
+    const BOT_USERNAME = 'tmxquantum_bot';
+    const APP_SHORT_NAME = 'app';
+    // Replace with your actual backend URL after deployment
+    const BACKEND_URL = 'https://your-backend-domain.com'; 
 
-        <h1>Cloud Mining Meets <span class="gradient-text">Telegram-Native Web3</span></h1>
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+    }
 
-        <p class="description">
-            Experience effortless cloud mining directly inside Telegram. Mine quantum tokens, complete tasks, and build your yield without leaving your chat app.
-        </p>
+    async function triggerBackendAction() {
+      const tg = window.Telegram?.WebApp;
+      const user = tg?.initDataUnsafe?.user;
 
-        <!-- Primary Launch Action -->
-        <a href="#" id="launchAppBtn" class="launch-btn">
-            🚀 Launch Mini App on Telegram
-        </a>
-    </main>
+      if (!user) {
+        alert("Please open this app inside Telegram.");
+        return;
+      }
 
-    <!-- Features Section -->
-    <section class="features">
-        <div class="card">
-            <div class="card-icon">⚙️</div>
-            <h2>Cloud Mining</h2>
-            <p>Automated background mining protocol designed for max yield without battery drain.</p>
-        </div>
-    </section>
-
-    <!-- Deep Linking Script -->
-    <script>
-        // CONFIGURATION: Replace these values with your Telegram Bot details
-        const BOT_USERNAME = "TMXQuantumBot"; // Replace with your actual bot handle (without @)
-        const APP_SHORT_NAME = "app";         // Replace with your Web App short name from @BotFather
-
-        // Generate standard Telegram Web App URLs
-        const telegramDirectUrl = `https://t.me/${BOT_USERNAME}/${APP_SHORT_NAME}`;
-        const botDirectUrl = `https://t.me/${BOT_USERNAME}`;
-
-        function openTelegramApp(e) {
-            e.preventDefault();
-
-            // Handles standard Web App opening format
-            window.location.href = telegramDirectUrl;
-        }
-
-        // Attach listeners to buttons
-        document.getElementById('launchAppBtn').addEventListener('click', openTelegramApp);
-        document.getElementById('openBotNav').addEventListener('click', function(e) {
-            e.preventDefault();
-            window.location.href = botDirectUrl;
+      try {
+        // Send request to your OWN secure backend instead of Telegram directly
+        const response = await fetch(`${BACKEND_URL}/api/send-message`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            initData: tg.initData, // Pass validation payload
+            chatId: user.id,
+            message: `Hello ${user.first_name}, your quantum mining action was received securely!`
+          })
         });
-    </script>
+
+        const result = await response.json();
+        if (result.success) {
+          tg.showAlert("Action completed safely!");
+        } else {
+          alert("Error: " + result.error);
+        }
+      } catch (err) {
+        console.error("Backend error:", err);
+      }
+    }
+  </script>
+
 </body>
 </html>
