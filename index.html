@@ -1,134 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TMX-QUANTUM Shop</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TMX-QUANTUM Shop</title>
 
-  <!-- Telegram Web App SDK -->
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <style>
-    :root {
-      --bg-color: var(--tg-theme-bg-color, #121212);
-      --text-color: var(--tg-theme-text-color, #ffffff);
-      --button-color: var(--tg-theme-button-color, #2481cc);
-      --button-text-color: var(--tg-theme-button-text-color, #ffffff);
-      --card-bg: var(--tg-theme-secondary-bg-color, #1e1e1e);
-    }
+    <style>
+        :root {
+            --bg-color: var(--tg-theme-bg-color, #121212);
+            --text-color: var(--tg-theme-text-color, #ffffff);
+            --button-color: var(--tg-theme-button-color, #2481cc);
+            --button-text-color: var(--tg-theme-button-text-color, #ffffff);
+            --card-bg: var(--tg-theme-secondary-bg-color, #1e1e1e);
+        }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      margin: 0;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      box-sizing: border-box;
-    }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
 
-    .container {
-      width: 100%;
-      max-width: 400px;
-      text-align: center;
-    }
+        .container {
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
 
-    .card {
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-      background: var(--card-bg);
-    }
+        .card {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: var(--card-bg);
+        }
 
-    .btn {
-      width: 100%;
-      padding: 14px;
-      background-color: var(--button-color);
-      color: var(--button-text-color);
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--button-color);
+            color: var(--button-text-color);
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
 
-    .btn:active {
-      opacity: 0.8;
-    }
-  </style>
+        .btn:active {
+            opacity: 0.8;
+        }
+    </style>
 </head>
 <body>
 
-  <div class="container">
-    <h2>TMX-QUANTUM Shop</h2>
+    <div class="container">
+        <h2>TMX-QUANTUM Shop</h2>
 
-    <div class="card">
-      <p id="user-greeting">Loading user profile...</p>
-      <p id="status-message">Connected to <strong>@Tmxquantum_bot</strong></p>
+        <div class="card">
+            <p id="user-greeting">Loading user profile...</p>
+            <p id="status-message">Connected to <strong>@Tmxquantum_bot</strong></p>
+        </div>
+
+        <button class="btn" id="checkout-btn">Complete Purchase</button>
     </div>
 
-    <button class="btn" id="checkout-btn">Complete Purchase</button>
-  </div>
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
 
-  <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
+        const user = tg.initDataUnsafe?.user;
+        const greetingEl = document.getElementById('user-greeting');
 
-    const user = tg.initDataUnsafe?.user;
-    const greetingEl = document.getElementById('user-greeting');
-
-    if (user) {
-      greetingEl.textContent = `Hello, ${user.first_name || 'User'}!`;
-    } else {
-      greetingEl.textContent = 'Welcome, Guest!';
-    }
-
-    async function handleCheckout() {
-      tg.MainButton.showProgress();
-
-      try {
-        const response = await fetch('/api/checkout', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            initData: tg.initData,
-            action: 'checkout'
-          })
-        });
-
-        // Verify response content-type to avoid HTML parse errors
-        const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-          const rawText = await response.text();
-          tg.showAlert(`Server Error (${response.status}): ${rawText}`);
-          return;
-        }
-
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-          tg.showAlert('Purchase completed successfully!');
-          tg.close();
+        if (user) {
+            greetingEl.textContent = `Hello, ${user.first_name || 'User'}!`;
         } else {
-          tg.showAlert('Error: ' + (result.message || 'Transaction failed.'));
+            greetingEl.textContent = 'Hello, Guest!';
         }
-      } catch (err) {
-        tg.showAlert('Network Error: ' + err.message);
-      } finally {
-        tg.MainButton.hideProgress();
-      }
-    }
 
-    tg.MainButton.onClick(handleCheckout);
-    document.getElementById('checkout-btn').addEventListener('click', handleCheckout);
-  </script>
+        async function handleCheckout() {
+            tg.MainButton.showProgress();
+
+            try {
+                const response = await fetch('/api/checkout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'checkout'
+                    })
+                });
+
+                // Verify response content-type to avoid HTML parse errors
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    const rawText = await response.text();
+                    tg.showAlert(`Server Error (${response.status}): ${rawText}`);
+                    return;
+                }
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    tg.showAlert('Purchase completed successfully!');
+                    
+                    // Redirect to your main app page instead of closing the app
+                    setTimeout(() => {
+                        window.location.href = '/dashboard'; // Change to '/main.html' or your preferred target route
+                    }, 1200);
+                } else {
+                    tg.showAlert('Error: ' + (result.message || 'Transaction failed'));
+                }
+            } catch (err) {
+                tg.showAlert('Network Error: ' + err.message);
+            } finally {
+                tg.MainButton.hideProgress();
+            }
+        }
+
+        tg.MainButton.onClick(handleCheckout);
+        document.getElementById('checkout-btn').addEventListener('click', handleCheckout);
+    </script>
 </body>
 </html>
