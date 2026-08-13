@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TMX-QUANTUM Shop</title>
-  
+
   <!-- Telegram Web App SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -67,10 +67,10 @@
 
   <div class="container">
     <h2>TMX-QUANTUM Shop</h2>
-    
+
     <div class="card">
       <p id="user-greeting">Loading user profile...</p>
-      <p id="status-message">Connected to <strong>@Tmxqunbot</strong></p>
+      <p id="status-message">Connected to <strong>@Tmxquantum_bot</strong></p>
     </div>
 
     <button class="btn" id="checkout-btn">Complete Purchase</button>
@@ -82,26 +82,24 @@
 
     const user = tg.initDataUnsafe?.user;
     const greetingEl = document.getElementById('user-greeting');
-    
-    if (user) {
-      greetingEl.innerText = `Welcome, ${user.first_name}!`;
-    } else {
-      greetingEl.innerText = `Welcome to TMX-QUANTUM Shop!`;
-    }
 
-    tg.MainButton.setText("CHECKOUT NOW");
-    tg.MainButton.show();
+    if (user) {
+      greetingEl.textContent = `Hello, ${user.first_name || 'User'}!`;
+    } else {
+      greetingEl.textContent = 'Welcome, Guest!';
+    }
 
     async function handleCheckout() {
       tg.MainButton.showProgress();
 
       try {
-        const response = await fetch('/api/shop', {
+        const response = await fetch('/api/checkout', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify({
             initData: tg.initData,
-            userId: user?.id,
             action: 'checkout'
           })
         });
@@ -110,7 +108,7 @@
         const contentType = response.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
           const rawText = await response.text();
-          tg.showAlert(`Server Error (${response.status}): ${rawText.substring(0, 120)}`);
+          tg.showAlert(`Server Error (${response.status}): ${rawText}`);
           return;
         }
 
@@ -120,7 +118,7 @@
           tg.showAlert('Purchase completed successfully!');
           tg.close();
         } else {
-          tg.showAlert('Error: ' + (result.message || 'Transaction failed'));
+          tg.showAlert('Error: ' + (result.message || 'Transaction failed.'));
         }
       } catch (err) {
         tg.showAlert('Network Error: ' + err.message);
