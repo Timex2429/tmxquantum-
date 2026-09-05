@@ -1,17 +1,8 @@
-# Web Framework & Server
 fastapi>=0.100.0
 uvicorn[standard]>=0.22.0
-
-# Data Validation
 pydantic>=2.0.0
 pydantic-settings>=2.0.0
-
-# Asynchronous HTTP Client
 httpx>=0.24.0
-
-# Database Drivers (MongoDB)
 motor>=3.3.0
 pymongo>=4.5.0
-
-# Environment Management
 python-dotenv>=1.0.0
