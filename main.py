@@ -1,19 +1,17 @@
-import hmac
-import hashlib
-import json
-import urllib.parse
-from typing import Optional
+import os
+import requests
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import httpx
+from typing import Optional
 
 app = FastAPI(
-    title="TMX-QUANTUM Core API",
-    description="Backend service for Web3 Telegram Mini App micro-earning and game engine.",
+    title="TMX Quantum API",
+    description="Backend engine for TMX Quantum Telegram Mini App",
     version="1.0.0"
 )
 
+# Enable CORS for Telegram Web App frontend requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -22,122 +20,84 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-BOT_TOKEN = "8667199385:AAEP4C7X8iHYHQrbhVaiAvGglnQuMa92ZKY"
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8667199385:AAEP4C7X8iHYHQrbhVaiAvGglnQuMa92ZKY")
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
-GAME_SHORT_NAME = "tmxquantum"
-GAME_WEBAPP_URL = "https://timex2429-tmxquantum.vercel.app"
 
-TOKEN_CONVERSION_RATE = 1
-MAX_POSSIBLE_SCORE_PER_SESSION = 300
+# In-memory storage for user balances (Replace with Database in production)
+user_balances = {}
 
 
 class GameScoreSubmission(BaseModel):
     user_id: int
     score: int
-    init_data: Optional[str] = None
 
 
-def verify_telegram_init_data(init_data: str, bot_token: str) -> bool:
-    if not init_data:
-        return False
-    try:
-        parsed_data = dict(urllib.parse.parse_qsl(init_data, keep_blank_values=True))
-        if "hash" not in parsed_data:
-            return False
-        received_hash = parsed_data.pop("hash")
-        data_check_string = "\n".join(
-            f"{k}={parsed_data[k]}" for k in sorted(parsed_data.keys())
-        )
-        secret_key = hmac.new(
-            b"WebAppData", 
-            bot_token.encode("utf-8"), 
-            hashlib.sha256
-        ).digest()
-        calculated_hash = hmac.new(
-            secret_key, 
-            data_check_string.encode("utf-8"), 
-            hashlib.sha256
-        ).hexdigest()
-        return hmac.compare_digest(calculated_hash, received_hash)
-    except Exception as e:
-        print(f"HMAC Verification Error: {e}")
-        return False
-
-
-async def send_game_card(chat_id: int):
-    url = f"{TELEGRAM_API_URL}/sendGame"
-    payload = {
-        "chat_id": chat_id,
-        "game_short_name": GAME_SHORT_NAME
-    }
-    async with httpx.AsyncClient() as client:
-        await client.post(url, json=payload)
-
-
-async def answer_game_callback(callback_query_id: str):
-    url = f"{TELEGRAM_API_URL}/answerCallbackQuery"
-    payload = {
-        "callback_query_id": callback_query_id,
-        "url": GAME_WEBAPP_URL
-    }
-    async with httpx.AsyncClient() as client:
-        await client.post(url, json=payload)
-
-
-@app.get("/")
-async def root():
-    return {
-        "project": "TMX-QUANTUM",
-        "status": "online",
-        "bot": "@Tmxqunbot"
-    }
+@app.get("/api/health")
+async def health_check():
+    return {"status": "online", "project": "TMX-QUANTUM"}
 
 
 @app.post("/webhook")
 async def telegram_webhook(request: Request):
     try:
-        data = await request.json()
+        update = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON payload")
 
-        if "message" in data:
-            chat_id = data["message"]["chat"]["id"]
-            text = data["message"].get("text", "")
+    if "message" in update:
+        message = update["message"]
+        chat_id = message["chat"]["id"]
+        text = message.get("text", "")
 
-            if text in ["/start", "/play", "play"]:
-                await send_game_card(chat_id)
+        if text == "/start" or text == "/play":
+            welcome_text = (
+                "⚡ *Welcome to TMX Quantum Mining!*\n\n"
+                "Tap below to launch the Mini App, mine TMX tokens, and complete rewarded tasks."
+            )
+            keyboard = {
+                "inline_keyboard": [
+                    [
+                        {
+                            "text": "🚀 Launch TMX Quantum",
+                            "web_app": {"url": "https://timex2429-tmxquantum.vercel.app"}
+                        }
+                    ]
+                ]
+            }
+            
+            payload = {
+                "chat_id": chat_id,
+                "text": welcome_text,
+                "parse_mode": "Markdown",
+                "reply_markup": keyboard
+            }
+            
+            requests.post(f"{TELEGRAM_API_URL}/sendMessage", json=payload)
 
-        if "callback_query" in data:
-            callback_id = data["callback_query"]["id"]
-            if data["callback_query"].get("game_short_name") == GAME_SHORT_NAME:
-                await answer_game_callback(callback_id)
-
-        return {"status": "ok"}
-    except Exception as e:
-        print(f"Webhook Exception: {e}")
-        return {"status": "error", "message": str(e)}
+    return {"status": "ok"}
 
 
 @app.post("/api/game/submit-score")
-async def submit_game_score(payload: GameScoreSubmission):
-    if payload.score > MAX_POSSIBLE_SCORE_PER_SESSION:
-        raise HTTPException(
-            status_code=400, 
-            detail="Score exceeds maximum allowable threshold for session."
-        )
+async def submit_score(data: GameScoreSubmission):
+    user_id = data.user_id
+    points_earned = data.score
 
-    if payload.score <= 0:
-        return {"success": False, "message": "No score recorded."}
+    if points_earned < 0:
+        raise HTTPException(status_code=400, detail="Invalid score format")
 
-    if payload.init_data:
-        is_valid = verify_telegram_init_data(payload.init_data, BOT_TOKEN)
-        if not is_valid:
-            print(f"Warning: Signature verification failed for user {payload.user_id}")
-
-    tokens_earned = payload.score * TOKEN_CONVERSION_RATE
+    current_balance = user_balances.get(user_id, 0)
+    new_balance = current_balance + points_earned
+    user_balances[user_id] = new_balance
 
     return {
-        "success": True,
-        "user_id": payload.user_id,
-        "score": payload.score,
-        "tokens_earned": tokens_earned,
-        "message": "Score synced and tokens credited successfully!"
+        "status": "success",
+        "user_id": user_id,
+        "score_added": points_earned,
+        "total_balance": new_balance
     }
+
+
+@app.get("/api/user/{user_id}/balance")
+async def get_balance(user_id: int):
+    balance = user_balances.get(user_id, 0)
+    return {"user_id": user_id, "balance": balance}
