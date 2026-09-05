@@ -26,13 +26,11 @@ app.add_middleware(
 
 # ------------------------------------------------------------------------------
 # Configuration & Credentials
-# ------------------------------------------------------------------------------
 BOT_TOKEN = "8667199385:AAEP4C7X8iHYHQrbhVaiAvGglnQuMa92ZKY"
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 GAME_SHORT_NAME = "tmxquantum"
 
-# Replace with your actual live hosted frontend Web App URL (Vercel / Render)
-GAME_WEBAPP_URL = "https://your-project.vercel.app"
+GAME_WEBAPP_URL = "https://timex2429-tmxquantum.vercel.app"
 
 # Game Conversion & Anti-Cheat Rules
 TOKEN_CONVERSION_RATE = 1  # 1 score point = 1 TMX Quantum Token
