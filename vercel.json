@@ -4,7 +4,7 @@
   "cleanUrls": true,
   "builds": [
     {
-      "src": "api/**/*.py",
+      "src": "main.py",
       "use": "@vercel/python"
     },
     {
@@ -15,11 +15,11 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "dest": "main.py"
     },
     {
       "src": "/(.*)",
-      "dest": "/public/$1"
+      "dest": "main.py"
     }
   ],
   "headers": [
@@ -36,7 +36,7 @@
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization, x-telegram-init-data"
+          "value": "X-Requested-With, Content-Type, Authorization"
         }
       ]
     }
