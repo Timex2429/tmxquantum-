@@ -1,251 +1,55 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>TMX Quantum - Tap & Earn</title>
+<script>
+    // -------------------------------------------------------------
+    // Application Configuration
+    // -------------------------------------------------------------
+    const CONFIG = {
+        botUsername: "Tmxqunbot",
+        adsgramBlockId: "40165",
+        sessionDuration: 15, // seconds
+        pointsPerTap: 1
+    };
 
-    <!-- Telegram WebApp SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-    <!-- Adsgram SDK -->
-    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-
-    <style>
-        :root {
-            --bg-color: #0d1117;
-            --card-bg: #161b22;
-            --accent-color: #0088cc;
-            --accent-gold: #ffd700;
-            --text-color: #ffffff;
-            --text-secondary: #8b949e;
+    // Safe Telegram WebApp Initialization
+    let tg = { expand: () => {}, ready: () => {}, initDataUnsafe: {}, initData: "" };
+    try {
+        if (window.Telegram && window.Telegram.WebApp) {
+            tg = window.Telegram.WebApp;
+            tg.expand();
+            tg.ready();
         }
+    } catch (err) {
+        console.error("Telegram WebApp SDK failed to initialize:", err);
+    }
 
-        * {
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
-            margin: 0;
-            padding: 0;
-        }
+    // Extract Telegram User Data safely
+    const user = tg.initDataUnsafe?.user || { id: "GUEST", first_name: "Player" };
+    const initDataRaw = tg.initData || "";
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            min-height: 100vh;
-            padding: 20px;
-            overflow: hidden;
-        }
+    // Game State Variables
+    let currentScore = 0;
+    let totalBalance = 0;
+    let timeLeft = CONFIG.sessionDuration;
+    let gameActive = false;
+    let timerInterval = null;
+    let multiplier = 1;
 
-        /* Header / Stats Panel */
-        .header {
-            width: 100%;
-            max-width: 400px;
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 16px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-            border: 1px solid #30363d;
-        }
-
-        .stat-box {
-            text-align: center;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .stat-value {
-            font-size: 22px;
-            font-weight: bold;
-            color: var(--accent-gold);
-            margin-top: 4px;
-        }
-
-        /* Game Canvas Container */
-        .game-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            margin: auto 0;
-        }
-
-        .tap-button {
-            position: relative;
-            width: 220px;
-            height: 220px;
-            border-radius: 50%;
-            background: radial-gradient(circle, #0088cc 0%, #004466 100%);
-            border: 4px solid var(--accent-gold);
-            box-shadow: 0 0 30px rgba(0, 136, 204, 0.5);
-            cursor: pointer;
-            outline: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.08s ease;
-        }
-
-        .tap-button:active {
-            transform: scale(0.92);
-        }
-
-        .tap-icon {
-            font-size: 64px;
-        }
-
-        .tap-text {
-            font-size: 18px;
-            font-weight: bold;
-            color: var(--text-color);
-            margin-top: 8px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-
-        /* Controls Section */
-        .controls {
-            width: 100%;
-            max-width: 400px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 10px;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 14px;
-            border-radius: 12px;
-            border: none;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: background 0.2s, opacity 0.2s;
-        }
-
-        .btn-primary {
-            background-color: var(--accent-color);
-            color: white;
-        }
-
-        .btn-ad {
-            background: linear-gradient(135deg, #ffd700, #ff8800);
-            color: #000;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* Floating Tap Indicator Effect */
-        .tap-effect {
-            position: absolute;
-            color: var(--accent-gold);
-            font-weight: bold;
-            font-size: 24px;
-            pointer-events: none;
-            animation: floatUp 0.8s ease-out forwards;
-        }
-
-        @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-50px); }
-        }
-    </style>
-</head>
-<body>
-
-    <!-- Header Stats -->
-    <div class="header">
-        <div class="stat-box">
-            <div class="stat-label">Time Left</div>
-            <div class="stat-value" id="timer">15s</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-label">Session Score</div>
-            <div class="stat-value" id="score">0</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-label">Total Balance</div>
-            <div class="stat-value" id="total-balance">0</div>
-        </div>
-    </div>
-
-    <!-- Interactive Tap Game Engine -->
-    <div class="game-container">
-        <button class="tap-button" id="tap-btn" onclick="handleTap(event)">
-            <div class="tap-icon">⚡</div>
-            <div class="tap-text" id="btn-label">TAP TO START</div>
-        </button>
-    </div>
-
-    <!-- Monetization & Claim Action Controls -->
-    <div class="controls">
-        <button class="btn btn-ad" id="ad-btn" onclick="watchAdFor2x()" disabled>
-            📺 Watch Ad to 2X Score
-        </button>
-        <button class="btn btn-primary" id="claim-btn" onclick="submitScore()" disabled>
-            💾 Submit Score & Save
-        </button>
-    </div>
-
-    <script>
-        // -------------------------------------------------------------
-        // Application Configuration
-        // -------------------------------------------------------------
-        const CONFIG = {
-            botUsername: "Tmxqunbot",
-            adsgramBlockId: "40165",
-            sessionDuration: 15, // seconds
-            pointsPerTap: 1
-        };
-
-        // Initialize Telegram WebApp SDK
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        tg.ready();
-
-        // Extract Telegram User Data
-        const user = tg.initDataUnsafe?.user || { id: "GUEST", first_name: "Player" };
-        const initDataRaw = tg.initData; // Signed HMAC string for backend verification
-
-        // Game State Variables
-        let currentScore = 0;
-        let totalBalance = 0;
-        let timeLeft = CONFIG.sessionDuration;
-        let gameActive = false;
-        let timerInterval = null;
-        let multiplier = 1;
-
-        // Initialize Adsgram SDK Controller
-        let AdController = null;
+    // Safe Adsgram SDK Controller Initialization
+    let AdController = null;
+    try {
         if (window.Adsgram) {
             AdController = window.Adsgram.init({ blockId: CONFIG.adsgramBlockId });
+        } else {
+            console.warn("Adsgram SDK script not detected on window.");
         }
+    } catch (err) {
+        console.error("Error initializing Adsgram Controller:", err);
+    }
 
-        // -------------------------------------------------------------
-        // Core Game Mechanics
-        // -------------------------------------------------------------
-        function handleTap(event) {
+    // -------------------------------------------------------------
+    // Core Game Mechanics
+    // -------------------------------------------------------------
+    function handleTap(event) {
+        try {
             // Trigger haptic vibration on mobile devices
             if (tg.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred("light");
@@ -261,25 +65,38 @@
                 document.getElementById("score").innerText = currentScore;
                 createTapAnimation(event);
             }
+        } catch (err) {
+            console.error("Error handling tap event:", err);
         }
+    }
 
-        function startGame() {
+    function startGame() {
+        try {
             gameActive = true;
             document.getElementById("btn-label").innerText = "TAP FAST!";
             document.getElementById("claim-btn").disabled = true;
             document.getElementById("ad-btn").disabled = true;
 
             timerInterval = setInterval(() => {
-                timeLeft--;
-                document.getElementById("timer").innerText = `${timeLeft}s`;
+                try {
+                    timeLeft--;
+                    document.getElementById("timer").innerText = `${timeLeft}s`;
 
-                if (timeLeft <= 0) {
-                    endGame();
+                    if (timeLeft <= 0) {
+                        endGame();
+                    }
+                } catch (timerErr) {
+                    console.error("Error inside game loop interval:", timerErr);
+                    clearInterval(timerInterval);
                 }
             }, 1000);
+        } catch (err) {
+            console.error("Error starting game:", err);
         }
+    }
 
-        function endGame() {
+    function endGame() {
+        try {
             clearInterval(timerInterval);
             gameActive = false;
             document.getElementById("btn-label").innerText = "FINISHED";
@@ -294,98 +111,123 @@
             if (tg.HapticFeedback) {
                 tg.HapticFeedback.notificationOccurred("success");
             }
+        } catch (err) {
+            console.error("Error ending game:", err);
         }
+    }
 
-        // Floating number visual effect
-        function createTapAnimation(event) {
+    // Floating number visual effect
+    function createTapAnimation(event) {
+        try {
             const btn = document.getElementById("tap-btn");
+            if (!btn) return;
+
             const rect = btn.getBoundingClientRect();
             
             const effect = document.createElement("div");
             effect.className = "tap-effect";
             effect.innerText = `+${CONFIG.pointsPerTap * multiplier}`;
             
-            // Calculate tap coordinates
-            const x = (event.clientX || (rect.left + rect.width / 2)) - rect.left - 10;
-            const y = (event.clientY || (rect.top + rect.height / 2)) - rect.top - 20;
+            // Calculate tap coordinates safely
+            const x = (event && event.clientX ? event.clientX : (rect.left + rect.width / 2)) - rect.left - 10;
+            const y = (event && event.clientY ? event.clientY : (rect.top + rect.height / 2)) - rect.top - 20;
             
             effect.style.left = `${x}px`;
             effect.style.top = `${y}px`;
             
             btn.appendChild(effect);
 
-            setTimeout(() => effect.remove(), 800);
-        }
-
-        // -------------------------------------------------------------
-        // Monetization: Adsgram Rewarded Integration
-        // -------------------------------------------------------------
-        async function watchAdFor2x() {
-            if (!AdController) {
-                tg.showAlert("Ad network is initializing. Please try again.");
-                return;
-            }
-
-            try {
-                const result = await AdController.show();
-                if (result.done) {
-                    // Double score on completed ad view
-                    currentScore = currentScore * 2;
-                    multiplier = 2;
-                    document.getElementById("score").innerText = currentScore;
-                    document.getElementById("ad-btn").disabled = true;
-                    document.getElementById("ad-btn").innerText = "2X Applied! ✨";
-                    tg.showAlert("Awesome! Your score has been doubled!");
+            setTimeout(() => {
+                try {
+                    effect.remove();
+                } catch (e) {
+                    /* Element already removed */
                 }
-            } catch (error) {
-                console.log("Ad dismissed or error:", error);
-                tg.showAlert("Ad reward canceled or unavailable.");
-            }
+            }, 800);
+        } catch (err) {
+            console.error("Error creating tap animation:", err);
+        }
+    }
+
+    // -------------------------------------------------------------
+    // Monetization: Adsgram Rewarded Integration
+    // -------------------------------------------------------------
+    async function watchAdFor2x() {
+        if (!AdController) {
+            if (tg.showAlert) tg.showAlert("Ad network is unavailable or initializing. Please try again.");
+            else alert("Ad network is unavailable or initializing. Please try again.");
+            return;
         }
 
-        // -------------------------------------------------------------
-        // Backend Data Sync Routines
-        // -------------------------------------------------------------
-        async function submitScore() {
-            const claimBtn = document.getElementById("claim-btn");
+        try {
+            const result = await AdController.show();
+            if (result && result.done) {
+                // Double score on completed ad view
+                currentScore = currentScore * 2;
+                multiplier = 2;
+                document.getElementById("score").innerText = currentScore;
+                document.getElementById("ad-btn").disabled = true;
+                document.getElementById("ad-btn").innerText = "2X Applied! ✨";
+                
+                if (tg.showAlert) tg.showAlert("Awesome! Your score has been doubled!");
+            }
+        } catch (error) {
+            console.error("Ad placement error or user dismissed ad:", error);
+            if (tg.showAlert) tg.showAlert("Ad reward canceled or unavailable.");
+        }
+    }
+
+    // -------------------------------------------------------------
+    // Backend Data Sync Routines
+    // -------------------------------------------------------------
+    async function submitScore() {
+        const claimBtn = document.getElementById("claim-btn");
+        if (claimBtn) {
             claimBtn.disabled = true;
             claimBtn.innerText = "Syncing...";
-
-            try {
-                // Post score payload to your FastAPI backend route
-                const response = await fetch("/api/game/submit-score", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        user_id: user.id,
-                        score: currentScore,
-                        init_data: initDataRaw
-                    })
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    totalBalance += currentScore;
-                    document.getElementById("total-balance").innerText = totalBalance;
-                    tg.showAlert(`Successfully recorded! Earned ${data.tokens_earned || currentScore} tokens.`);
-                } else {
-                    // Fallback for standalone/local client testing
-                    totalBalance += currentScore;
-                    document.getElementById("total-balance").innerText = totalBalance;
-                    tg.showAlert(`Score saved: ${currentScore} points.`);
-                }
-            } catch (err) {
-                console.warn("Backend sync offline, saving locally:", err);
-                totalBalance += currentScore;
-                document.getElementById("total-balance").innerText = totalBalance;
-                tg.showAlert("Score recorded!");
-            } finally {
-                resetGameUI();
-            }
         }
 
-        function resetGameUI() {
+        try {
+            // Post score payload to your FastAPI backend route
+            const response = await fetch("/api/game/submit-score", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    user_id: user.id,
+                    score: currentScore,
+                    init_data: initDataRaw
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Server returned HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data && data.success) {
+                totalBalance += (data.tokens_earned || currentScore);
+                document.getElementById("total-balance").innerText = totalBalance;
+                if (tg.showAlert) tg.showAlert(`Successfully recorded! Earned ${data.tokens_earned || currentScore} tokens.`);
+            } else {
+                throw new Error("API reported failure or invalid payload structure.");
+            }
+        } catch (err) {
+            console.warn("Backend sync failed or offline, applying local fallback:", err);
+            totalBalance += currentScore;
+            document.getElementById("total-balance").innerText = totalBalance;
+            if (tg.showAlert) tg.showAlert(`Score saved locally: ${currentScore} points.`);
+        } finally {
+            try {
+                resetGameUI();
+            } catch (resetErr) {
+                console.error("Error resetting game state:", resetErr);
+            }
+        }
+    }
+
+    function resetGameUI() {
+        try {
             currentScore = 0;
             timeLeft = CONFIG.sessionDuration;
             multiplier = 1;
@@ -395,13 +237,20 @@
             document.getElementById("btn-label").innerText = "TAP TO START";
             
             document.getElementById("tap-btn").disabled = false;
-            document.getElementById("claim-btn").disabled = true;
-            document.getElementById("claim-btn").innerText = "💾 Submit Score & Save";
+            
+            const claimBtn = document.getElementById("claim-btn");
+            if (claimBtn) {
+                claimBtn.disabled = true;
+                claimBtn.innerText = "💾 Submit Score & Save";
+            }
             
             const adBtn = document.getElementById("ad-btn");
-            adBtn.disabled = true;
-            adBtn.innerText = "📺 Watch Ad to 2X Score";
+            if (adBtn) {
+                adBtn.disabled = true;
+                adBtn.innerText = "📺 Watch Ad to 2X Score";
+            }
+        } catch (err) {
+            console.error("Error updating reset UI elements:", err);
         }
-    </script>
-</body>
-</html>
+    }
+</script>
