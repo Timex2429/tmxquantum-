@@ -1,9 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
   "cleanUrls": true,
   "functions": {
     "api/**/*.py": {
-      "memory": 1024,
       "maxDuration": 15
     }
   },
@@ -32,11 +32,6 @@
         {
           "key": "Access-Control-Allow-Headers",
           "value": "Content-Type, Authorization, x-telegram-init-data"
-        },
-        {
-          "key": "Content-Security-Policy",
-          "value": "default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://sad.adsgram.ai; frame-src 'self' https://sad.adsgram.ai; frame-ancestors 'self' https://web.telegram.org https://*.telegram.org https://*.t.me;"
-
         }
       ]
     }
