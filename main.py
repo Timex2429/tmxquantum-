@@ -1,10 +1,10 @@
 import os
-from fastapi.responses import FileResponse
-import requests
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 from typing import Optional
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from pydantic import BaseModel
+import requests
 
 app = FastAPI(
     title="TMX Quantum API",
@@ -90,30 +90,80 @@ async def telegram_webhook(request: Request):
             
             requests.post(f"{TELEGRAM_API_URL}/sendMessage", json=payload)
 
-    return {"status": "ok"}
+    return {"status": "ok"}h
+class GameScoreSubmission(BaseModel):
+  user_id: int
+  score: int
+
+
+class UserInitRequest(BaseModel):
+  user_id: int
+  referred_by: Optional[int] = None
+
+
+@app.post("/api/user/init")
+async def initialize_user(data: UserInitRequest):
+  try:
+    existing_user = db.users.find_one({"user_id": data.user_id})
+
+    if not existing_user:
+      welcome_bonus = 0
+
+      # Credit referrer (+500) if friend joined via referral link
+      if data.referred_by and data.referred_by != data.user_id:
+        db.users.update_one(
+            {"user_id": data.referred_by},
+            {"$inc": {"balance": 500, "referrals_count": 1}},
+            upsert=True,
+        )
+        welcome_bonus = 200
+
+      new_user = {
+          "user_id": data.user_id,
+          "balance": welcome_bonus,
+          "referred_by": data.referred_by,
+          "referrals_count": 0,
+          "wallet_address": None,
+      }
+      db.users.insert_one(new_user)
+      return {
+          "status": "created",
+          "balance": welcome_bonus,
+          "referrals_count": 0,
+      }
+
+    return {
+        "status": "exists",
+        "balance": existing_user.get("balance", 0),
+        "referrals_count": existing_user.get("referrals_count", 0),
+    }
+  except Exception as e:
+    return {"status": "error", "message": str(e)}
 
 
 @app.post("/api/game/submit-score")
 async def submit_score(data: GameScoreSubmission):
-    user_id = data.user_id
-    points_earned = data.score
+  if data.score < 0:
+    raise HTTPException(status_code=400, detail="Invalid score format")
 
-    if points_earned < 0:
-        raise HTTPException(status_code=400, detail="Invalid score format")
+  # Atomically update balance directly in MongoDB Atlas
+  user = db.users.find_one_and_update(
+      {"user_id": data.user_id},
+      {"$inc": {"balance": data.score}},
+      upsert=True,
+      return_document=True,
+  )
 
-    current_balance = user_balances.get(user_id, 0)
-    new_balance = current_balance + points_earned
-    user_balances[user_id] = new_balance
-
-    return {
-        "status": "success",
-        "user_id": user_id,
-        "score_added": points_earned,
-        "total_balance": new_balance
-    }
+  return {
+      "status": "success",
+      "user_id": data.user_id,
+      "score_added": data.score,
+      "total_balance": user.get("balance", 0) if user else data.score,
+  }
 
 
 @app.get("/api/user/{user_id}/balance")
 async def get_balance(user_id: int):
-    balance = user_balances.get(user_id, 0)
-    return {"user_id": user_id, "balance": balance}
+  user = db.users.find_one({"user_id": user_id})
+  balance = user.get("balance", 0) if user else 0
+  return {"user_id": user_id, "balance": balance}
