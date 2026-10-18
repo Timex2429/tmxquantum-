@@ -2,58 +2,55 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>TMX Quantum - Tap & Earn</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TMX Quantum Mini App</title>
+    
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-    <!-- Adsgram SDK -->
+    <!-- Adsgram Rewarded SDK -->
     <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 
     <style>
         :root {
-            --bg-color: #0d1117;
-            --card-bg: #161b22;
+            --bg-color: #0f172a;
+            --text-color: #f8fafc;
+            --text-secondary: #94a3b8;
             --accent-color: #0088cc;
             --accent-gold: #ffd700;
-            --text-color: #ffffff;
-            --text-secondary: #8b949e;
         }
 
         * {
             box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
             margin: 0;
             padding: 0;
+            user-select: none;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             flex-direction: column;
-            align-items: center;
             justify-content: space-between;
-            min-height: 100vh;
+            height: 100vh;
+            height: 100dvh;
             padding: 20px;
             overflow: hidden;
         }
 
-        /* Header / Stats Panel */
+        /* Header Stats Grid */
         .header {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
             width: 100%;
             max-width: 400px;
-            background: var(--card-bg);
+            margin: 0 auto;
+            background: rgba(30, 41, 59, 0.7);
+            padding: 12px;
             border-radius: 16px;
-            padding: 16px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-            border: 1px solid #30363d;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .stat-box {
@@ -61,14 +58,14 @@
         }
 
         .stat-label {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
         .stat-value {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
             color: var(--accent-gold);
             margin-top: 4px;
@@ -123,7 +120,7 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            margin-bottom: 10px;
+            margin: 0 auto 10px auto;
         }
 
         .btn {
@@ -213,7 +210,7 @@
         // Application Configuration
         // -------------------------------------------------------------
         const CONFIG = {
-            botUsername: "Tmxqunbot",
+            backendUrl: "https://tmxquantum-ten.vercel.app", // Live FastAPI backend URL
             adsgramBlockId: "40165",
             sessionDuration: 15, // seconds
             pointsPerTap: 1
@@ -224,9 +221,9 @@
         tg.expand();
         tg.ready();
 
-        // Extract Telegram User Data
-        const user = tg.initDataUnsafe?.user || { id: "GUEST", first_name: "Player" };
-        const initDataRaw = tg.initData; // Signed HMAC string for backend verification
+        // Extract Telegram User Data safely with fallback for browser testing
+        const user = tg.initDataUnsafe?.user || { id: 12345, first_name: "Player" };
+        const initDataRaw = tg.initData || "";
 
         // Game State Variables
         let currentScore = 0;
@@ -240,6 +237,24 @@
         let AdController = null;
         if (window.Adsgram) {
             AdController = window.Adsgram.init({ blockId: CONFIG.adsgramBlockId });
+        }
+
+        // Fetch initial user balance on startup
+        window.addEventListener("DOMContentLoaded", () => {
+            fetchUserBalance();
+        });
+
+        async function fetchUserBalance() {
+            try {
+                const response = await fetch(`${CONFIG.backendUrl}/api/user/${user.id}/balance`);
+                if (response.ok) {
+                    const data = await response.json();
+                    totalBalance = data.balance || 0;
+                    document.getElementById("total-balance").innerText = totalBalance;
+                }
+            } catch (err) {
+                console.warn("Could not retrieve initial balance from server:", err);
+            }
         }
 
         // -------------------------------------------------------------
@@ -305,7 +320,6 @@
             effect.className = "tap-effect";
             effect.innerText = `+${CONFIG.pointsPerTap * multiplier}`;
             
-            // Calculate tap coordinates
             const x = (event.clientX || (rect.left + rect.width / 2)) - rect.left - 10;
             const y = (event.clientY || (rect.top + rect.height / 2)) - rect.top - 20;
             
@@ -329,7 +343,6 @@
             try {
                 const result = await AdController.show();
                 if (result.done) {
-                    // Double score on completed ad view
                     currentScore = currentScore * 2;
                     multiplier = 2;
                     document.getElementById("score").innerText = currentScore;
@@ -352,8 +365,8 @@
             claimBtn.innerText = "Syncing...";
 
             try {
-                // Post score payload to your FastAPI backend route
-                const response = await fetch("/api/game/submit-score", {
+                // Post score payload to your live FastAPI backend route
+                const response = await fetch(`${CONFIG.backendUrl}/api/game/submit-score`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -365,21 +378,18 @@
 
                 const data = await response.json();
 
-                if (response.ok && data.success) {
-                    totalBalance += currentScore;
+                if (response.ok) {
+                    totalBalance = data.total_balance || (totalBalance + currentScore);
                     document.getElementById("total-balance").innerText = totalBalance;
-                    tg.showAlert(`Successfully recorded! Earned ${data.tokens_earned || currentScore} tokens.`);
+                    tg.showAlert(`Successfully recorded! Total Balance: ${totalBalance} TMX`);
                 } else {
-                    // Fallback for standalone/local client testing
-                    totalBalance += currentScore;
-                    document.getElementById("total-balance").innerText = totalBalance;
-                    tg.showAlert(`Score saved: ${currentScore} points.`);
+                    throw new Error(data.detail || "Server error");
                 }
             } catch (err) {
-                console.warn("Backend sync offline, saving locally:", err);
+                console.warn("Backend sync issue:", err);
                 totalBalance += currentScore;
                 document.getElementById("total-balance").innerText = totalBalance;
-                tg.showAlert("Score recorded!");
+                tg.showAlert(`Score saved locally: ${currentScore} points.`);
             } finally {
                 resetGameUI();
             }
