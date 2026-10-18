@@ -1,4 +1,6 @@
 import os
+from fastapi.responses import FileResponse
+import os
 import requests
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -31,20 +33,16 @@ class GameScoreSubmission(BaseModel):
     user_id: int
     score: int
 @app.get("/")
-async def root():
-    return {"message": "Welcome to TMX Quantum API", "status": "active"}
+async def serve_frontend():
+  file_path = os.path.join(os.path.dirname(__file__), "..", "index.html")
+  if os.path.exists(file_path):
+    return FileResponse(file_path)
+  return {"message": "Welcome to TMX Quantum API", "status": "active"}
 
 
 @app.get("/api/health")
 async def health_check():
-    return {"status": "online", "project": "TMX-QUANTUM"}
-
-
-@app.get("/api/health")
-async def health_check():
-    return {"status": "online", "project": "TMX-QUANTUM"}
-
-
+  return {"status": "online", "project": "TMX-QUANTUM"}
 @app.post("/webhook")
 async def telegram_webhook(request: Request):
     try:
