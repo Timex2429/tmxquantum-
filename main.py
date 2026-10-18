@@ -1,6 +1,5 @@
 import os
 from fastapi.responses import FileResponse
-import os
 import requests
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -34,10 +33,21 @@ class GameScoreSubmission(BaseModel):
     score: int
 @app.get("/")
 async def serve_frontend():
-  file_path = os.path.join(os.path.dirname(__file__), "..", "index.html")
-  if os.path.exists(file_path):
-    return FileResponse(file_path)
-  return {"message": "Welcome to TMX Quantum API", "status": "active"}
+  possible_paths = [
+      os.path.join(os.getcwd(), "index.html"),
+      os.path.join(os.path.dirname(__file__), "..", "index.html"),
+      os.path.join(os.path.dirname(__file__), "index.html"),
+      "index.html",
+  ]
+  for path in possible_paths:
+    if os.path.exists(path):
+      return FileResponse(path)
+  return {
+      "message": "Welcome to TMX Quantum API",
+      "status": "active",
+      "error": "index.html path not resolved",
+  }
+
 
 
 @app.get("/api/health")
