@@ -30,6 +30,14 @@ user_balances = {}
 class GameScoreSubmission(BaseModel):
     user_id: int
     score: int
+@app.get("/")
+async def root():
+    return {"message": "Welcome to TMX Quantum API", "status": "active"}
+
+
+@app.get("/api/health")
+async def health_check():
+    return {"status": "online", "project": "TMX-QUANTUM"}
 
 
 @app.get("/api/health")
