@@ -15,8 +15,10 @@ import requests
 # ------------------------------------------------------------------
 app = FastAPI(
     title="TMX Quantum API",
-    description="Backend engine for TMX Quantum Telegram Mini App",
-    version="1.0.0",
+    description=(
+        "Backend engine for TMX-QUANTUM Telegram Mini App & Web3 Mining"
+    ),
+    version="1.1.0",
 )
 
 app.add_middleware(
@@ -28,14 +30,22 @@ app.add_middleware(
 )
 
 # ------------------------------------------------------------------
-# 2. MONGODB ATLAS CONNECTION
+# 2. MONGODB ATLAS CONNECTION (Fixed to support MONGO_URL & MONGO_URI)
 # ------------------------------------------------------------------
-MONGO_URI = os.getenv(
-    "MONGO_URI",
-    "mongodb+srv://tmxquantum:tmxquantum123@cluster0.mongodb.net/tmxquantum?retryWrites=true&w=majority",
+MONGO_URI = (
+    os.getenv("MONGO_URL")
+    or os.getenv("MONGO_URI")
+    or "mongodb+srv://horaltmitchell_db_user:Arizabalaga25@tmx-quantum.mqltymh.mongodb.net/tmxquantum?retryWrites=true&w=majority"
 )
-client = pymongo.MongoClient(MONGO_URI)
-db = client["tmxquantum"]
+
+try:
+  client = pymongo.MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+  db = client["tmxquantum"]
+  # Test connection
+  client.admin.command("ping")
+  print("✅ Successfully connected to MongoDB Atlas!")
+except Exception as e:
+  print(f"❌ MongoDB Connection Error: {e}")
 
 BOT_TOKEN = os.getenv(
     "BOT_TOKEN", "8667199385:AAEP4C7X81HYHQrbhVaiAvGg1nQuMa92ZKY"
@@ -85,12 +95,26 @@ async def serve_frontend():
   for path in possible_paths:
     if os.path.exists(path):
       return FileResponse(path)
-  return {"message": "TMX Quantum API is active", "status": "online"}
+  return {
+      "message": "TMX-QUANTUM API is active and running",
+      "status": "online",
+  }
 
 
 @app.get("/api/health")
 async def health_check():
-  return {"status": "online", "project": "TMX-QUANTUM", "database": "connected"}
+  try:
+    client.admin.command("ping")
+    db_status = "connected"
+  except Exception:
+    db_status = "disconnected"
+
+  return {
+      "status": "online",
+      "project": "TMX-QUANTUM",
+      "database": db_status,
+      "timestamp": datetime.utcnow(),
+  }
 
 
 # ------------------------------------------------------------------
@@ -110,13 +134,13 @@ async def telegram_webhook(request: Request):
 
     if text.startswith("/start") or text == "/play":
       welcome_text = (
-          "⚡ *Welcome to TMX Quantum Mining!*\n\n"
+          "⚡ *Welcome to TMX-QUANTUM Mining!*\n\n"
           "Tap below to launch the Mini App, mine TMX tokens, complete"
-          " tasks, and earn referral rewards!"
+          " missions, spin the wheel, and earn referral rewards!"
       )
       keyboard = {
           "inline_keyboard": [[{
-              "text": "🚀 Launch TMX Quantum",
+              "text": "🚀 Launch TMX-QUANTUM",
               "web_app": {"url": "https://timex2429-tmxquantum.vercel.app"},
           }]]
       }
@@ -132,7 +156,7 @@ async def telegram_webhook(request: Request):
 
 
 # ------------------------------------------------------------------
-# 6. USER INIT & MONGODB REFERRAL SYSTEM
+# 6. USER INIT & REFERRAL SYSTEM
 # ------------------------------------------------------------------
 @app.post("/api/user/init")
 async def initialize_user(data: UserInitRequest):
@@ -144,12 +168,16 @@ async def initialize_user(data: UserInitRequest):
 
       # Credit Referrer (+500 TMX) if valid referral link used
       if data.referred_by and data.referred_by != data.user_id:
-        db.users.update_one(
-            {"user_id": data.referred_by},
-            {"$inc": {"balance": 500, "referrals_count": 1}},
-            upsert=True,
-        )
-        welcome_bonus = 200  # Give new user +200 bonus
+        referrer = db.users.find_one({"user_id": data.referred_by})
+        if referrer:
+          db.users.update_one(
+              {"user_id": data.referred_by},
+              {
+                  "$inc": {"balance": 500, "referrals_count": 1},
+                  "$push": {"referred_users": data.user_id},
+              },
+          )
+          welcome_bonus = 200  # Give new user +200 bonus
 
       new_user = {
           "user_id": data.user_id,
@@ -157,6 +185,7 @@ async def initialize_user(data: UserInitRequest):
           "balance": welcome_bonus,
           "referred_by": data.referred_by,
           "referrals_count": 0,
+          "referred_users": [],
           "completed_tasks": [],
           "last_daily_claim": None,
           "daily_streak": 0,
@@ -178,7 +207,7 @@ async def initialize_user(data: UserInitRequest):
         "wallet_address": user.get("wallet_address", None),
     }
   except Exception as e:
-    return {"status": "error", "message": str(e)}
+    raise HTTPException(status_code=500, detail=str(e))
 
 
 # ------------------------------------------------------------------
@@ -196,6 +225,9 @@ async def submit_score(data: GameScoreSubmission):
       return_document=pymongo.ReturnDocument.AFTER,
   )
 
+  if not user:
+    raise HTTPException(status_code=404, detail="User not found")
+
   return {
       "status": "success",
       "user_id": data.user_id,
@@ -208,7 +240,7 @@ async def submit_score(data: GameScoreSubmission):
 async def get_user_data(user_id: int):
   user = db.users.find_one({"user_id": user_id})
   if not user:
-    return {"status": "not_found", "balance": 0, "referrals_count": 0}
+    raise HTTPException(status_code=404, detail="User not found")
 
   return {
       "status": "success",
@@ -228,11 +260,43 @@ async def get_user_data(user_id: int):
 TASKS = {
     "telegram_channel": {
         "reward": 1000,
-        "title": "Join Telegram Channel",
+        "title": "Join Official Telegram Channel",
+        "link": "https://t.me/tmxquantum",
     },
-    "twitter_follow": {"reward": 1000, "title": "Follow us on X"},
-    "youtube_sub": {"reward": 1500, "title": "Subscribe on YouTube"},
+    "twitter_follow": {
+        "reward": 1000,
+        "title": "Follow us on X (Twitter)",
+        "link": "https://x.com/tmxquantum",
+    },
+    "youtube_sub": {
+        "reward": 1500,
+        "title": "Subscribe on YouTube",
+        "link": "https://youtube.com/@tmxquantum",
+    },
+    "telegram_chat": {
+        "reward": 800,
+        "title": "Join Community Chat",
+        "link": "https://t.me/tmxquantum_chat",
+    },
 }
+
+
+@app.get("/api/tasks/{user_id}")
+async def get_tasks(user_id: int):
+  user = db.users.find_one({"user_id": user_id})
+  completed_tasks = user.get("completed_tasks", []) if user else []
+
+  tasks_list = []
+  for task_id, info in TASKS.items():
+    tasks_list.append({
+        "task_id": task_id,
+        "title": info["title"],
+        "reward": info["reward"],
+        "link": info["link"],
+        "completed": task_id in completed_tasks,
+    })
+
+  return {"status": "success", "tasks": tasks_list}
 
 
 @app.post("/api/tasks/claim")
@@ -246,7 +310,11 @@ async def claim_task(data: TaskClaimRequest):
 
   completed_tasks = user.get("completed_tasks", [])
   if data.task_id in completed_tasks:
-    return {"status": "already_claimed", "balance": user.get("balance", 0)}
+    return {
+        "status": "already_claimed",
+        "message": "Task already completed",
+        "balance": user.get("balance", 0),
+    }
 
   reward = TASKS[data.task_id]["reward"]
 
@@ -260,7 +328,7 @@ async def claim_task(data: TaskClaimRequest):
   )
 
   return {
-      "status": "claimed",
+      "status": "success",
       "reward": reward,
       "total_balance": updated_user.get("balance", 0),
       "completed_tasks": updated_user.get("completed_tasks", []),
@@ -271,7 +339,7 @@ async def claim_task(data: TaskClaimRequest):
 # 9. DAILY LOGIN STREAK REWARDS
 # ------------------------------------------------------------------
 @app.post("/api/daily/claim")
-async def claim_daily_reward(data: TaskClaimRequest):  # Reusing TaskClaimRequest
+async def claim_daily_reward(data: TaskClaimRequest):
   user = db.users.find_one({"user_id": data.user_id})
   if not user:
     raise HTTPException(status_code=404, detail="User not found")
@@ -285,13 +353,13 @@ async def claim_daily_reward(data: TaskClaimRequest):  # Reusing TaskClaimReques
     if time_diff < timedelta(hours=24):
       return {
           "status": "cooldown",
-          "message": "Daily reward already claimed today",
+          "message": "Daily reward already claimed today. Try again later.",
       }
     elif time_diff > timedelta(hours=48):
-      streak = 0  # Reset streak if missed a day
+      streak = 0  # Reset streak if user missed a day
 
   streak += 1
-  reward = 500 * streak  # Incremental daily reward
+  reward = 500 * streak  # Incremental daily bonus
 
   updated_user = db.users.find_one_and_update(
       {"user_id": data.user_id},
@@ -325,10 +393,9 @@ async def spin_wheel(data: SpinRequest):
   if last_spin and (now - last_spin) < timedelta(hours=12):
     return {
         "status": "cooldown",
-        "message": "Spin available every 12 hours",
+        "message": "Spin available every 12 hours. Please check back later.",
     }
 
-  # Spin probabilities / rewards
   spin_rewards = [100, 250, 500, 1000, 2500, 5000]
   won_reward = random.choice(spin_rewards)
 
@@ -350,9 +417,32 @@ async def spin_wheel(data: SpinRequest):
 # ------------------------------------------------------------------
 @app.post("/api/wallet/save")
 async def save_wallet(data: WalletSaveRequest):
-  db.users.update_one(
+  user = db.users.find_one_and_update(
       {"user_id": data.user_id},
       {"$set": {"wallet_address": data.wallet_address}},
-      upsert=True,
+      return_document=pymongo.ReturnDocument.AFTER,
   )
-  return {"status": "success", "wallet_address": data.wallet_address}
+
+  if not user:
+    raise HTTPException(status_code=404, detail="User not found")
+
+  return {
+      "status": "success",
+      "wallet_address": data.wallet_address,
+      "message": "TON Wallet saved successfully",
+  }
+
+
+# ------------------------------------------------------------------
+# 12. LEADERBOARD SYSTEM
+# ------------------------------------------------------------------
+@app.get("/api/leaderboard")
+async def get_leaderboard():
+  top_users = (
+      db.users.find({}, {"_id": 0, "user_id": 1, "username": 1, "balance": 1})
+      .sort("balance", pymongo.DESCENDING)
+      .limit(20)
+  )
+
+  leaderboard = list(top_users)
+  return {"status": "success", "leaderboard": leaderboard}
