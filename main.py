@@ -253,7 +253,6 @@ async def get_user_data(user_id: int):
       "wallet_address": user.get("wallet_address"),
   }
 
-
 # ------------------------------------------------------------------
 # 8. SOCIAL MEDIA & DAILY TASKS SYSTEM
 # ------------------------------------------------------------------
@@ -266,7 +265,12 @@ TASKS = {
     "twitter_follow": {
         "reward": 1000,
         "title": "Follow us on X (Twitter)",
-        "link": "https://x.com/tmxquantum",
+        "link": "https://x.com/timex2429",
+    },
+    "instagram_follow": {
+        "reward": 1000,
+        "title": "Follow us on Instagram",
+        "link": "https://instagram.com/tmxquantum245",
     },
     "youtube_sub": {
         "reward": 1500,
@@ -275,11 +279,10 @@ TASKS = {
     },
     "telegram_chat": {
         "reward": 800,
-        "title": "Join Community Chat",
-        "link": "https://t.me/tmxquantum_chat",
+        "title": "Join TMX-Quantum Official Chat",
+        "link": "https://t.me/+LW4DJIurXOE0ZGU0",  # Replace with your exact community chat link if different
     },
 }
-
 
 @app.get("/api/tasks/{user_id}")
 async def get_tasks(user_id: int):
