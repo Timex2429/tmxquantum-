@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TMX Quantum Mini App</title>
+    <title>TMX-QUANTUM Mini App</title>
     
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -13,10 +13,12 @@
     <style>
         :root {
             --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
             --text-color: #f8fafc;
             --text-secondary: #94a3b8;
             --accent-color: #0088cc;
             --accent-gold: #ffd700;
+            --border-color: rgba(255, 255, 255, 0.08);
         }
 
         * {
@@ -32,25 +34,60 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
             height: 100vh;
             height: 100dvh;
-            padding: 20px;
             overflow: hidden;
         }
 
-        /* Header Stats Grid */
-        .header {
+        /* Top Global Header */
+        .global-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .balance-pill {
+            color: var(--accent-gold);
+            background: rgba(255, 215, 0, 0.1);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        /* Main Viewport Container */
+        .content-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            padding-bottom: 80px;
+        }
+
+        .view-section {
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .view-section.active {
+            display: flex;
+        }
+
+        /* Header Stats Grid (Game View) */
+        .header-stats {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
-            width: 100%;
-            max-width: 400px;
-            margin: 0 auto;
-            background: rgba(30, 41, 59, 0.7);
+            background: var(--card-bg);
             padding: 12px;
             border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
         }
 
         .stat-box {
@@ -58,14 +95,14 @@
         }
 
         .stat-label {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
         .stat-value {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
             color: var(--accent-gold);
             margin-top: 4px;
@@ -77,17 +114,17 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            margin: auto 0;
+            margin: 30px 0;
         }
 
         .tap-button {
             position: relative;
-            width: 220px;
-            height: 220px;
+            width: 200px;
+            height: 200px;
             border-radius: 50%;
             background: radial-gradient(circle, #0088cc 0%, #004466 100%);
             border: 4px solid var(--accent-gold);
-            box-shadow: 0 0 30px rgba(0, 136, 204, 0.5);
+            box-shadow: 0 0 30px rgba(0, 136, 204, 0.4);
             cursor: pointer;
             outline: none;
             display: flex;
@@ -101,26 +138,20 @@
             transform: scale(0.92);
         }
 
-        .tap-icon {
-            font-size: 64px;
-        }
-
+        .tap-icon { font-size: 56px; }
         .tap-text {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             color: var(--text-color);
-            margin-top: 8px;
+            margin-top: 6px;
             text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
 
         /* Controls Section */
         .controls {
-            width: 100%;
-            max-width: 400px;
             display: flex;
             flex-direction: column;
             gap: 12px;
-            margin: 0 auto 10px auto;
         }
 
         .btn {
@@ -128,145 +159,329 @@
             padding: 14px;
             border-radius: 12px;
             border: none;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            transition: background 0.2s, opacity 0.2s;
+            transition: opacity 0.2s;
         }
 
-        .btn-primary {
-            background-color: var(--accent-color);
-            color: white;
+        .btn-primary { background-color: var(--accent-color); color: white; }
+        .btn-ad { background: linear-gradient(135deg, #ffd700, #ff8800); color: #000; }
+        .btn-success { background-color: #10b981; color: white; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Cards & Lists (Tasks, Leaderboard, Profile) */
+        .card {
+            background: var(--card-bg);
+            border-radius: 14px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
-        .btn-ad {
-            background: linear-gradient(135deg, #ffd700, #ff8800);
-            color: #000;
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
         }
 
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .item-info h4 { font-size: 14px; margin-bottom: 2px; }
+        .item-info p { font-size: 12px; color: var(--accent-gold); }
+
+        /* Bottom Navigation Bar */
+        .nav-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border-color);
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            align-items: center;
+            padding: 0 6px;
+            z-index: 100;
         }
 
-        /* Floating Tap Indicator Effect */
+        .nav-item {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            cursor: pointer;
+            padding: 8px 0;
+            transition: color 0.2s;
+        }
+
+        .nav-item.active {
+            color: var(--accent-gold);
+        }
+
+        .nav-icon { font-size: 20px; }
+
+        /* Floating Animation */
         .tap-effect {
             position: absolute;
             color: var(--accent-gold);
             font-weight: bold;
-            font-size: 24px;
+            font-size: 22px;
             pointer-events: none;
-            animation: floatUp 0.8s ease-out forwards;
+            animation: floatUp 0.7s ease-out forwards;
         }
 
         @keyframes floatUp {
             0% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-50px); }
+            100% { opacity: 0; transform: translateY(-45px); }
         }
     </style>
 </head>
 <body>
 
-    <!-- Header Stats -->
-    <div class="header">
-        <div class="stat-box">
-            <div class="stat-label">Time Left</div>
-            <div class="stat-value" id="timer">15s</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-label">Session Score</div>
-            <div class="stat-value" id="score">0</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-label">Total Balance</div>
-            <div class="stat-value" id="total-balance">0</div>
-        </div>
+    <!-- Global Header -->
+    <div class="global-header">
+        <span id="user-welcome">⚡ Miner</span>
+        <div class="balance-pill">💎 <span id="global-balance">0</span> TMX</div>
     </div>
 
-    <!-- Interactive Tap Game Engine -->
-    <div class="game-container">
-        <button class="tap-button" id="tap-btn" onclick="handleTap(event)">
-            <div class="tap-icon">⚡</div>
-            <div class="tap-text" id="btn-label">TAP TO START</div>
-        </button>
+    <!-- Viewport Container -->
+    <div class="content-container">
+
+        <!-- TAB 1: MINING GAME -->
+        <div id="view-game" class="view-section active">
+            <div class="header-stats">
+                <div class="stat-box">
+                    <div class="stat-label">Time Left</div>
+                    <div class="stat-value" id="timer">15s</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Session</div>
+                    <div class="stat-value" id="score">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Total</div>
+                    <div class="stat-value" id="header-balance">0</div>
+                </div>
+            </div>
+
+            <div class="game-container">
+                <button class="tap-button" id="tap-btn" onclick="handleTap(event)">
+                    <div class="tap-icon">⚡</div>
+                    <div class="tap-text" id="btn-label">TAP TO START</div>
+                </button>
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-ad" id="ad-btn" onclick="watchAdFor2x()" disabled>
+                    📺 Watch Ad to 2X Score
+                </button>
+                <button class="btn btn-primary" id="claim-btn" onclick="submitScore()" disabled>
+                    💾 Submit Score & Save
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB 2: TASKS & MISSIONS -->
+        <div id="view-tasks" class="view-section">
+            <h3 style="margin-bottom: 4px;">Earn Free TMX</h3>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">Complete social missions to boost your balance.</p>
+            <div id="tasks-list" style="display: flex; flex-direction: column; gap: 10px;">
+                <!-- Populated dynamically via JS -->
+            </div>
+        </div>
+
+        <!-- TAB 3: DAILY & SPIN -->
+        <div id="view-earn" class="view-section">
+            <div class="card">
+                <h3>📅 Daily Login Streak</h3>
+                <p style="font-size: 13px; color: var(--text-secondary);">Check in every 24 hours to earn increasing rewards.</p>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span id="streak-info">Current Streak: 0 Days</span>
+                    <button class="btn btn-success" id="daily-btn" onclick="claimDaily()" style="width: auto; padding: 10px 20px;">Claim Daily</button>
+                </div>
+            </div>
+
+            <div class="card" style="text-align: center; margin-top: 10px;">
+                <h3>🎡 Lucky Spin Wheel</h3>
+                <p style="font-size: 13px; color: var(--text-secondary);">Spin every 12 hours for a chance to win up to 5,000 TMX!</p>
+                <div id="spin-result" style="font-size: 24px; font-weight: bold; color: var(--accent-gold); margin: 10px 0;">🎁 Tap to Spin</div>
+                <button class="btn btn-ad" onclick="spinWheel()">Spin Now</button>
+            </div>
+        </div>
+
+        <!-- TAB 4: LEADERBOARD -->
+        <div id="view-leaderboard" class="view-section">
+            <h3>🏆 Top Miners Leaderboard</h3>
+            <div id="leaderboard-list" style="display: flex; flex-direction: column; gap: 8px;">
+                <!-- Populated dynamically via JS -->
+            </div>
+        </div>
+
+        <!-- TAB 5: PROFILE & WALLET -->
+        <div id="view-profile" class="view-section">
+            <div class="card">
+                <h3>👤 Miner Profile</h3>
+                <p><strong>Username:</strong> <span id="prof-username">Miner</span></p>
+                <p><strong>User ID:</strong> <span id="prof-id">12345</span></p>
+                <p><strong>Referrals Count:</strong> <span id="prof-refs">0</span></p>
+            </div>
+
+            <div class="card">
+                <h3>💎 TON Wallet Connect</h3>
+                <p style="font-size: 13px; color: var(--text-secondary);">Link your wallet address for future token distributions.</p>
+                <input type="text" id="wallet-input" placeholder="Paste TON Wallet Address..." style="padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(15, 23, 42, 0.8); color: white; outline: none;">
+                <button class="btn btn-primary" onclick="saveWallet()">Save Wallet Address</button>
+            </div>
+        </div>
+
     </div>
 
-    <!-- Monetization & Claim Action Controls -->
-    <div class="controls">
-        <button class="btn btn-ad" id="ad-btn" onclick="watchAdFor2x()" disabled>
-            📺 Watch Ad to 2X Score
+    <!-- Bottom Navigation Bar -->
+    <nav class="nav-bar">
+        <button class="nav-item active" onclick="switchTab('game', this)">
+            <span class="nav-icon">⚡</span>
+            <span>Mine</span>
         </button>
-        <button class="btn btn-primary" id="claim-btn" onclick="submitScore()" disabled>
-            💾 Submit Score & Save
+        <button class="nav-item" onclick="switchTab('tasks', this)">
+            <span class="nav-icon">📋</span>
+            <span>Tasks</span>
         </button>
-    </div>
+        <button class="nav-item" onclick="switchTab('earn', this)">
+            <span class="nav-icon">🎁</span>
+            <span>Bonus</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('leaderboard', this)">
+            <span class="nav-icon">🏆</span>
+            <span>Ranks</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('profile', this)">
+            <span class="nav-icon">👤</span>
+            <span>Profile</span>
+        </button>
+    </nav>
 
     <script>
         // -------------------------------------------------------------
-        // Application Configuration
+        // App Configuration & State
         // -------------------------------------------------------------
         const CONFIG = {
-            backendUrl: "https://tmxquantum-ten.vercel.app", // Live FastAPI backend URL
+            backendUrl: "https://tmxquantum-ten.vercel.app", // Matches your FastAPI backend
             adsgramBlockId: "40165",
-            sessionDuration: 15, // seconds
+            sessionDuration: 15,
             pointsPerTap: 1
         };
 
-        // Initialize Telegram WebApp SDK
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.ready();
 
-        // Extract Telegram User Data safely with fallback for browser testing
-        const user = tg.initDataUnsafe?.user || { id: 12345, first_name: "Player" };
-        const initDataRaw = tg.initData || "";
+        const user = tg.initDataUnsafe?.user || { id: 99999, username: "TestMiner", first_name: "Miner" };
+        const startParam = tg.initDataUnsafe?.start_param ? parseInt(tg.initDataUnsafe.start_param) : null;
 
-        // Game State Variables
+        let currentUserData = {
+            balance: 0,
+            referrals_count: 0,
+            completed_tasks: [],
+            daily_streak: 0,
+            wallet_address: null
+        };
+
         let currentScore = 0;
-        let totalBalance = 0;
         let timeLeft = CONFIG.sessionDuration;
         let gameActive = false;
         let timerInterval = null;
         let multiplier = 1;
 
-        // Initialize Adsgram SDK Controller
         let AdController = null;
         if (window.Adsgram) {
             AdController = window.Adsgram.init({ blockId: CONFIG.adsgramBlockId });
         }
 
-        // Fetch initial user balance on startup
+        // Initialize App on Load
         window.addEventListener("DOMContentLoaded", () => {
-            fetchUserBalance();
+            initializeUserSession();
         });
 
-        async function fetchUserBalance() {
+        // -------------------------------------------------------------
+        // Tab Navigation Controller
+        // -------------------------------------------------------------
+        function switchTab(tabName, btnElement) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+            document.getElementById(`view-${tabName}`).classList.add('active');
+            btnElement.classList.add('active');
+
+            if (tabName === 'tasks') loadTasks();
+            if (tabName === 'leaderboard') loadLeaderboard();
+        }
+
+        // -------------------------------------------------------------
+        // Backend API Sync
+        // -------------------------------------------------------------
+        async function initializeUserSession() {
             try {
-                const response = await fetch(`${CONFIG.backendUrl}/api/user/${user.id}/balance`);
+                const response = await fetch(`${CONFIG.backendUrl}/api/user/init`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        user_id: user.id,
+                        username: user.username || user.first_name || "Miner",
+                        referred_by: startParam
+                    })
+                });
+
                 if (response.ok) {
                     const data = await response.json();
-                    totalBalance = data.balance || 0;
-                    document.getElementById("total-balance").innerText = totalBalance;
+                    updateUserState(data);
                 }
             } catch (err) {
-                console.warn("Could not retrieve initial balance from server:", err);
+                console.warn("Failed to initialize user session:", err);
+            }
+        }
+
+        function updateUserState(data) {
+            currentUserData.balance = data.balance || 0;
+            currentUserData.referrals_count = data.referrals_count || 0;
+            currentUserData.completed_tasks = data.completed_tasks || [];
+            currentUserData.daily_streak = data.daily_streak || 0;
+            currentUserData.wallet_address = data.wallet_address || null;
+
+            document.getElementById("global-balance").innerText = currentUserData.balance;
+            document.getElementById("header-balance").innerText = currentUserData.balance;
+            document.getElementById("user-welcome").innerText = `⚡ ${data.username || "Miner"}`;
+            
+            document.getElementById("prof-username").innerText = data.username || "Miner";
+            document.getElementById("prof-id").innerText = user.id;
+            document.getElementById("prof-refs").innerText = currentUserData.referrals_count;
+            document.getElementById("streak-info").innerText = `Current Streak: ${currentUserData.daily_streak} Days`;
+            
+            if (currentUserData.wallet_address) {
+                document.getElementById("wallet-input").value = currentUserData.wallet_address;
             }
         }
 
         // -------------------------------------------------------------
-        // Core Game Mechanics
+        // Game Mechanics
         // -------------------------------------------------------------
         function handleTap(event) {
-            // Trigger haptic vibration on mobile devices
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred("light");
-            }
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
 
-            // Start game on first click
             if (!gameActive && timeLeft === CONFIG.sessionDuration) {
                 startGame();
             }
@@ -299,97 +514,68 @@
             gameActive = false;
             document.getElementById("btn-label").innerText = "FINISHED";
             document.getElementById("tap-btn").disabled = true;
-
-            // Enable post-game actions
             document.getElementById("claim-btn").disabled = false;
-            if (AdController) {
-                document.getElementById("ad-btn").disabled = false;
-            }
+            if (AdController) document.getElementById("ad-btn").disabled = false;
 
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.notificationOccurred("success");
-            }
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
         }
 
-        // Floating number visual effect
         function createTapAnimation(event) {
             const btn = document.getElementById("tap-btn");
             const rect = btn.getBoundingClientRect();
-            
             const effect = document.createElement("div");
             effect.className = "tap-effect";
             effect.innerText = `+${CONFIG.pointsPerTap * multiplier}`;
             
             const x = (event.clientX || (rect.left + rect.width / 2)) - rect.left - 10;
             const y = (event.clientY || (rect.top + rect.height / 2)) - rect.top - 20;
-            
             effect.style.left = `${x}px`;
             effect.style.top = `${y}px`;
             
             btn.appendChild(effect);
-
-            setTimeout(() => effect.remove(), 800);
+            setTimeout(() => effect.remove(), 700);
         }
 
-        // -------------------------------------------------------------
-        // Monetization: Adsgram Rewarded Integration
-        // -------------------------------------------------------------
         async function watchAdFor2x() {
             if (!AdController) {
-                tg.showAlert("Ad network is initializing. Please try again.");
+                tg.showAlert("Ad network is initializing. Try again shortly.");
                 return;
             }
-
             try {
-                const result = await AdController.show();
-                if (result.done) {
-                    currentScore = currentScore * 2;
+                const res = await AdController.show();
+                if (res.done) {
+                    currentScore *= 2;
                     multiplier = 2;
                     document.getElementById("score").innerText = currentScore;
                     document.getElementById("ad-btn").disabled = true;
-                    document.getElementById("ad-btn").innerText = "2X Applied! ✨";
-                    tg.showAlert("Awesome! Your score has been doubled!");
+                    document.getElementById("ad-btn").innerText = "2X Boost Applied! ✨";
+                    tg.showAlert("Score successfully doubled!");
                 }
-            } catch (error) {
-                console.log("Ad dismissed or error:", error);
-                tg.showAlert("Ad reward canceled or unavailable.");
+            } catch (err) {
+                tg.showAlert("Ad unavailable or canceled.");
             }
         }
 
-        // -------------------------------------------------------------
-        // Backend Data Sync Routines
-        // -------------------------------------------------------------
         async function submitScore() {
             const claimBtn = document.getElementById("claim-btn");
             claimBtn.disabled = true;
-            claimBtn.innerText = "Syncing...";
+            claimBtn.innerText = "Saving...";
 
             try {
-                // Post score payload to your live FastAPI backend route
                 const response = await fetch(`${CONFIG.backendUrl}/api/game/submit-score`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        user_id: user.id,
-                        score: currentScore,
-                        init_data: initDataRaw
-                    })
+                    body: JSON.stringify({ user_id: user.id, score: currentScore })
                 });
-
                 const data = await response.json();
-
                 if (response.ok) {
-                    totalBalance = data.total_balance || (totalBalance + currentScore);
-                    document.getElementById("total-balance").innerText = totalBalance;
-                    tg.showAlert(`Successfully recorded! Total Balance: ${totalBalance} TMX`);
+                    updateUserState({ ...currentUserData, balance: data.total_balance });
+                    tg.showAlert(`Successfully saved +${currentScore} TMX to your balance!`);
                 } else {
-                    throw new Error(data.detail || "Server error");
+                    throw new Error(data.detail);
                 }
             } catch (err) {
-                console.warn("Backend sync issue:", err);
-                totalBalance += currentScore;
-                document.getElementById("total-balance").innerText = totalBalance;
-                tg.showAlert(`Score saved locally: ${currentScore} points.`);
+                tg.showAlert("Error saving score to database.");
             } finally {
                 resetGameUI();
             }
@@ -399,18 +585,167 @@
             currentScore = 0;
             timeLeft = CONFIG.sessionDuration;
             multiplier = 1;
-
             document.getElementById("score").innerText = "0";
             document.getElementById("timer").innerText = `${CONFIG.sessionDuration}s`;
             document.getElementById("btn-label").innerText = "TAP TO START";
-            
             document.getElementById("tap-btn").disabled = false;
             document.getElementById("claim-btn").disabled = true;
             document.getElementById("claim-btn").innerText = "💾 Submit Score & Save";
-            
-            const adBtn = document.getElementById("ad-btn");
-            adBtn.disabled = true;
-            adBtn.innerText = "📺 Watch Ad to 2X Score";
+            document.getElementById("ad-btn").disabled = true;
+            document.getElementById("ad-btn").innerText = "📺 Watch Ad to 2X Score";
+        }
+
+        // -------------------------------------------------------------
+        // Tasks & Missions Controller
+        // -------------------------------------------------------------
+        async function loadTasks() {
+            const listEl = document.getElementById("tasks-list");
+            listEl.innerHTML = "<p style='color:var(--text-secondary); text-align:center;'>Loading tasks...</p>";
+
+            try {
+                const response = await fetch(`${CONFIG.backendUrl}/api/tasks/${user.id}`);
+                const data = await response.json();
+                
+                if (response.ok && data.tasks) {
+                    listEl.innerHTML = "";
+                    data.tasks.forEach(task => {
+                        listEl.innerHTML += `
+                            <div class="list-item">
+                                <div class="item-info">
+                                    <h4>${task.title}</h4>
+                                    <p>+${task.reward} TMX</p>
+                                </div>
+                                ${task.completed ? 
+                                    '<span style="color: #10b981; font-weight: bold; font-size: 13px;">Completed</span>' : 
+                                    `<button class="btn btn-primary" style="width: auto; padding: 8px 14px; font-size: 13px;" onclick="claimTask('${task.task_id}', '${task.link}')">Start</button>`
+                                }
+                            </div>
+                        `;
+                    });
+                }
+            } catch (err) {
+                listEl.innerHTML = "<p style='color: #ef4444; text-align:center;'>Failed to load missions.</p>";
+            }
+        }
+
+        async function claimTask(taskId, link) {
+            if (link) window.open(link, '_blank');
+
+            try {
+                const response = await fetch(`${CONFIG.backendUrl}/api/tasks/claim`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ user_id: user.id, task_id: taskId })
+                });
+                const data = await response.json();
+                if (response.ok && data.status === "success") {
+                    updateUserState({ ...currentUserData, balance: data.total_balance, completed_tasks: data.completed_tasks });
+                    tg.showAlert(`Reward Claimed: +${data.reward} TMX!`);
+                    loadTasks();
+                } else {
+                    tg.showAlert(data.message || "Task already claimed or pending verification.");
+                }
+            } catch (err) {
+                tg.showAlert("Error claiming task reward.");
+            }
+        }
+
+        // -------------------------------------------------------------
+        // Daily Check-in & Spin Wheel
+        // -------------------------------------------------------------
+        async function claimDaily() {
+            try {
+                const response = await fetch(`${CONFIG.backendUrl}/api/daily/claim`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ user_id: user.id, task_id: "daily" })
+                });
+                const data = await response.json();
+                if (response.ok && data.status === "success") {
+                    updateUserState({ ...currentUserData, balance: data.total_balance, daily_streak: data.streak });
+                    tg.showAlert(`Daily Streak Claimed! +${data.reward} TMX (Day ${data.streak})`);
+                } else {
+                    tg.showAlert(data.message || "Already claimed today!");
+                }
+            } catch (err) {
+                tg.showAlert("Error claiming daily reward.");
+            }
+        }
+
+        async function spinWheel() {
+            try {
+                const response = await fetch(`${CONFIG.backendUrl}/api/spin/claim`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ user_id: user.id })
+                });
+                const data = await response.json();
+                if (response.ok && data.status === "success") {
+                    updateUserState({ ...currentUserData, balance: data.total_balance });
+                    document.getElementById("spin-result").innerText = `🎉 Won +${data.reward_won} TMX!`;
+                    tg.showAlert(`Spin Successful! Won ${data.reward_won} TMX`);
+                } else {
+                    tg.showAlert(data.message || "Spin on cooldown (Available every 12 hours).");
+                }
+            } catch (err) {
+                tg.showAlert("Error spinning the wheel.");
+            }
+        }
+
+        // -------------------------------------------------------------
+        // Leaderboard
+        // -------------------------------------------------------------
+        async function loadLeaderboard() {
+            const listEl = document.getElementById("leaderboard-list");
+            listEl.innerHTML = "<p style='color:var(--text-secondary); text-align:center;'>Loading ranks...</p>";
+
+            try {
+                const response = await fetch(`${CONFIG.backendUrl}/api/leaderboard`);
+                const data = await response.json();
+                if (response.ok && data.leaderboard) {
+                    listEl.innerHTML = "";
+                    data.leaderboard.forEach((miner, index) => {
+                        listEl.innerHTML += `
+                            <div class="list-item">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <span style="font-weight: bold; color: ${index === 0 ? '#ffd700' : index === 1 ? '#c0c0c0' : index === 2 ? '#cd7f32' : 'var(--text-secondary)'};">#${index + 1}</span>
+                                    <h4>${miner.username}</h4>
+                                </div>
+                                <span style="color: var(--accent-gold); font-weight: bold;">💎 ${miner.balance} TMX</span>
+                            </div>
+                        `;
+                    });
+                }
+            } catch (err) {
+                listEl.innerHTML = "<p style='color: #ef4444; text-align:center;'>Failed to load leaderboard.</p>";
+            }
+        }
+
+        // -------------------------------------------------------------
+        // Wallet Save
+        // -------------------------------------------------------------
+        async function saveWallet() {
+            const address = document.getElementById("wallet-input").value.trim();
+            if (!address) {
+                tg.showAlert("Please enter a valid wallet address.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`${CONFIG.backendUrl}/api/wallet/save`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ user_id: user.id, wallet_address: address })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    tg.showAlert("TON Wallet address saved successfully!");
+                } else {
+                    tg.showAlert("Failed to save wallet address.");
+                }
+            } catch (err) {
+                tg.showAlert("Network error saving wallet.");
+            }
         }
     </script>
 </body>
