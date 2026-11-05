@@ -341,6 +341,15 @@
                 <p><strong>Referrals Count:</strong> <span id="prof-refs">0</span></p>
             </div>
 
+            <!-- Referral Card Section Added -->
+            <div class="card">
+                <h3>🤝 Invite Friends</h3>
+                <p style="font-size: 13px; color: var(--text-secondary);">Earn +500 TMX for every friend who joins your mining network!</p>
+                <button class="btn btn-ad" onclick="shareReferralLink()">
+                    📤 Share Invite Link
+                </button>
+            </div>
+
             <div class="card">
                 <h3>💎 TON Wallet Connect</h3>
                 <p style="font-size: 13px; color: var(--text-secondary);">Link your wallet address for future token distributions.</p>
@@ -473,6 +482,21 @@
             
             if (currentUserData.wallet_address) {
                 document.getElementById("wallet-input").value = currentUserData.wallet_address;
+            }
+        }
+
+        // -------------------------------------------------------------
+        // Referral Share Handler
+        // -------------------------------------------------------------
+        function shareReferralLink() {
+            const refLink = `https://t.me/Tmxqunbot?start=${user.id}`;
+            const shareText = encodeURIComponent("⚡ Join me on TMX-QUANTUM! Mine TMX tokens, complete tasks, and earn rewards together!");
+            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${shareText}`;
+            
+            if (tg.openTelegramLink) {
+                tg.openTelegramLink(shareUrl);
+            } else {
+                window.open(shareUrl, '_blank');
             }
         }
 
