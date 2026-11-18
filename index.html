@@ -775,7 +775,48 @@
   </script>
 
   <p style="font-size: 13px; opacity: 0.85; text-align: center; margin: 16px auto; padding: 0 12px;">
-    TMX-QUANTUM is a Web3 Telegram Mini App powered by The Open Network (TON) blockchain, enabling users to mine TMX tokens and earn community rewards.
+    // Initialize TON Connect UI
+let tonConnectUI = null;
+try {
+    tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+        manifestUrl: 'https://tmxquantum.vercel.app/tonconnect-manifest.json',
+        buttonRootId: 'ton-connect-button'
+    });
+
+    console.log("TON Connect UI initialized successfully.");
+
+    // Listen to wallet connection changes
+    tonConnectUI.onStatusChange(async (wallet) => {
+        if (wallet) {
+            const address = wallet.account.address;
+            console.log("Wallet connected:", address);
+            
+            try {
+                const response = await fetch(`${CONFIG.backendUrl}/api/wallet/save`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ user_id: user.id, wallet_address: address })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    tg.showAlert("TON Wallet address saved successfully!");
+                } else {
+                    tg.showAlert("Failed to save wallet address.");
+                }
+            } catch (err) {
+                tg.showAlert("Network error saving wallet.");
+            }
+        }
+    });
+} catch (error) {
+    console.error("Failed to initialize TON Connect UI:", error);
+}
+
+try {
+    const response = await fetch(`${CONFIG.backendUrl}/api/wallet/save`, {
+        // ... rest of your existing code continues here
+
+          TMX-QUANTUM is a Web3 Telegram Mini App powered by The Open Network (TON) blockchain, enabling users to mine TMX tokens and earn community rewards.
   </p>
 </body>
 </html>
