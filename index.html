@@ -1,17 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-        <meta charset="UTF-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TMX-QUANTUM Mini App</title>
     
-    <!-- Add TON Connect SDK script here -->
+    <!-- TON Connect SDK -->
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
 
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- Adsgram Rewarded SDK -->
     <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+
+    <style>
         :root {
             --bg-color: #0f172a;
             --card-bg: rgba(30, 41, 59, 0.7);
@@ -175,7 +177,7 @@
         .btn-success { background-color: #10b981; color: white; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* Cards & Lists (Tasks, Leaderboard, Profile) */
+        /* Cards & Lists */
         .card {
             background: var(--card-bg);
             border-radius: 14px;
@@ -301,9 +303,7 @@
         <div id="view-tasks" class="view-section">
             <h3 style="margin-bottom: 4px;">Earn Free TMX</h3>
             <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">Complete social missions to boost your balance.</p>
-            <div id="tasks-list" style="display: flex; flex-direction: column; gap: 10px;">
-                <!-- Populated dynamically via JS -->
-            </div>
+            <div id="tasks-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
         </div>
 
         <!-- TAB 3: DAILY & SPIN -->
@@ -328,9 +328,7 @@
         <!-- TAB 4: LEADERBOARD -->
         <div id="view-leaderboard" class="view-section">
             <h3>🏆 Top Miners Leaderboard</h3>
-            <div id="leaderboard-list" style="display: flex; flex-direction: column; gap: 8px;">
-                <!-- Populated dynamically via JS -->
-            </div>
+            <div id="leaderboard-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
         </div>
 
         <!-- TAB 5: PROFILE & WALLET -->
@@ -342,7 +340,6 @@
                 <p><strong>Referrals Count:</strong> <span id="prof-refs">0</span></p>
             </div>
 
-            <!-- Referral Card Section Added -->
             <div class="card">
                 <h3>🤝 Invite Friends</h3>
                 <p style="font-size: 13px; color: var(--text-secondary);">Earn +500 TMX for every friend who joins your mining network!</p>
@@ -351,9 +348,14 @@
                 </button>
             </div>
 
+            <!-- TON Wallet Connect Section with Native Connect Button Container -->
             <div class="card">
                 <h3>💎 TON Wallet Connect</h3>
-                <p style="font-size: 13px; color: var(--text-secondary);">Link your wallet address for future token distributions.</p>
+                <p style="font-size: 13px; color: var(--text-secondary);">Connect your wallet via TON Connect or enter address manually.</p>
+                
+                <!-- Native TON Connect UI Button Container -->
+                <div id="ton-connect-button" style="margin: 6px 0;"></div>
+
                 <input type="text" id="wallet-input" placeholder="Paste TON Wallet Address..." style="padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(15, 23, 42, 0.8); color: white; outline: none;">
                 <button class="btn btn-primary" onclick="saveWallet()">Save Wallet Address</button>
             </div>
@@ -390,7 +392,7 @@
         // App Configuration & State
         // -------------------------------------------------------------
         const CONFIG = {
-            backendUrl: "https://tmxquantum-ten.vercel.app", // Matches your FastAPI backend
+            backendUrl: "https://tmxquantum-ten.vercel.app",
             adsgramBlockId: "40165",
             sessionDuration: 15,
             pointsPerTap: 1
@@ -422,10 +424,51 @@
             AdController = window.Adsgram.init({ blockId: CONFIG.adsgramBlockId });
         }
 
-        // Initialize App on Load
+        // Initialize App on Load & Set up TON Connect UI
         window.addEventListener("DOMContentLoaded", () => {
             initializeUserSession();
+            initTonConnect();
         });
+
+        // -------------------------------------------------------------
+        // TON Connect UI Initialization & Integration
+        // -------------------------------------------------------------
+        let tonConnectUI = null;
+        function initTonConnect() {
+            try {
+                tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+                    manifestUrl: 'https://tmxquantum.vercel.app/tonconnect-manifest.json',
+                    buttonRootId: 'ton-connect-button'
+                });
+
+                console.log("TON Connect UI initialized successfully.");
+
+                tonConnectUI.onStatusChange(async (wallet) => {
+                    if (wallet) {
+                        const address = wallet.account.address;
+                        console.log("Wallet connected:", address);
+                        document.getElementById("wallet-input").value = address;
+                        
+                        try {
+                            const response = await fetch(`${CONFIG.backendUrl}/api/wallet/save`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ user_id: user.id, wallet_address: address })
+                            });
+                            if (response.ok) {
+                                tg.showAlert("TON Wallet address saved successfully via TON Connect!");
+                            } else {
+                                tg.showAlert("Failed to save wallet address on backend.");
+                            }
+                        } catch (err) {
+                            tg.showAlert("Network error saving wallet.");
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error("Failed to initialize TON Connect UI:", error);
+            }
+        }
 
         // -------------------------------------------------------------
         // Tab Navigation Controller
@@ -747,7 +790,7 @@
         }
 
         // -------------------------------------------------------------
-        // Wallet Save
+        // Manual Wallet Save
         // -------------------------------------------------------------
         async function saveWallet() {
             const address = document.getElementById("wallet-input").value.trim();
@@ -772,51 +815,10 @@
                 tg.showAlert("Network error saving wallet.");
             }
         }
-  </script>
+    </script>
 
-  <p style="font-size: 13px; opacity: 0.85; text-align: center; margin: 16px auto; padding: 0 12px;">
-    // Initialize TON Connect UI
-let tonConnectUI = null;
-try {
-    tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-        manifestUrl: 'https://tmxquantum.vercel.app/tonconnect-manifest.json',
-        buttonRootId: 'ton-connect-button'
-    });
-
-    console.log("TON Connect UI initialized successfully.");
-
-    // Listen to wallet connection changes
-    tonConnectUI.onStatusChange(async (wallet) => {
-        if (wallet) {
-            const address = wallet.account.address;
-            console.log("Wallet connected:", address);
-            
-            try {
-                const response = await fetch(`${CONFIG.backendUrl}/api/wallet/save`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ user_id: user.id, wallet_address: address })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    tg.showAlert("TON Wallet address saved successfully!");
-                } else {
-                    tg.showAlert("Failed to save wallet address.");
-                }
-            } catch (err) {
-                tg.showAlert("Network error saving wallet.");
-            }
-        }
-    });
-} catch (error) {
-    console.error("Failed to initialize TON Connect UI:", error);
-}
-
-try {
-    const response = await fetch(`${CONFIG.backendUrl}/api/wallet/save`, {
-        // ... rest of your existing code continues here
-
-          TMX-QUANTUM is a Web3 Telegram Mini App powered by The Open Network (TON) blockchain, enabling users to mine TMX tokens and earn community rewards.
-  </p>
+    <p style="font-size: 13px; opacity: 0.85; text-align: center; margin: 16px auto; padding: 0 12px;">
+        TMX-QUANTUM is a Web3 Telegram Mini App powered by The Open Network (TON) blockchain, enabling users to mine TMX tokens and earn community rewards.
+    </p>
 </body>
 </html>
