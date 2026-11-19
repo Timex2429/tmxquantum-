@@ -4,9 +4,25 @@
     {
       "src": "main.py",
       "use": "@vercel/python"
+    },
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "tonconnect-manifest.json",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
+    {
+      "src": "/tonconnect-manifest.json",
+      "dest": "/tonconnect-manifest.json"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
+    },
     {
       "src": "/(.*)",
       "dest": "main.py"
