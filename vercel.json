@@ -14,7 +14,7 @@
       "use": "@vercel/static"
     },
     {
-      "src": "logo.png",
+      "src": "1795016818399.jpg",
       "use": "@vercel/static"
     }
   ],
@@ -24,8 +24,8 @@
       "dest": "/tonconnect-manifest.json"
     },
     {
-      "src": "/logo.png",
-      "dest": "/logo.png"
+      "src": "/1795016818399.jpg",
+      "dest": "/1795016818399.jpg"
     },
     {
       "src": "/",
