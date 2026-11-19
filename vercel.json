@@ -12,12 +12,20 @@
     {
       "src": "tonconnect-manifest.json",
       "use": "@vercel/static"
+    },
+    {
+      "src": "logo.png",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/tonconnect-manifest.json",
       "dest": "/tonconnect-manifest.json"
+    },
+    {
+      "src": "/logo.png",
+      "dest": "/logo.png"
     },
     {
       "src": "/",
