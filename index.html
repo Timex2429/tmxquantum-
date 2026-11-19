@@ -4,6 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TMX-QUANTUM Mini App</title>
+
+    <!-- Official TMX-QUANTUM Social & Ecosystem Identity -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "TMX-QUANTUM",
+      "url": "https://tmxquantum.vercel.app",
+      "email": "tmxquantum@gmail.com",
+      "sameAs": [
+        "https://www.facebook.com/profile.php?id=61595898467380",
+        "https://t.me/Tmxqunbot",
+        "https://x.com/timex2429",
+        "https://t.me/Tmxqun_official"
+      ]
+    }
+    </script>
     
     <!-- TON Connect SDK -->
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
@@ -15,13 +32,19 @@
 
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.7);
+            /* TMX-QUANTUM Brand Color Palette */
+            --bg-color: #0c081e; /* Deeper cosmic blue-violet */
+            --card-bg: rgba(30, 16, 62, 0.5); /* Semi-transparent quantum purple */
             --text-color: #f8fafc;
-            --text-secondary: #94a3b8;
-            --accent-color: #0088cc;
-            --accent-gold: #ffd700;
-            --border-color: rgba(255, 255, 255, 0.08);
+            --text-secondary: #a78bfa; /* Lavender tint */
+            --accent-color: #00f5ff; /* Neural Cyan */
+            --accent-blue: #0088cc; /* Electric Blue */
+            --accent-gold: #ffd700; /* Cyber Gold */
+            --accent-purple: #7b2cbf; /* Quantum Purple */
+            --border-color: rgba(123, 44, 191, 0.25); /* Glowing Purple Border */
+            --border-glow: 0 0 8px rgba(123, 44, 191, 0.4);
+            --neon-glow: 0 0 12px rgba(0, 245, 255, 0.5);
+            --gold-glow: 0 0 12px rgba(255, 215, 0, 0.5);
         }
 
         * {
@@ -33,6 +56,12 @@
 
         body {
             background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 50% 10%, rgba(123, 44, 191, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 10% 80%, rgba(0, 136, 204, 0.1) 0%, transparent 40%),
+                linear-gradient(rgba(255, 255, 255, 0.007) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.007) 1px, transparent 1px);
+            background-size: auto, auto, 20px 20px, 20px 20px; /* Futuristic cosmic grid overlay */
             color: var(--text-color);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex;
@@ -48,8 +77,10 @@
             justify-content: space-between;
             align-items: center;
             padding: 14px 20px;
-            background: var(--card-bg);
-            border-bottom: 1px solid var(--border-color);
+            background: rgba(20, 11, 46, 0.85);
+            backdrop-filter: blur(8px);
+            border-bottom: 1.5px solid var(--border-color);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), var(--border-glow);
             font-size: 14px;
             font-weight: 600;
         }
@@ -60,6 +91,8 @@
             padding: 6px 12px;
             border-radius: 20px;
             border: 1px solid rgba(255, 215, 0, 0.3);
+            text-shadow: 0 0 4px rgba(255, 215, 0, 0.3);
+            box-shadow: inset 0 0 6px rgba(255, 215, 0, 0.1), var(--gold-glow);
         }
 
         /* Main Viewport Container */
@@ -90,7 +123,9 @@
             background: var(--card-bg);
             padding: 12px;
             border-radius: 16px;
-            border: 1px solid var(--border-color);
+            border: 1.5px solid var(--border-color);
+            box-shadow: var(--border-glow);
+            backdrop-filter: blur(4px);
         }
 
         .stat-box {
@@ -102,6 +137,7 @@
             color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 1px;
+            font-weight: 700;
         }
 
         .stat-value {
@@ -109,6 +145,7 @@
             font-weight: bold;
             color: var(--accent-gold);
             margin-top: 4px;
+            text-shadow: 0 0 4px rgba(255, 215, 0, 0.4);
         }
 
         /* Game Canvas Container */
@@ -118,36 +155,61 @@
             align-items: center;
             justify-content: center;
             margin: 30px 0;
+            position: relative;
+        }
+
+        /* Ambient Outer Glow for the Tap Button */
+        .game-container::before {
+            content: '';
+            position: absolute;
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(123, 44, 191, 0.25) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
         }
 
         .tap-button {
             position: relative;
+            z-index: 1;
             width: 200px;
             height: 200px;
             border-radius: 50%;
-            background: radial-gradient(circle, #0088cc 0%, #004466 100%);
-            border: 4px solid var(--accent-gold);
-            box-shadow: 0 0 30px rgba(0, 136, 204, 0.4);
+            background: radial-gradient(circle, #7b2cbf 0%, #1a083a 70%, #0c081e 100%);
+            border: 3.5px solid var(--accent-gold);
+            box-shadow: 
+                0 0 35px rgba(123, 44, 191, 0.5), 
+                inset 0 0 20px rgba(0, 245, 255, 0.25),
+                var(--gold-glow);
             cursor: pointer;
             outline: none;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: transform 0.08s ease;
+            transition: transform 0.08s ease, box-shadow 0.1s ease;
         }
 
         .tap-button:active {
             transform: scale(0.92);
+            box-shadow: 
+                0 0 20px rgba(123, 44, 191, 0.4), 
+                inset 0 0 10px rgba(0, 245, 255, 0.15),
+                0 0 6px rgba(255, 215, 0, 0.3);
         }
 
-        .tap-icon { font-size: 56px; }
+        .tap-icon { 
+            font-size: 56px;
+            filter: drop-shadow(0 0 8px rgba(0, 245, 255, 0.6));
+        }
+        
         .tap-text {
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 800;
             color: var(--text-color);
             margin-top: 6px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.6), 0 2px 4px rgba(0,0,0,0.8);
+            letter-spacing: 0.5px;
         }
 
         /* Controls Section */
@@ -161,7 +223,7 @@
             width: 100%;
             padding: 14px;
             border-radius: 12px;
-            border: none;
+            border: 1px solid rgba(255, 255, 255, 0.15);
             font-size: 15px;
             font-weight: bold;
             cursor: pointer;
@@ -169,37 +231,178 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            transition: opacity 0.2s;
+            transition: transform 0.1s ease, filter 0.2s, box-shadow 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
 
-        .btn-primary { background-color: var(--accent-color); color: white; }
-        .btn-ad { background: linear-gradient(135deg, #ffd700, #ff8800); color: #000; }
-        .btn-success { background-color: #10b981; color: white; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary { 
+            background: linear-gradient(135deg, #0088cc, #005580); 
+            color: white; 
+            border-color: #00f5ff;
+        }
+        .btn-primary:not(:disabled):hover {
+            box-shadow: var(--neon-glow), 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn-ad { 
+            background: linear-gradient(135deg, #ffd700, #ff8800); 
+            color: #0c081e; 
+            border-color: #fff2a3;
+        }
+        .btn-ad:not(:disabled):hover {
+            box-shadow: var(--gold-glow), 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn-success { 
+            background: linear-gradient(135deg, #10b981, #065f46); 
+            color: white; 
+            border-color: #34d399;
+        }
+        .btn-success:not(:disabled):hover {
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn-secondary { 
+            background: linear-gradient(135deg, #311c52, #1b0a33); 
+            color: var(--text-color); 
+            border-color: var(--border-color); 
+        }
+        .btn-secondary:not(:disabled):hover {
+            box-shadow: var(--border-glow), 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
 
         /* Cards & Lists */
         .card {
             background: var(--card-bg);
             border-radius: 14px;
             padding: 16px;
-            border: 1px solid var(--border-color);
+            border: 1.5px solid var(--border-color);
             display: flex;
             flex-direction: column;
             gap: 12px;
+            box-shadow: var(--border-glow);
+            backdrop-filter: blur(4px);
         }
 
         .list-item {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            gap: 10px;
             padding: 12px;
-            background: rgba(15, 23, 42, 0.6);
+            background: rgba(12, 8, 30, 0.7);
             border-radius: 10px;
             border: 1px solid var(--border-color);
+            transition: border-color 0.2s;
         }
 
-        .item-info h4 { font-size: 14px; margin-bottom: 2px; }
-        .item-info p { font-size: 12px; color: var(--accent-gold); }
+        .list-item:hover {
+            border-color: rgba(0, 245, 255, 0.4);
+        }
+
+        .list-item-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .task-verify-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .task-input, .support-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1.5px solid var(--border-color);
+            background: rgba(12, 8, 30, 0.95);
+            color: var(--text-color);
+            font-size: 13px;
+            outline: none;
+            user-select: text;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .task-input:focus, .support-textarea:focus {
+            border-color: var(--accent-color);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5), var(--neon-glow);
+        }
+
+        .support-textarea {
+            min-height: 76px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .task-actions, .channel-links-grid {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .channel-links-grid .btn {
+            flex: 1 1 calc(50% - 4px);
+            padding: 10px 12px;
+            font-size: 13px;
+        }
+
+        .faq-item {
+            background: rgba(12, 8, 30, 0.6);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+
+        .faq-item:hover {
+            border-color: rgba(0, 245, 255, 0.3);
+        }
+
+        .faq-question {
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            padding: 12px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .faq-answer {
+            display: none;
+            padding: 0 12px 12px;
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--text-secondary);
+            user-select: text;
+            border-top: 1px solid rgba(123, 44, 191, 0.1);
+            margin-top: 2px;
+            padding-top: 10px;
+        }
+
+        .faq-item.open .faq-answer {
+            display: block;
+        }
+
+        .item-info h4 { font-size: 14px; margin-bottom: 2px; font-weight: 700; }
+        .item-info p { font-size: 12px; color: var(--accent-gold); text-shadow: 0 0 2px rgba(255, 215, 0, 0.2); }
 
         /* Bottom Navigation Bar */
         .nav-bar {
@@ -208,14 +411,15 @@
             left: 0;
             width: 100%;
             height: 70px;
-            background: rgba(15, 23, 42, 0.95);
+            background: rgba(12, 8, 30, 0.95);
             backdrop-filter: blur(10px);
-            border-top: 1px solid var(--border-color);
+            border-top: 1.5px solid var(--border-color);
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             align-items: center;
             padding: 0 6px;
             z-index: 100;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5), var(--border-glow);
         }
 
         .nav-item {
@@ -229,28 +433,42 @@
             font-size: 10px;
             cursor: pointer;
             padding: 8px 0;
-            transition: color 0.2s;
+            transition: color 0.2s, transform 0.1s;
         }
 
         .nav-item.active {
             color: var(--accent-gold);
+            text-shadow: 0 0 6px rgba(255, 215, 0, 0.4);
         }
 
-        .nav-icon { font-size: 20px; }
+        .nav-item:active {
+            transform: scale(0.95);
+        }
+
+        .nav-icon { 
+            font-size: 20px; 
+            transition: filter 0.2s;
+        }
+
+        .nav-item.active .nav-icon {
+            filter: drop-shadow(0 0 5px var(--accent-gold));
+        }
 
         /* Floating Animation */
         .tap-effect {
             position: absolute;
             color: var(--accent-gold);
-            font-weight: bold;
-            font-size: 22px;
+            text-shadow: var(--gold-glow);
+            font-weight: 800;
+            font-size: 24px;
             pointer-events: none;
             animation: floatUp 0.7s ease-out forwards;
         }
 
         @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-45px); }
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            50% { opacity: 1; }
+            100% { opacity: 0; transform: translateY(-55px) scale(0.85); }
         }
     </style>
 </head>
@@ -302,7 +520,7 @@
         <!-- TAB 2: TASKS & MISSIONS -->
         <div id="view-tasks" class="view-section">
             <h3 style="margin-bottom: 4px;">Earn Free TMX</h3>
-            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">Complete social missions to boost your balance.</p>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">Open the social page, complete the action, enter your handle, and verify to claim.</p>
             <div id="tasks-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
         </div>
 
@@ -331,7 +549,7 @@
             <div id="leaderboard-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
         </div>
 
-        <!-- TAB 5: PROFILE & WALLET -->
+        <!-- TAB 5: PROFILE, WALLET & SUPPORT -->
         <div id="view-profile" class="view-section">
             <div class="card">
                 <h3>👤 Miner Profile</h3>
@@ -342,9 +560,12 @@
 
             <div class="card">
                 <h3>🤝 Invite Friends</h3>
-                <p style="font-size: 13px; color: var(--text-secondary);">Earn +500 TMX for every friend who joins your mining network!</p>
-                <button class="btn btn-ad" onclick="shareReferralLink()">
-                    📤 Share Invite Link
+                <p style="font-size: 13px; color: var(--text-secondary);">Earn +500 TMX for every friend who joins your mining network! Share inside Telegram or on any external app.</p>
+                <button class="btn btn-ad" onclick="shareInsideTelegram()">
+                    ✈️ Share Inside Telegram
+                </button>
+                <button class="btn btn-secondary" onclick="shareOutsideTelegram()">
+                    🌐 Share Outside Telegram / Copy Link
                 </button>
             </div>
 
@@ -358,6 +579,72 @@
 
                 <input type="text" id="wallet-input" placeholder="Paste TON Wallet Address..." style="padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(15, 23, 42, 0.8); color: white; outline: none;">
                 <button class="btn btn-primary" onclick="saveWallet()">Save Wallet Address</button>
+            </div>
+
+            <!-- Support & Contact Channels -->
+            <div class="card">
+                <h3>🛟 Support & Official Channels</h3>
+                <p style="font-size: 13px; color: var(--text-secondary);">Contact us at <strong style="color: var(--text-color); user-select: text;">tmxquantum@gmail.com</strong> or reach out via our official channels below.</p>
+
+                <div class="channel-links-grid">
+                    <button class="btn btn-secondary" onclick="openEmailSupport()">📧 Email Support</button>
+                    <button class="btn btn-secondary" onclick="copySupportEmail()">📋 Copy Email</button>
+                    <button class="btn btn-secondary" onclick="openExternalLink(OFFICIAL_LINKS.telegramChannel)">📢 TG Channel</button>
+                    <button class="btn btn-secondary" onclick="openExternalLink(OFFICIAL_LINKS.x)">𝕏 Official X</button>
+                    <button class="btn btn-secondary" onclick="openExternalLink(OFFICIAL_LINKS.facebook)">📘 Facebook</button>
+                    <button class="btn btn-secondary" onclick="openExternalLink(OFFICIAL_LINKS.telegramBot)">🤖 Bot Home</button>
+                </div>
+
+                <textarea id="support-message-input" class="support-textarea" placeholder="Describe your issue (e.g., task verification, score save, or wallet connection)..."></textarea>
+                <button class="btn btn-primary" onclick="sendOrCopySupportRequest()">
+                    ✉️ Send via Email & Copy Ticket
+                </button>
+            </div>
+
+            <!-- Frequently Asked Questions (FAQs) -->
+            <div class="card">
+                <h3>❓ Frequently Asked Questions (FAQ)</h3>
+                <div id="faq-list" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div class="faq-item">
+                        <button type="button" class="faq-question" onclick="toggleFaq(this)">
+                            <span>How does a 15-second mining session work?</span>
+                            <span>+</span>
+                        </button>
+                        <div class="faq-answer">
+                            Tap the ⚡ button to start a 15-second session, tap as fast as you can to build your session score, optionally watch a rewarded ad for a 2X boost, and tap "Submit Score & Save" to store your TMX balance.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button type="button" class="faq-question" onclick="toggleFaq(this)">
+                            <span>Why do social tasks require waiting and entering my handle?</span>
+                            <span>+</span>
+                        </button>
+                        <div class="faq-answer">
+                            To keep rewards fair and prevent instant reward farming, open the official Facebook, X, or Telegram channel link, spend at least 10 seconds completing the action, enter your @username or profile name, and then tap "Verify & Claim".
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button type="button" class="faq-question" onclick="toggleFaq(this)">
+                            <span>How do I connect or update my TON wallet?</span>
+                            <span>+</span>
+                        </button>
+                        <div class="faq-answer">
+                            Go to Profile → TON Wallet Connect to connect a compatible TON wallet via TON Connect, or paste your TON address manually and tap "Save Wallet Address".
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button type="button" class="faq-question" onclick="toggleFaq(this)">
+                            <span>How can I contact TMX-QUANTUM support?</span>
+                            <span>+</span>
+                        </button>
+                        <div class="faq-answer">
+                            You can email tmxquantum@gmail.com directly, use the "Send via Email & Copy Ticket" button in Support, or message through our official Telegram channel and social links.
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -389,21 +676,58 @@
 
     <script>
         // -------------------------------------------------------------
-        // App Configuration & State
+        // App Configuration & Official Social Links
         // -------------------------------------------------------------
         const CONFIG = {
             backendUrl: "https://tmxquantum-ten.vercel.app",
+            webAppUrl: "https://tmxquantum.vercel.app",
+            botUsername: "Tmxqunbot",
             adsgramBlockId: "40165",
             sessionDuration: 15,
-            pointsPerTap: 1
+            pointsPerTap: 1,
+            taskMinSeconds: 10
         };
 
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        tg.ready();
+        const OFFICIAL_LINKS = {
+            supportEmail: "tmxquantum@gmail.com",
+            facebook: "https://www.facebook.com/profile.php?id=61595898467380",
+            telegramBot: "https://t.me/Tmxqunbot",
+            x: "https://x.com/timex2429",
+            telegramChannel: "https://t.me/Tmxqun_official"
+        };
 
-        const user = tg.initDataUnsafe?.user || { id: 99999, username: "TestMiner", first_name: "Miner" };
-        const startParam = tg.initDataUnsafe?.start_param ? parseInt(tg.initDataUnsafe.start_param) : null;
+        const FALLBACK_TASKS = [
+            {
+                task_id: "follow_facebook",
+                title: "Follow TMX-QUANTUM on Facebook",
+                reward: 250,
+                link: OFFICIAL_LINKS.facebook,
+                completed: false
+            },
+            {
+                task_id: "follow_x",
+                title: "Follow TMX-QUANTUM on X (@timex2429)",
+                reward: 250,
+                link: OFFICIAL_LINKS.x,
+                completed: false
+            },
+            {
+                task_id: "join_telegram_channel",
+                title: "Join TMX-QUANTUM Official Channel",
+                reward: 250,
+                link: OFFICIAL_LINKS.telegramChannel,
+                completed: false
+            }
+        ];
+
+        const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+        if (tg) {
+            tg.expand();
+            tg.ready();
+        }
+
+        const user = tg?.initDataUnsafe?.user || { id: 99999, username: "TestMiner", first_name: "Miner" };
+        const startParam = tg?.initDataUnsafe?.start_param ? parseInt(tg.initDataUnsafe.start_param) : null;
 
         let currentUserData = {
             balance: 0,
@@ -418,10 +742,32 @@
         let gameActive = false;
         let timerInterval = null;
         let multiplier = 1;
+        const taskStartedAt = {};
 
         let AdController = null;
         if (window.Adsgram) {
             AdController = window.Adsgram.init({ blockId: CONFIG.adsgramBlockId });
+        }
+
+        function notifyUser(message) {
+            if (tg && typeof tg.showAlert === "function") {
+                try {
+                    tg.showAlert(message);
+                    return;
+                } catch (_) {
+                    // Fallback outside supported Telegram alert context
+                }
+            }
+            alert(message);
+        }
+
+        function openExternalLink(url) {
+            if (!url) return;
+            if (tg && typeof tg.openLink === "function") {
+                tg.openLink(url);
+            } else {
+                window.open(url, "_blank", "noopener,noreferrer");
+            }
         }
 
         // Initialize App on Load & Set up TON Connect UI
@@ -441,12 +787,9 @@
                     buttonRootId: 'ton-connect-button'
                 });
 
-                console.log("TON Connect UI initialized successfully.");
-
                 tonConnectUI.onStatusChange(async (wallet) => {
                     if (wallet) {
                         const address = wallet.account.address;
-                        console.log("Wallet connected:", address);
                         document.getElementById("wallet-input").value = address;
                         
                         try {
@@ -456,12 +799,12 @@
                                 body: JSON.stringify({ user_id: user.id, wallet_address: address })
                             });
                             if (response.ok) {
-                                tg.showAlert("TON Wallet address saved successfully via TON Connect!");
+                                notifyUser("TON Wallet address saved successfully via TON Connect!");
                             } else {
-                                tg.showAlert("Failed to save wallet address on backend.");
+                                notifyUser("Failed to save wallet address on backend.");
                             }
                         } catch (err) {
-                            tg.showAlert("Network error saving wallet.");
+                            notifyUser("Network error saving wallet.");
                         }
                     }
                 });
@@ -530,25 +873,109 @@
         }
 
         // -------------------------------------------------------------
-        // Referral Share Handler
+        // Share Handler (Inside & Outside Telegram)
         // -------------------------------------------------------------
-        function shareReferralLink() {
-            const refLink = `https://t.me/Tmxqunbot?start=${user.id}`;
+        function getShareDetails() {
+            const refLink = `https://t.me/${CONFIG.botUsername}?start=${user.id}`;
+            const message = `⚡ Join me on TMX-QUANTUM! Mine TMX tokens, complete tasks, and earn rewards together.\nTelegram: ${refLink}\nWeb: ${CONFIG.webAppUrl}`;
+            return { refLink, message };
+        }
+
+        function shareInsideTelegram() {
+            const { refLink } = getShareDetails();
             const shareText = encodeURIComponent("⚡ Join me on TMX-QUANTUM! Mine TMX tokens, complete tasks, and earn rewards together!");
             const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${shareText}`;
-            
-            if (tg.openTelegramLink) {
+
+            if (tg && typeof tg.openTelegramLink === "function") {
                 tg.openTelegramLink(shareUrl);
             } else {
-                window.open(shareUrl, '_blank');
+                window.open(shareUrl, '_blank', 'noopener,noreferrer');
             }
+        }
+
+        async function shareOutsideTelegram() {
+            const { refLink, message } = getShareDetails();
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: "TMX-QUANTUM",
+                        text: message,
+                        url: refLink
+                    });
+                    return;
+                } catch (err) {
+                    if (err && err.name === "AbortError") return;
+                }
+            }
+
+            try {
+                await navigator.clipboard.writeText(message);
+                notifyUser("Invite link and message copied! Paste it anywhere outside Telegram.");
+            } catch (_) {
+                notifyUser(`Copy & share this invite link:\n${refLink}`);
+            }
+        }
+
+        // -------------------------------------------------------------
+        // Support & FAQ Helpers
+        // -------------------------------------------------------------
+        function toggleFaq(buttonEl) {
+            const item = buttonEl.closest(".faq-item");
+            if (!item) return;
+            item.classList.toggle("open");
+            const indicator = buttonEl.querySelector("span:last-child");
+            if (indicator) {
+                indicator.innerText = item.classList.contains("open") ? "−" : "+";
+            }
+        }
+
+        function openEmailSupport(subject = "TMX-QUANTUM Support Request", body = "") {
+            const mailtoUrl = `mailto:${OFFICIAL_LINKS.supportEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            window.location.href = mailtoUrl;
+        }
+
+        async function copySupportEmail() {
+            try {
+                await navigator.clipboard.writeText(OFFICIAL_LINKS.supportEmail);
+                notifyUser(`Support email copied: ${OFFICIAL_LINKS.supportEmail}`);
+            } catch (_) {
+                notifyUser(`Support email: ${OFFICIAL_LINKS.supportEmail}`);
+            }
+        }
+
+        async function sendOrCopySupportRequest() {
+            const inputEl = document.getElementById("support-message-input");
+            const details = inputEl ? inputEl.value.trim() : "";
+            if (details.length < 4) {
+                notifyUser("Please enter a short description of what you need help with first.");
+                return;
+            }
+
+            const username = document.getElementById("prof-username")?.innerText || user.username || "Miner";
+            const ticketText = [
+                "TMX-QUANTUM Support Request",
+                `User ID: ${user.id}`,
+                `Username: ${username}`,
+                `Balance: ${currentUserData.balance} TMX`,
+                `Issue: ${details}`
+            ].join("\n");
+
+            try {
+                await navigator.clipboard.writeText(ticketText);
+            } catch (_) {
+                // Continue even if clipboard permission is restricted
+            }
+
+            notifyUser(`Ticket copied! Opening email draft to ${OFFICIAL_LINKS.supportEmail}.`);
+            openEmailSupport(`TMX-QUANTUM Support (User ${user.id})`, ticketText);
         }
 
         // -------------------------------------------------------------
         // Game Mechanics
         // -------------------------------------------------------------
         function handleTap(event) {
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
+            if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
 
             if (!gameActive && timeLeft === CONFIG.sessionDuration) {
                 startGame();
@@ -585,7 +1012,7 @@
             document.getElementById("claim-btn").disabled = false;
             if (AdController) document.getElementById("ad-btn").disabled = false;
 
-            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+            if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
         }
 
         function createTapAnimation(event) {
@@ -606,7 +1033,7 @@
 
         async function watchAdFor2x() {
             if (!AdController) {
-                tg.showAlert("Ad network is initializing. Try again shortly.");
+                notifyUser("Ad network is initializing. Try again shortly.");
                 return;
             }
             try {
@@ -617,10 +1044,10 @@
                     document.getElementById("score").innerText = currentScore;
                     document.getElementById("ad-btn").disabled = true;
                     document.getElementById("ad-btn").innerText = "2X Boost Applied! ✨";
-                    tg.showAlert("Score successfully doubled!");
+                    notifyUser("Score successfully doubled!");
                 }
             } catch (err) {
-                tg.showAlert("Ad unavailable or canceled.");
+                notifyUser("Ad unavailable or canceled.");
             }
         }
 
@@ -638,12 +1065,12 @@
                 const data = await response.json();
                 if (response.ok) {
                     updateUserState({ ...currentUserData, balance: data.total_balance });
-                    tg.showAlert(`Successfully saved +${currentScore} TMX to your balance!`);
+                    notifyUser(`Successfully saved +${currentScore} TMX to your balance!`);
                 } else {
                     throw new Error(data.detail);
                 }
             } catch (err) {
-                tg.showAlert("Error saving score to database.");
+                notifyUser("Error saving score to database.");
             } finally {
                 resetGameUI();
             }
@@ -664,8 +1091,54 @@
         }
 
         // -------------------------------------------------------------
-        // Tasks & Missions Controller
+        // Tasks & Two-Step Verification Controller
         // -------------------------------------------------------------
+        function renderTasks(tasks) {
+            const listEl = document.getElementById("tasks-list");
+            listEl.innerHTML = "";
+
+            tasks.forEach(task => {
+                const taskId = task.task_id || task.id;
+                const taskLink = task.link || task.url || "";
+                const isDone = Boolean(task.completed || currentUserData.completed_tasks.includes(taskId));
+
+                listEl.innerHTML += `
+                    <div class="list-item">
+                        <div class="list-item-top">
+                            <div class="item-info">
+                                <h4>${task.title}</h4>
+                                <p>+${task.reward} TMX</p>
+                            </div>
+                            ${isDone
+                                ? '<span style="color: #10b981; font-weight: bold; font-size: 13px;">Completed</span>'
+                                : `<button class="btn btn-secondary" style="width: auto; padding: 8px 12px; font-size: 12px;" onclick="openTaskLink('${taskId}', '${taskLink}')">Open Link</button>`
+                            }
+                        </div>
+                        ${isDone ? "" : `
+                            <div class="task-verify-row">
+                                <input
+                                    type="text"
+                                    id="handle-${taskId}"
+                                    class="task-input"
+                                    placeholder="Enter your @username or profile name"
+                                >
+                                <div class="task-actions">
+                                    <button
+                                        id="verify-${taskId}"
+                                        class="btn btn-primary"
+                                        style="padding: 9px 12px; font-size: 12px;"
+                                        onclick="verifyAndClaimTask('${taskId}')"
+                                    >
+                                        Verify & Claim
+                                    </button>
+                                </div>
+                            </div>
+                        `}
+                    </div>
+                `;
+            });
+        }
+
         async function loadTasks() {
             const listEl = document.getElementById("tasks-list");
             listEl.innerHTML = "<p style='color:var(--text-secondary); text-align:center;'>Loading tasks...</p>";
@@ -673,48 +1146,84 @@
             try {
                 const response = await fetch(`${CONFIG.backendUrl}/api/tasks/${user.id}`);
                 const data = await response.json();
-                
-                if (response.ok && data.tasks) {
-                    listEl.innerHTML = "";
-                    data.tasks.forEach(task => {
-                        listEl.innerHTML += `
-                            <div class="list-item">
-                                <div class="item-info">
-                                    <h4>${task.title}</h4>
-                                    <p>+${task.reward} TMX</p>
-                                </div>
-                                ${task.completed ? 
-                                    '<span style="color: #10b981; font-weight: bold; font-size: 13px;">Completed</span>' : 
-                                    `<button class="btn btn-primary" style="width: auto; padding: 8px 14px; font-size: 13px;" onclick="claimTask('${task.task_id}', '${task.link}')">Start</button>`
-                                }
-                            </div>
-                        `;
-                    });
+                if (response.ok && Array.isArray(data.tasks) && data.tasks.length > 0) {
+                    renderTasks(data.tasks);
+                    return;
                 }
             } catch (err) {
-                listEl.innerHTML = "<p style='color: #ef4444; text-align:center;'>Failed to load missions.</p>";
+                console.warn("Falling back to local tasks list:", err);
+            }
+            renderTasks(FALLBACK_TASKS);
+        }
+
+        function openTaskLink(taskId, link) {
+            taskStartedAt[taskId] = Date.now();
+            if (link) {
+                openExternalLink(link);
+            }
+            const verifyBtn = document.getElementById(`verify-${taskId}`);
+            if (verifyBtn) {
+                let left = CONFIG.taskMinSeconds;
+                verifyBtn.disabled = true;
+                verifyBtn.innerText = `Verifying in ${left}s...`;
+                const interval = setInterval(() => {
+                    left -= 1;
+                    if (left > 0) {
+                        verifyBtn.innerText = `Verifying in ${left}s...`;
+                    } else {
+                        clearInterval(interval);
+                        verifyBtn.disabled = false;
+                        verifyBtn.innerText = "Verify & Claim";
+                    }
+                }, 1000);
             }
         }
 
-        async function claimTask(taskId, link) {
-            if (link) window.open(link, '_blank');
+        async function verifyAndClaimTask(taskId) {
+            const startedAt = taskStartedAt[taskId];
+            if (!startedAt) {
+                notifyUser("Please tap 'Open Link' first and complete the social action.");
+                return;
+            }
+
+            const elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
+            if (elapsedSeconds < CONFIG.taskMinSeconds) {
+                notifyUser(`Please spend at least ${CONFIG.taskMinSeconds}s on the page (${CONFIG.taskMinSeconds - elapsedSeconds}s left).`);
+                return;
+            }
+
+            const handleInput = document.getElementById(`handle-${taskId}`);
+            const socialHandle = handleInput ? handleInput.value.trim() : "";
+            if (socialHandle.length < 2) {
+                notifyUser("Please enter your social @username or profile name to verify.");
+                return;
+            }
 
             try {
                 const response = await fetch(`${CONFIG.backendUrl}/api/tasks/claim`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ user_id: user.id, task_id: taskId })
+                    body: JSON.stringify({
+                        user_id: user.id,
+                        task_id: taskId,
+                        social_handle: socialHandle,
+                        elapsed_seconds: elapsedSeconds
+                    })
                 });
                 const data = await response.json();
                 if (response.ok && data.status === "success") {
-                    updateUserState({ ...currentUserData, balance: data.total_balance, completed_tasks: data.completed_tasks });
-                    tg.showAlert(`Reward Claimed: +${data.reward} TMX!`);
+                    updateUserState({
+                        ...currentUserData,
+                        balance: data.total_balance,
+                        completed_tasks: data.completed_tasks || [...currentUserData.completed_tasks, taskId]
+                    });
+                    notifyUser(`Reward Claimed: +${data.reward} TMX!`);
                     loadTasks();
                 } else {
-                    tg.showAlert(data.message || "Task already claimed or pending verification.");
+                    notifyUser(data.message || data.detail || "Task already claimed or pending verification.");
                 }
             } catch (err) {
-                tg.showAlert("Error claiming task reward.");
+                notifyUser("Error claiming task reward.");
             }
         }
 
@@ -731,12 +1240,12 @@
                 const data = await response.json();
                 if (response.ok && data.status === "success") {
                     updateUserState({ ...currentUserData, balance: data.total_balance, daily_streak: data.streak });
-                    tg.showAlert(`Daily Streak Claimed! +${data.reward} TMX (Day ${data.streak})`);
+                    notifyUser(`Daily Streak Claimed! +${data.reward} TMX (Day ${data.streak})`);
                 } else {
-                    tg.showAlert(data.message || "Already claimed today!");
+                    notifyUser(data.message || "Already claimed today!");
                 }
             } catch (err) {
-                tg.showAlert("Error claiming daily reward.");
+                notifyUser("Error claiming daily reward.");
             }
         }
 
@@ -751,12 +1260,12 @@
                 if (response.ok && data.status === "success") {
                     updateUserState({ ...currentUserData, balance: data.total_balance });
                     document.getElementById("spin-result").innerText = `🎉 Won +${data.reward_won} TMX!`;
-                    tg.showAlert(`Spin Successful! Won ${data.reward_won} TMX`);
+                    notifyUser(`Spin Successful! Won ${data.reward_won} TMX`);
                 } else {
-                    tg.showAlert(data.message || "Spin on cooldown (Available every 12 hours).");
+                    notifyUser(data.message || "Spin on cooldown (Available every 12 hours).");
                 }
             } catch (err) {
-                tg.showAlert("Error spinning the wheel.");
+                notifyUser("Error spinning the wheel.");
             }
         }
 
@@ -795,7 +1304,7 @@
         async function saveWallet() {
             const address = document.getElementById("wallet-input").value.trim();
             if (!address) {
-                tg.showAlert("Please enter a valid wallet address.");
+                notifyUser("Please enter a valid wallet address.");
                 return;
             }
 
@@ -807,12 +1316,12 @@
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    tg.showAlert("TON Wallet address saved successfully!");
+                    notifyUser("TON Wallet address saved successfully!");
                 } else {
-                    tg.showAlert("Failed to save wallet address.");
+                    notifyUser("Failed to save wallet address.");
                 }
             } catch (err) {
-                tg.showAlert("Network error saving wallet.");
+                notifyUser("Network error saving wallet.");
             }
         }
     </script>
