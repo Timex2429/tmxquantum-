@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TMX-QUANTUM Mini App</title>
 
-    <!-- Official TMX-QUANTUM Organization & Social Identity -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -23,31 +22,11 @@
     }
     </script>
 
-    <!-- External SDKs -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js" defer></script>
     <script src="https://sad.adsgram.ai/js/sad.min.js" defer></script>
 
     <style>
-        :root {
-            --bg-cosmic: #0c081e;
-            --bg-panel: rgba(24, 13, 52, 0.85);
-            --bg-surface: rgba(12, 8, 30, 0.9);
-            --text-primary: #f8fafc;
-            --text-muted: #a78bfa;
-            --quantum-purple: #7b2cbf;
-            --neural-cyan: #00f5ff;
-            --electric-blue: #0088cc;
-            --cyber-gold: #ffd700;
-            --emerald-ok: #10b981;
-            --danger-red: #ef4444;
-            --border-quantum: rgba(123, 44, 191, 0.42);
-            --border-cyan: rgba(0, 245, 255, 0.35);
-            --glow-purple: 0 0 14px rgba(123, 44, 191, 0.45);
-            --glow-cyan: 0 0 14px rgba(0, 245, 255, 0.38);
-            --glow-gold: 0 0 14px rgba(255, 215, 0, 0.42);
-        }
-
         * {
             box-sizing: border-box;
             margin: 0;
@@ -57,34 +36,36 @@
 
         html, body {
             width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: var(--bg-cosmic);
-            color: var(--text-primary);
+            min-height: 100vh;
+            background-color: #0c081e;
+            color: #f8fafc;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
             background-image:
-                radial-gradient(circle at 50% 8%, rgba(123, 44, 191, 0.24) 0%, transparent 48%),
-                radial-gradient(circle at 85% 75%, rgba(0, 136, 204, 0.16) 0%, transparent 45%),
+                radial-gradient(circle at 50% 8%, rgba(123, 44, 191, 0.25) 0%, transparent 48%),
                 linear-gradient(rgba(0, 245, 255, 0.03) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0, 245, 255, 0.03) 1px, transparent 1px);
-            background-size: 100% 100%, 100% 100%, 24px 24px, 24px 24px;
-            display: flex;
-            flex-direction: column;
+            background-size: 100% 100%, 24px 24px, 24px 24px;
+            padding-top: 58px;
+            padding-bottom: 84px;
         }
 
         .global-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 58px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 10px;
-            padding: 12px 16px;
-            background: rgba(16, 9, 38, 0.95);
-            border-bottom: 1px solid var(--border-quantum);
-            flex-shrink: 0;
-            z-index: 20;
+            padding: 10px 16px;
+            background: #120a29;
+            border-bottom: 1px solid rgba(123, 44, 191, 0.45);
+            z-index: 50;
         }
 
         .brand-badge {
@@ -106,11 +87,11 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            color: var(--cyber-gold);
-            background: rgba(255, 215, 0, 0.12);
+            color: #ffd700;
+            background: rgba(255, 215, 0, 0.14);
             padding: 6px 12px;
             border-radius: 999px;
-            border: 1px solid rgba(255, 215, 0, 0.4);
+            border: 1px solid rgba(255, 215, 0, 0.45);
             font-size: 13px;
             font-weight: 700;
             white-space: nowrap;
@@ -118,67 +99,45 @@
 
         #runtime-error-banner {
             display: none;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            margin: 10px 16px 0;
+            margin: 10px auto 0;
+            max-width: 480px;
             padding: 10px 12px;
             border-radius: 10px;
-            background: rgba(239, 68, 68, 0.18);
+            background: rgba(239, 68, 68, 0.2);
             border: 1px solid rgba(239, 68, 68, 0.55);
             color: #fecaca;
             font-size: 12px;
-            line-height: 1.4;
-            z-index: 25;
-        }
-
-        #runtime-error-dismiss {
-            background: rgba(239, 68, 68, 0.3);
-            border: 1px solid rgba(254, 202, 202, 0.4);
-            color: #fecaca;
-            border-radius: 6px;
-            padding: 3px 8px;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            flex-shrink: 0;
         }
 
         .content-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            padding-bottom: 88px;
-            position: relative;
-            z-index: 10;
+            width: 100%;
+            padding: 14px 16px;
         }
 
         .view-section {
             display: none;
-            flex-direction: column;
-            gap: 14px;
             max-width: 480px;
             margin: 0 auto;
         }
 
         .view-section.active {
-            display: flex;
+            display: block;
         }
 
         .header-stats {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
-            background: var(--bg-panel);
+            background: rgba(24, 13, 52, 0.9);
             padding: 12px;
             border-radius: 16px;
-            border: 1px solid var(--border-quantum);
-            box-shadow: var(--glow-purple);
+            border: 1px solid rgba(123, 44, 191, 0.45);
+            margin-bottom: 18px;
         }
 
         .stat-box {
-            background: var(--bg-surface);
-            border: 1px solid rgba(123, 44, 191, 0.25);
+            background: rgba(12, 8, 30, 0.92);
+            border: 1px solid rgba(123, 44, 191, 0.28);
             border-radius: 12px;
             padding: 8px 6px;
             text-align: center;
@@ -186,7 +145,7 @@
 
         .stat-label {
             font-size: 10px;
-            color: var(--text-muted);
+            color: #a78bfa;
             text-transform: uppercase;
             letter-spacing: 0.8px;
             font-weight: 700;
@@ -195,50 +154,35 @@
         .stat-value {
             font-size: 18px;
             font-weight: 800;
-            color: var(--cyber-gold);
+            color: #ffd700;
             margin-top: 3px;
         }
 
         .game-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            margin: 18px 0;
+            text-align: center;
+            margin: 20px 0 24px;
             position: relative;
-        }
-
-        .game-container::before {
-            content: "";
-            position: absolute;
-            width: 240px;
-            height: 240px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(0, 245, 255, 0.16) 0%, rgba(123, 44, 191, 0.18) 50%, transparent 72%);
-            pointer-events: none;
         }
 
         .tap-button {
             position: relative;
-            z-index: 1;
             width: 196px;
             height: 196px;
             border-radius: 50%;
             background: radial-gradient(circle at 35% 30%, #9d4edd 0%, #3c096c 55%, #12072b 100%);
-            border: 3px solid var(--cyber-gold);
-            box-shadow: 0 0 28px rgba(123, 44, 191, 0.55), inset 0 0 18px rgba(0, 245, 255, 0.28);
+            border: 3px solid #ffd700;
+            box-shadow: 0 0 26px rgba(123, 44, 191, 0.55);
+            color: #f8fafc;
             cursor: pointer;
-            outline: none;
-            display: flex;
+            display: inline-flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: transform 0.08s ease;
             user-select: none;
         }
 
         .tap-button:active:not(:disabled) {
-            transform: scale(0.93);
+            transform: scale(0.94);
         }
 
         .tap-button:disabled {
@@ -254,7 +198,6 @@
         .tap-text {
             font-size: 14px;
             font-weight: 800;
-            color: var(--text-primary);
             margin-top: 8px;
             letter-spacing: 0.6px;
         }
@@ -262,15 +205,7 @@
         .session-hint {
             margin-top: 12px;
             font-size: 12px;
-            color: var(--text-muted);
-            text-align: center;
-            z-index: 1;
-        }
-
-        .controls, .stack-col {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            color: #a78bfa;
         }
 
         .btn {
@@ -285,12 +220,11 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            transition: transform 0.1s ease, opacity 0.2s ease;
-            user-select: none;
+            margin-bottom: 10px;
         }
 
-        .btn:active:not(:disabled) {
-            transform: scale(0.98);
+        .btn:last-child {
+            margin-bottom: 0;
         }
 
         .btn:disabled {
@@ -299,62 +233,52 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--electric-blue), #005b8a);
+            background: linear-gradient(135deg, #0088cc, #005b8a);
             color: #ffffff;
-            border-color: var(--border-cyan);
         }
 
         .btn-ad {
-            background: linear-gradient(135deg, var(--cyber-gold), #ff9100);
+            background: linear-gradient(135deg, #ffd700, #ff9100);
             color: #0c081e;
-            border-color: rgba(255, 245, 177, 0.7);
         }
 
         .btn-success {
-            background: linear-gradient(135deg, var(--emerald-ok), #047857);
+            background: linear-gradient(135deg, #10b981, #047857);
             color: #ffffff;
-            border-color: rgba(52, 211, 153, 0.5);
         }
 
         .btn-secondary {
-            background: rgba(45, 23, 88, 0.85);
-            color: var(--text-primary);
-            border-color: var(--border-quantum);
+            background: #2d1758;
+            color: #f8fafc;
         }
 
         .card {
-            background: var(--bg-panel);
+            background: rgba(24, 13, 52, 0.9);
             border-radius: 16px;
             padding: 16px;
-            border: 1px solid var(--border-quantum);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            border: 1px solid rgba(123, 44, 191, 0.42);
+            margin-bottom: 14px;
         }
 
         .card h3 {
             font-size: 15px;
             font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            margin-bottom: 6px;
         }
 
         .card-sub {
             font-size: 12px;
-            color: var(--text-muted);
+            color: #a78bfa;
             line-height: 1.45;
+            margin-bottom: 10px;
         }
 
         .list-item {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-quantum);
+            background: rgba(12, 8, 30, 0.92);
+            border: 1px solid rgba(123, 44, 191, 0.38);
             border-radius: 12px;
             padding: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            margin-bottom: 10px;
         }
 
         .list-item-row {
@@ -372,19 +296,15 @@
 
         .item-info p {
             font-size: 12px;
-            color: var(--cyber-gold);
+            color: #ffd700;
             font-weight: 600;
         }
 
-        .status-pill {
+        .status-done {
             font-size: 11px;
             font-weight: 700;
             padding: 4px 10px;
             border-radius: 999px;
-            white-space: nowrap;
-        }
-
-        .status-done {
             color: #6ee7b7;
             background: rgba(16, 185, 129, 0.16);
             border: 1px solid rgba(16, 185, 129, 0.4);
@@ -394,16 +314,11 @@
             width: 100%;
             padding: 10px 12px;
             border-radius: 10px;
-            border: 1px solid var(--border-quantum);
-            background: rgba(9, 6, 24, 0.92);
-            color: var(--text-primary);
+            border: 1px solid rgba(123, 44, 191, 0.45);
+            background: #090618;
+            color: #f8fafc;
             font-size: 13px;
-            outline: none;
-        }
-
-        .field-input:focus, .field-textarea:focus {
-            border-color: var(--neural-cyan);
-            box-shadow: var(--glow-cyan);
+            margin-bottom: 10px;
         }
 
         .field-textarea {
@@ -416,17 +331,20 @@
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 8px;
+            margin-bottom: 10px;
         }
 
         .two-col-btns .btn {
+            margin-bottom: 0;
             padding: 10px;
             font-size: 12px;
         }
 
         .faq-item {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-quantum);
+            background: rgba(12, 8, 30, 0.92);
+            border: 1px solid rgba(123, 44, 191, 0.38);
             border-radius: 12px;
+            margin-bottom: 8px;
             overflow: hidden;
         }
 
@@ -434,7 +352,7 @@
             width: 100%;
             background: none;
             border: none;
-            color: var(--text-primary);
+            color: #f8fafc;
             padding: 12px;
             font-size: 13px;
             font-weight: 600;
@@ -442,7 +360,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 10px;
             cursor: pointer;
         }
 
@@ -451,8 +368,8 @@
             padding: 10px 12px 12px;
             font-size: 12px;
             line-height: 1.5;
-            color: var(--text-muted);
-            border-top: 1px solid rgba(123, 44, 191, 0.2);
+            color: #a78bfa;
+            border-top: 1px solid rgba(123, 44, 191, 0.25);
         }
 
         .faq-item.open .faq-body {
@@ -461,18 +378,17 @@
 
         .tap-effect {
             position: absolute;
-            color: var(--cyber-gold);
+            color: #ffd700;
             font-size: 20px;
             font-weight: 800;
             pointer-events: none;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
             animation: floatUp 0.65s ease-out forwards;
-            z-index: 3;
+            z-index: 5;
         }
 
         @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0) scale(1); }
-            100% { opacity: 0; transform: translateY(-48px) scale(0.9); }
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-45px); }
         }
 
         .nav-bar {
@@ -480,54 +396,48 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 70px;
-            background: rgba(12, 8, 30, 0.97);
-            border-top: 1px solid var(--border-quantum);
+            height: 68px;
+            background: #0c081e;
+            border-top: 1px solid rgba(123, 44, 191, 0.45);
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             align-items: center;
-            padding: 0 4px;
-            z-index: 100;
-            flex-shrink: 0;
+            z-index: 50;
         }
 
         .nav-item {
             background: none;
             border: none;
-            color: var(--text-muted);
+            color: #a78bfa;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 3px;
             font-size: 10px;
             font-weight: 600;
             cursor: pointer;
-            padding: 8px 2px;
-            user-select: none;
+            padding: 6px 2px;
         }
 
         .nav-item.active {
-            color: var(--cyber-gold);
+            color: #ffd700;
         }
 
         .nav-icon {
             font-size: 19px;
-            line-height: 1;
         }
 
         .footer-note {
             font-size: 12px;
-            color: var(--text-muted);
-            opacity: 0.9;
+            color: #a78bfa;
             text-align: center;
-            margin: 18px auto 6px;
-            max-width: 460px;
+            margin: 14px auto 8px;
             line-height: 1.45;
         }
 
         .directory-link {
-            color: var(--neural-cyan);
+            color: #00f5ff;
             text-decoration: underline;
             font-weight: 600;
         }
@@ -547,15 +457,11 @@
         </div>
     </header>
 
-    <div id="runtime-error-banner" role="alert">
-        <span id="runtime-error-text"></span>
-        <button type="button" id="runtime-error-dismiss" onclick="hideErrorBanner()">Dismiss</button>
-    </div>
+    <div id="runtime-error-banner"></div>
 
-    <main class="content-container" id="main-content">
+    <main class="content-container">
 
-        <!-- TAB 1: MINING REACTOR -->
-        <section id="view-game" class="view-section active" aria-label="Mining">
+        <section id="view-game" class="view-section active">
             <div class="header-stats">
                 <div class="stat-box">
                     <div class="stat-label">Timer</div>
@@ -579,33 +485,29 @@
                 <p class="session-hint" id="session-status">15-second mining round • Optional 2X ad boost after timer ends</p>
             </div>
 
-            <div class="controls">
-                <button type="button" class="btn btn-ad" id="ad-btn" onclick="watchAdFor2x()" disabled>
-                    📺 Watch Ad for 2X Boost
-                </button>
-                <button type="button" class="btn btn-primary" id="claim-btn" onclick="submitScore()" disabled>
-                    💾 Submit & Save Session
-                </button>
-            </div>
+            <button type="button" class="btn btn-ad" id="ad-btn" onclick="watchAdFor2x()" disabled>
+                📺 Watch Ad for 2X Boost
+            </button>
+            <button type="button" class="btn btn-primary" id="claim-btn" onclick="submitScore()" disabled>
+                💾 Submit & Save Session
+            </button>
         </section>
 
-        <!-- TAB 2: SOCIAL TASKS -->
-        <section id="view-tasks" class="view-section" aria-label="Tasks">
+        <section id="view-tasks" class="view-section">
             <div class="card">
                 <h3>📋 Verified Social Missions</h3>
                 <p class="card-sub">Step 1: Tap <strong>Open</strong> to visit the official account. Step 2: Wait at least 10s, enter your @username or profile name, and tap <strong>Verify & Claim</strong>.</p>
             </div>
-            <div id="tasks-list" class="stack-col"></div>
+            <div id="tasks-list"></div>
         </section>
 
-        <!-- TAB 3: DAILY & SPIN -->
-        <section id="view-earn" class="view-section" aria-label="Bonus">
+        <section id="view-earn" class="view-section">
             <div class="card">
                 <h3>📅 Daily Check-In Streak</h3>
                 <p class="card-sub">Claim your streak reward once every 24 hours.</p>
                 <div class="list-item-row">
-                    <span id="streak-info" style="font-size: 13px; font-weight: 700; color: var(--neural-cyan);">Streak: 0 Days</span>
-                    <button type="button" class="btn btn-success" id="daily-btn" onclick="claimDaily()" style="width: auto; padding: 10px 16px; font-size: 13px;">
+                    <span id="streak-info" style="font-size: 13px; font-weight: 700; color: #00f5ff;">Streak: 0 Days</span>
+                    <button type="button" class="btn btn-success" id="daily-btn" onclick="claimDaily()" style="width: auto; padding: 10px 16px; font-size: 13px; margin-bottom: 0;">
                         Claim Daily
                     </button>
                 </div>
@@ -614,7 +516,7 @@
             <div class="card" style="text-align: center;">
                 <h3>🎡 Quantum Spin Wheel</h3>
                 <p class="card-sub">Spin every 12 hours for bonus TMX rewards up to 5,000 TMX.</p>
-                <div id="spin-result" style="font-size: 20px; font-weight: 800; color: var(--cyber-gold); margin: 8px 0;">
+                <div id="spin-result" style="font-size: 20px; font-weight: 800; color: #ffd700; margin: 10px 0;">
                     🎁 Ready to Spin
                 </div>
                 <button type="button" class="btn btn-ad" id="spin-btn" onclick="spinWheel()">
@@ -623,21 +525,19 @@
             </div>
         </section>
 
-        <!-- TAB 4: LEADERBOARD -->
-        <section id="view-leaderboard" class="view-section" aria-label="Leaderboard">
+        <section id="view-leaderboard" class="view-section">
             <div class="card">
                 <h3>🏆 Top TMX Miners</h3>
                 <p class="card-sub">Live rankings across the TMX-QUANTUM mining network.</p>
             </div>
-            <div id="leaderboard-list" class="stack-col"></div>
+            <div id="leaderboard-list"></div>
         </section>
 
-        <!-- TAB 5: PROFILE, REFERRALS, WALLET & SUPPORT -->
-        <section id="view-profile" class="view-section" aria-label="Profile">
+        <section id="view-profile" class="view-section">
             <div class="card">
                 <h3>👤 Miner Profile</h3>
-                <p style="font-size: 13px;"><strong>Username:</strong> <span id="prof-username">Miner</span></p>
-                <p style="font-size: 13px;"><strong>User ID:</strong> <span id="prof-id">0</span></p>
+                <p style="font-size: 13px; margin-bottom: 4px;"><strong>Username:</strong> <span id="prof-username">Miner</span></p>
+                <p style="font-size: 13px; margin-bottom: 4px;"><strong>User ID:</strong> <span id="prof-id">0</span></p>
                 <p style="font-size: 13px;"><strong>Referrals:</strong> <span id="prof-refs">0</span></p>
             </div>
 
@@ -655,7 +555,7 @@
             <div class="card">
                 <h3>💎 TON Wallet</h3>
                 <p class="card-sub">Connect with TON Connect or save your wallet address manually.</p>
-                <div id="ton-connect-button" style="margin: 4px 0;"></div>
+                <div id="ton-connect-button" style="margin-bottom: 10px;"></div>
                 <input type="text" id="wallet-input" class="field-input" placeholder="Enter TON Wallet Address (EQ... or UQ...)">
                 <button type="button" class="btn btn-primary" onclick="saveWallet()">
                     Save Wallet Address
@@ -664,7 +564,7 @@
 
             <div class="card">
                 <h3>🛟 Support Contact</h3>
-                <p class="card-sub">Need assistance? Email <strong style="color: var(--text-primary);">tmxquantum@gmail.com</strong>.</p>
+                <p class="card-sub">Need assistance? Email <strong>tmxquantum@gmail.com</strong>.</p>
                 <div class="two-col-btns">
                     <button type="button" class="btn btn-secondary" onclick="openSupportEmail()">
                         📧 Email Support
@@ -681,45 +581,40 @@
 
             <div class="card">
                 <h3>❓ Frequently Asked Questions</h3>
-                <div class="stack-col">
-                    <div class="faq-item">
-                        <button type="button" class="faq-trigger" onclick="toggleFaq(this)">
-                            <span>How does a 15-second mining session work?</span>
-                            <span>+</span>
-                        </button>
-                        <div class="faq-body">
-                            Tap the ⚡ button to begin a 15-second session, tap to accumulate points, optionally watch a rewarded ad for a 2X boost once the timer ends, and tap "Submit & Save Session".
-                        </div>
+                <div class="faq-item">
+                    <button type="button" class="faq-trigger" onclick="toggleFaq(this)">
+                        <span>How does a 15-second mining session work?</span>
+                        <span>+</span>
+                    </button>
+                    <div class="faq-body">
+                        Tap the ⚡ button to begin a 15-second session, tap to accumulate points, optionally watch a rewarded ad for a 2X boost once the timer ends, and tap "Submit & Save Session".
                     </div>
-
-                    <div class="faq-item">
-                        <button type="button" class="faq-trigger" onclick="toggleFaq(this)">
-                            <span>How are social tasks verified?</span>
-                            <span>+</span>
-                        </button>
-                        <div class="faq-body">
-                            Tap "Open" on a task, wait at least 10 seconds while completing the follow or channel join, enter your @username or profile name, and tap "Verify & Claim".
-                        </div>
+                </div>
+                <div class="faq-item">
+                    <button type="button" class="faq-trigger" onclick="toggleFaq(this)">
+                        <span>How are social tasks verified?</span>
+                        <span>+</span>
+                    </button>
+                    <div class="faq-body">
+                        Tap "Open" on a task, wait at least 10 seconds while completing the follow or channel join, enter your @username or profile name, and tap "Verify & Claim".
                     </div>
-
-                    <div class="faq-item">
-                        <button type="button" class="faq-trigger" onclick="toggleFaq(this)">
-                            <span>How do I connect my TON wallet?</span>
-                            <span>+</span>
-                        </button>
-                        <div class="faq-body">
-                            Use the TON Connect button in Profile or paste your TON wallet address into the input box and tap "Save Wallet Address".
-                        </div>
+                </div>
+                <div class="faq-item">
+                    <button type="button" class="faq-trigger" onclick="toggleFaq(this)">
+                        <span>How do I connect my TON wallet?</span>
+                        <span>+</span>
+                    </button>
+                    <div class="faq-body">
+                        Use the TON Connect button in Profile or paste your TON wallet address into the input box and tap "Save Wallet Address".
                     </div>
-
-                    <div class="faq-item">
-                        <button type="button" class="faq-trigger" onclick="toggleFaq(this)">
-                            <span>How do I contact TMX-QUANTUM support?</span>
-                            <span>+</span>
-                        </button>
-                        <div class="faq-body">
-                            Send an email to tmxquantum@gmail.com or use "Compose Email & Copy Ticket" in the Support Contact card above.
-                        </div>
+                </div>
+                <div class="faq-item">
+                    <button type="button" class="faq-trigger" onclick="toggleFaq(this)">
+                        <span>How do I contact TMX-QUANTUM support?</span>
+                        <span>+</span>
+                    </button>
+                    <div class="faq-body">
+                        Send an email to tmxquantum@gmail.com or use "Compose Email & Copy Ticket" in the Support Contact card above.
                     </div>
                 </div>
             </div>
@@ -732,426 +627,15 @@
 
     </main>
 
-    <nav class="nav-bar" aria-label="Primary Navigation">
-        <button type="button" class="nav-item active" data-tab="game" onclick="switchTab('game', this)">
+    <nav class="nav-bar">
+        <button type="button" class="nav-item active" onclick="switchTab('game', this)">
             <span class="nav-icon">⚡</span>
             <span>Mine</span>
         </button>
-        <button type="button" class="nav-item" data-tab="tasks" onclick="switchTab('tasks', this)">
+        <button type="button" class="nav-item" onclick="switchTab('tasks', this)">
             <span class="nav-icon">📋</span>
             <span>Tasks</span>
         </button>
-        <button type="button" class="nav-item" data-tab="earn" onclick="switchTab('earn', this)">
+        <button type="button" class="nav-item" onclick="switchTab('earn', this)">
             <span class="nav-icon">🎁</span>
             <span>Bonus</span>
-        </button>
-        <button type="button" class="nav-item" data-tab="leaderboard" onclick="switchTab('leaderboard', this)">
-            <span class="nav-icon">🏆</span>
-            <span>Ranks</span>
-        </button>
-        <button type="button" class="nav-item" data-tab="profile" onclick="switchTab('profile', this)">
-            <span class="nav-icon">👤</span>
-            <span>Profile</span>
-        </button>
-    </nav>
-
-    <script>
-        var CONFIG = {
-            backendUrl: "https://tmxquantum-ten.vercel.app",
-            webAppUrl: "https://www.tmxquantum.site",
-            manifestUrl: "https://www.tmxquantum.site/tonconnect-manifest.json",
-            botUsername: "Tmxqunbot",
-            supportEmail: "tmxquantum@gmail.com",
-            adsgramBlockId: "40165",
-            sessionDuration: 15,
-            pointsPerTap: 1,
-            taskMinSeconds: 10
-        };
-
-        var SOCIAL_TASK_PROFILES = {
-            facebook: "https://www.facebook.com/profile.php?id=61595898467380",
-            x: "https://x.com/timex2429",
-            telegramChannel: "https://t.me/Tmxqun_official"
-        };
-
-        var DEFAULT_TASKS = [
-            {
-                task_id: "follow_facebook",
-                title: "Follow TMX-QUANTUM on Facebook",
-                reward: 250,
-                link: SOCIAL_TASK_PROFILES.facebook,
-                completed: false
-            },
-            {
-                task_id: "follow_x",
-                title: "Follow TMX-QUANTUM on X (@timex2429)",
-                reward: 250,
-                link: SOCIAL_TASK_PROFILES.x,
-                completed: false
-            },
-            {
-                task_id: "join_telegram_channel",
-                title: "Join TMX-QUANTUM Official Channel",
-                reward: 250,
-                link: SOCIAL_TASK_PROFILES.telegramChannel,
-                completed: false
-            }
-        ];
-
-        function getEl(id) {
-            try {
-                return document.getElementById(id);
-            } catch (_) {
-                return null;
-            }
-        }
-
-        function setText(id, val) {
-            try {
-                var el = getEl(id);
-                if (el) el.textContent = String(val === undefined || val === null ? "" : val);
-            } catch (_) {}
-        }
-
-        function showErrorBanner(msg) {
-            try {
-                var banner = getEl("runtime-error-banner");
-                var textEl = getEl("runtime-error-text");
-                if (banner && textEl) {
-                    textEl.textContent = "Notice: " + String(msg || "Something went wrong");
-                    banner.style.display = "flex";
-                }
-            } catch (_) {}
-        }
-
-        function hideErrorBanner() {
-            try {
-                var banner = getEl("runtime-error-banner");
-                if (banner) banner.style.display = "none";
-            } catch (_) {}
-        }
-
-        try {
-            window.addEventListener("error", function (event) {
-                if (event && event.message) {
-                    showErrorBanner(event.message);
-                }
-            });
-            window.addEventListener("unhandledrejection", function (event) {
-                var reason = event && event.reason ? (event.reason.message || String(event.reason)) : "Async error";
-                showErrorBanner(reason);
-                if (event && typeof event.preventDefault === "function") {
-                    event.preventDefault();
-                }
-            });
-        } catch (_) {}
-
-        function safePostJson(url, payload) {
-            return new Promise(function (resolve) {
-                try {
-                    if (typeof fetch !== "function") {
-                        resolve({ ok: false, data: {}, error: "Fetch unavailable" });
-                        return;
-                    }
-                    var done = false;
-                    var timer = setTimeout(function () {
-                        if (!done) {
-                            done = true;
-                            resolve({ ok: false, data: {}, error: "Request timed out" });
-                        }
-                    }, 10000);
-
-                    fetch(url, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(payload || {})
-                    })
-                    .then(function (res) {
-                        return res.text().then(function (txt) {
-                            var parsed = {};
-                            try {
-                                parsed = txt ? JSON.parse(txt) : {};
-                            } catch (_) {
-                                parsed = {};
-                            }
-                            return { ok: res.ok, data: parsed };
-                        });
-                    })
-                    .then(function (out) {
-                        if (!done) {
-                            done = true;
-                            clearTimeout(timer);
-                            resolve(out);
-                        }
-                    })
-                    .catch(function (err) {
-                        if (!done) {
-                            done = true;
-                            clearTimeout(timer);
-                            resolve({ ok: false, data: {}, error: err && err.message ? err.message : "Network error" });
-                        }
-                    });
-                } catch (err) {
-                    resolve({ ok: false, data: {}, error: err && err.message ? err.message : "Request failed" });
-                }
-            });
-        }
-
-        function safeGetJson(url) {
-            return new Promise(function (resolve) {
-                try {
-                    if (typeof fetch !== "function") {
-                        resolve({ ok: false, data: {}, error: "Fetch unavailable" });
-                        return;
-                    }
-                    var done = false;
-                    var timer = setTimeout(function () {
-                        if (!done) {
-                            done = true;
-                            resolve({ ok: false, data: {}, error: "Request timed out" });
-                        }
-                    }, 10000);
-
-                    fetch(url)
-                    .then(function (res) {
-                        return res.text().then(function (txt) {
-                            var parsed = {};
-                            try {
-                                parsed = txt ? JSON.parse(txt) : {};
-                            } catch (_) {
-                                parsed = {};
-                            }
-                            return { ok: res.ok, data: parsed };
-                        });
-                    })
-                    .then(function (out) {
-                        if (!done) {
-                            done = true;
-                            clearTimeout(timer);
-                            resolve(out);
-                        }
-                    })
-                    .catch(function (err) {
-                        if (!done) {
-                            done = true;
-                            clearTimeout(timer);
-                            resolve({ ok: false, data: {}, error: err && err.message ? err.message : "Network error" });
-                        }
-                    });
-                } catch (err) {
-                    resolve({ ok: false, data: {}, error: err && err.message ? err.message : "Request failed" });
-                }
-            });
-        }
-
-        var tg = null;
-        var tgUser = null;
-        var user = { id: 99999, username: "Miner" };
-        var parsedStartParam = null;
-
-        try {
-            if (window.Telegram && window.Telegram.WebApp) {
-                tg = window.Telegram.WebApp;
-                if (typeof tg.expand === "function") tg.expand();
-                if (typeof tg.ready === "function") tg.ready();
-                if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                    tgUser = tg.initDataUnsafe.user;
-                    if (tgUser.id) user.id = tgUser.id;
-                    if (tgUser.username || tgUser.first_name) {
-                        user.username = String(tgUser.username || tgUser.first_name);
-                    }
-                }
-                if (tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
-                    var sp = String(tg.initDataUnsafe.start_param);
-                    if (/^\d+$/.test(sp)) {
-                        parsedStartParam = parseInt(sp, 10);
-                    }
-                }
-            }
-        } catch (_) {}
-
-        var currentUserData = {
-            balance: 0,
-            referrals_count: 0,
-            completed_tasks: [],
-            daily_streak: 0,
-            wallet_address: null
-        };
-
-        var currentScore = 0;
-        var timeLeft = CONFIG.sessionDuration;
-        var gameActive = false;
-        var timerInterval = null;
-        var multiplier = 1;
-        var isSubmittingScore = false;
-
-        var taskOpenedAt = {};
-        var taskCountdowns = {};
-
-        var tonConnectUI = null;
-        var AdController = null;
-        var appBooted = false;
-
-        function notifyUser(message) {
-            var text = String(message || "");
-            if (!text) return;
-            try {
-                if (tg && typeof tg.showAlert === "function") {
-                    tg.showAlert(text);
-                    return;
-                }
-            } catch (_) {}
-            try {
-                window.alert(text);
-            } catch (_) {
-                showErrorBanner(text);
-            }
-        }
-
-        function safeUrl(url) {
-            try {
-                var parsed = new URL(String(url));
-                if (parsed.protocol === "https:" || parsed.protocol === "http:") {
-                    return parsed.href;
-                }
-            } catch (_) {}
-            return "";
-        }
-
-        function escapeHtml(value) {
-            return String(value === undefined || value === null ? "" : value)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#39;");
-        }
-
-        function openExternalLink(url) {
-            var validated = safeUrl(url);
-            if (!validated) {
-                notifyUser("Invalid or missing link.");
-                return;
-            }
-            try {
-                if (tg && typeof tg.openLink === "function") {
-                    tg.openLink(validated);
-                    return;
-                }
-            } catch (_) {}
-            try {
-                window.open(validated, "_blank", "noopener,noreferrer");
-            } catch (_) {
-                notifyUser("Open this link:\n" + validated);
-            }
-        }
-
-        function updateUserState(data) {
-            try {
-                if (!data || typeof data !== "object") return;
-                var balNum = Number(data.balance);
-                var refNum = Number(data.referrals_count);
-                var streakNum = Number(data.daily_streak);
-
-                currentUserData.balance = isNaN(balNum) ? 0 : balNum;
-                currentUserData.referrals_count = isNaN(refNum) ? 0 : refNum;
-                currentUserData.completed_tasks = Array.isArray(data.completed_tasks) ? data.completed_tasks : [];
-                currentUserData.daily_streak = isNaN(streakNum) ? 0 : streakNum;
-                currentUserData.wallet_address = data.wallet_address ? String(data.wallet_address) : null;
-
-                var displayName = String(data.username || user.username || "Miner");
-                setText("global-balance", currentUserData.balance);
-                setText("header-balance", currentUserData.balance);
-                setText("user-welcome", "TMX-QUANTUM • " + displayName);
-                setText("prof-username", displayName);
-                setText("prof-id", user.id);
-                setText("prof-refs", currentUserData.referrals_count);
-                setText("streak-info", "Streak: " + currentUserData.daily_streak + " Days");
-
-                var walletInput = getEl("wallet-input");
-                if (walletInput && currentUserData.wallet_address) {
-                    walletInput.value = currentUserData.wallet_address;
-                }
-            } catch (_) {}
-        }
-
-        function ensureActiveViewVisible() {
-            try {
-                var activeSection = document.querySelector(".view-section.active");
-                if (!activeSection) {
-                    var gameSection = getEl("view-game");
-                    if (gameSection) gameSection.classList.add("active");
-                }
-            } catch (_) {}
-        }
-
-        function bootApp() {
-            if (appBooted) return;
-            appBooted = true;
-            try {
-                ensureActiveViewVisible();
-                updateUserState({
-                    username: user.username,
-                    balance: 0,
-                    referrals_count: 0,
-                    completed_tasks: [],
-                    daily_streak: 0,
-                    wallet_address: null
-                });
-
-                safePostJson(CONFIG.backendUrl + "/api/user/init", {
-                    user_id: user.id,
-                    username: user.username,
-                    referred_by: parsedStartParam
-                }).then(function (res) {
-                    if (res && res.ok && res.data) {
-                        updateUserState(res.data);
-                    }
-                });
-
-                setTimeout(function () {
-                    initAdsgram();
-                    initTonConnect();
-                }, 250);
-            } catch (err) {
-                showErrorBanner(err && err.message ? err.message : "Startup error");
-            }
-        }
-
-        bootApp();
-        try {
-            window.addEventListener("DOMContentLoaded", bootApp);
-            window.addEventListener("load", bootApp);
-        } catch (_) {}
-
-        function initAdsgram() {
-            try {
-                if (window.Adsgram && typeof window.Adsgram.init === "function") {
-                    AdController = window.Adsgram.init({ blockId: CONFIG.adsgramBlockId });
-                }
-            } catch (_) {}
-        }
-
-        function initTonConnect() {
-            try {
-                var root = getEl("ton-connect-button");
-                if (!root || !window.TON_CONNECT_UI || typeof window.TON_CONNECT_UI.TonConnectUI !== "function") {
-                    return;
-                }
-                tonConnectUI = new window.TON_CONNECT_UI.TonConnectUI({
-                    manifestUrl: CONFIG.manifestUrl,
-                    buttonRootId: "ton-connect-button"
-                });
-                if (tonConnectUI && typeof tonConnectUI.onStatusChange === "function") {
-                    tonConnectUI.onStatusChange(function (wallet) {
-                        try {
-                            if (!wallet || !wallet.account || !wallet.account.address) return;
-                            var address = String(wallet.account.address).trim();
-                            if (!address) return;
-                            var walletInput = getEl("wallet-input");
-                            if (walletInput) walletInput.value = address;
-                            safePostJson(CONFIG.backendUrl + "/api/wallet/save", {
-                                user_id: user.id,
-                                wallet_address: address
-                            }).then(function (res) {
-                                if (res && res.ok) {
