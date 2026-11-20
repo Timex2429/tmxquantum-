@@ -699,7 +699,7 @@
     // =========================================================================
     const CONFIG = {
       API_BASE_URL: "", // e.g. "https://your-backend.vercel.app" or "" for same-origin /api/*
-      ADSGRAM_BLOCK_ID: "40165",
+      ADSGRAM_BLOCK_ID: "60934",
       ROUND_SECONDS: 15,
       STORAGE_KEY: "tmx_quantum_state_v3",
       REQUEST_TIMEOUT_MS: 8000
@@ -830,6 +830,19 @@
       return window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
     }
 
+    function getTelegramInitData() {
+      const tg = getTelegramWebApp();
+      if (tg && typeof tg.initData === "string" && tg.initData.trim().length > 0) {
+        return tg.initData.trim();
+      }
+      const queryId = tg?.initDataUnsafe?.query_id;
+      if (queryId) {
+        return `query_id=${encodeURIComponent(String(queryId))}`;
+      }
+      const profile = getCurrentUserProfile();
+      return `user_id=${encodeURIComponent(String(profile.user_id))}`;
+    }
+
     function getCurrentUserProfile() {
       const tg = getTelegramWebApp();
       const u = tg?.initDataUnsafe?.user;
@@ -880,6 +893,7 @@
       const url = `${base}${cleanPath}`;
       const tg = getTelegramWebApp();
       const profile = getCurrentUserProfile();
+      const initDataStr = getTelegramInitData();
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), CONFIG.REQUEST_TIMEOUT_MS);
@@ -888,7 +902,7 @@
         method,
         headers: {
           "Content-Type": "application/json",
-          "X-Telegram-Init-Data": tg?.initData || ""
+          "X-Telegram-Init-Data": initDataStr
         },
         signal: controller.signal
       };
@@ -898,7 +912,7 @@
           ...payload,
           user_id: profile.user_id,
           username: profile.username,
-          initData: tg?.initData || "",
+          initData: initDataStr,
           user: tg?.initDataUnsafe?.user || null
         });
       }
@@ -1160,12 +1174,17 @@
 
     function initAdsgram() {
       try {
+        const initDataStr = getTelegramInitData();
         if (window.Adsgram && typeof window.Adsgram.init === "function" && CONFIG.ADSGRAM_BLOCK_ID) {
           adController = window.Adsgram.init({
             blockId: CONFIG.ADSGRAM_BLOCK_ID,
+            initData: initDataStr,
             debug: false
           });
-          recordLog("INFO", "Adsgram AdController initialized", { blockId: CONFIG.ADSGRAM_BLOCK_ID });
+          recordLog("INFO", "Adsgram AdController initialized", {
+            blockId: CONFIG.ADSGRAM_BLOCK_ID,
+            hasInitData: Boolean(initDataStr)
+          });
         } else {
           recordLog("WARN", "Adsgram SDK not loaded yet or blockId missing");
         }
@@ -1185,7 +1204,7 @@
       showBanner("Loading rewarded ad...", "info");
 
       try {
-        if (!adController) initAdsgram();
+        initAdsgram();
         if (adController && typeof adController.show === "function") {
           await adController.show();
           state.boost2xActive = true;
