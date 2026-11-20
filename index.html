@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>TMX-QUANTUM • Mini App</title>
+  <title>TMX-QUANTUM • Web3 Telegram Mini App on TON Blockchain</title>
+  <meta name="description" content="TMX-QUANTUM is a Web3 Telegram Mini App built on The Open Network (TON) blockchain, enabling TON wallet connection, tap-to-mine rewards, and ecosystem tasks." />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
   <style>
@@ -12,6 +13,7 @@
       --surface: #130d26;
       --surface-2: #1c1338;
       --border: rgba(168, 85, 247, 0.25);
+      --ton-blue: #0098ea;
       --text: #f5f3ff;
       --muted: #a79ec7;
       --primary: #7c3aed;
@@ -61,6 +63,17 @@
       font-weight: 700;
       font-size: 15px;
       letter-spacing: 0.3px;
+    }
+
+    .ton-badge {
+      background: rgba(0, 152, 234, 0.16);
+      border: 1px solid rgba(0, 152, 234, 0.45);
+      color: #7dd3fc;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      letter-spacing: 0.4px;
     }
 
     .balance-pill {
@@ -203,6 +216,32 @@
       border-radius: 14px;
       padding: 14px;
       margin-bottom: 12px;
+    }
+
+    .ton-card {
+      background: linear-gradient(145deg, rgba(0, 152, 234, 0.14), rgba(19, 13, 38, 0.95));
+      border: 1px solid rgba(0, 152, 234, 0.38);
+      border-radius: 14px;
+      padding: 14px;
+      margin-top: 14px;
+      margin-bottom: 12px;
+    }
+
+    .ton-card-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #7dd3fc;
+      margin: 0 0 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ton-card-text {
+      font-size: 12.5px;
+      color: #dbeafe;
+      margin: 0;
+      line-height: 1.5;
     }
 
     .card-header-row {
@@ -462,6 +501,7 @@
       <div class="brand">
         <span>⚛️</span>
         <span>TMX-QUANTUM</span>
+        <span class="ton-badge">TON</span>
       </div>
       <div class="balance-pill" id="headerBalance">0 TMX</div>
     </header>
@@ -517,6 +557,14 @@
         <span>💾</span>
         <span id="saveLabel">Submit & Save Session</span>
       </button>
+
+      <!-- Visible TON Blockchain Ecosystem Integration Section (Required for ton.app verification) -->
+      <section class="ton-card" aria-label="TON Blockchain Integration">
+        <h2 class="ton-card-title">💎 Built on The Open Network (TON)</h2>
+        <p class="ton-card-text">
+          <strong>TMX-QUANTUM</strong> is a Web3 Telegram Mini App powered by the <strong>TON blockchain</strong>. Users mine TMX points in 15-second sessions, complete ecosystem tasks, and link their <strong>TON wallet via TON Connect</strong> to verify on-chain identity and unlock future TON token distribution and rewards.
+        </p>
+      </section>
     </main>
 
     <!-- TASKS TAB -->
@@ -524,7 +572,7 @@
       <div class="card">
         <h2 class="card-title">Task Verification</h2>
         <p class="card-desc">
-          Complete tasks and official channel verifications below to earn bonus TMX rewards.
+          Complete tasks and official channel verifications below to earn bonus TMX rewards on TON.
         </p>
 
         <div class="task-item">
@@ -634,6 +682,13 @@
     <section id="panel-support" class="tab-panel">
       <div class="card">
         <h2 class="card-title">Frequently Asked Questions (FAQ)</h2>
+
+        <details open>
+          <summary>How does TMX-QUANTUM use the TON blockchain?</summary>
+          <p>
+            TMX-QUANTUM is built for The Open Network (TON) ecosystem inside Telegram. Your mined TMX balance and task achievements link to your Telegram identity and TON Connect wallet for on-chain reward eligibility and ecosystem utility.
+          </p>
+        </details>
 
         <details open>
           <summary>How does a 15-second mining round work?</summary>
