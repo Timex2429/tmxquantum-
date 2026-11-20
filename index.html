@@ -226,6 +226,31 @@
       line-height: 1.45;
     }
 
+    .user-summary-box {
+      background: var(--surface-2);
+      border: 1px solid rgba(167, 139, 250, 0.3);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .user-id-tag {
+      font-size: 11.5px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .user-bal-tag {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+
     .task-item, .lb-item {
       display: flex;
       align-items: center;
@@ -263,6 +288,11 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    .lb-sub {
+      font-size: 11px;
+      color: var(--muted);
     }
 
     .lb-score {
@@ -494,15 +524,35 @@
       <div class="card">
         <h2 class="card-title">Task Verification</h2>
         <p class="card-desc">
-          Complete tasks below, then verify to earn bonus TMX rewards.
+          Complete tasks and official channel verifications below to earn bonus TMX rewards.
         </p>
 
         <div class="task-item">
           <div>
-            <div style="font-weight:700;font-size:13px;">Join Official Community</div>
+            <div style="font-weight:700;font-size:13px;">Launch Official Bot (@Tmxqunbot)</div>
             <div class="task-meta">Reward: +25 TMX</div>
           </div>
-          <button class="btn btn-primary btn-ghost" id="task-join-community" type="button" onclick="verifyTask('join_community', 25)">
+          <button class="btn btn-primary btn-ghost" id="task-bot-tmxqunbot" type="button" onclick="verifyTask('bot_tmxqunbot', 25, 'https://t.me/Tmxqunbot')">
+            Verify
+          </button>
+        </div>
+
+        <div class="task-item">
+          <div>
+            <div style="font-weight:700;font-size:13px;">Follow on X (@timex2429)</div>
+            <div class="task-meta">Reward: +20 TMX</div>
+          </div>
+          <button class="btn btn-primary btn-ghost" id="task-x-timex2429" type="button" onclick="verifyTask('x_timex2429', 20, 'https://x.com/timex2429')">
+            Verify
+          </button>
+        </div>
+
+        <div class="task-item">
+          <div>
+            <div style="font-weight:700;font-size:13px;">Follow on Instagram (@tmxquantum245)</div>
+            <div class="task-meta">Reward: +20 TMX</div>
+          </div>
+          <button class="btn btn-primary btn-ghost" id="task-ig-tmxquantum245" type="button" onclick="verifyTask('ig_tmxquantum245', 20, 'https://instagram.com/tmxquantum245')">
             Verify
           </button>
         </div>
@@ -529,17 +579,31 @@
       </div>
     </section>
 
-    <!-- LEADERBOARD TAB -->
+    <!-- RANKS / USERS & BALANCES TAB -->
     <section id="panel-leaderboard" class="tab-panel">
       <div class="card">
         <div class="card-header-row">
-          <h2 class="card-title" style="margin:0;">🏆 Top TMX Miners</h2>
+          <h2 class="card-title" style="margin:0;">👤 Your User Data & Balance</h2>
+          <button class="btn btn-ghost" type="button" onclick="syncUserData(true)">Sync Data</button>
+        </div>
+        <div class="user-summary-box">
+          <div>
+            <div id="profileDisplayName" style="font-weight:700;font-size:14px;">Miner</div>
+            <div id="profileUserId" class="user-id-tag">ID: guest_local • Tasks: 0</div>
+          </div>
+          <div id="profileBalance" class="user-bal-tag">0 TMX</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header-row">
+          <h2 class="card-title" style="margin:0;">🏆 Users & Balances Leaderboard</h2>
           <button class="btn btn-ghost" type="button" onclick="loadLeaderboard(true)">Refresh</button>
         </div>
         <p class="card-desc">
-          Live rankings synced from MongoDB Atlas (with local fallback when offline).
+          User balances and rankings synced from MongoDB Atlas (with local fallback when offline).
         </p>
-        <div id="leaderboardList">Loading leaderboard...</div>
+        <div id="leaderboardList">Loading users and balances...</div>
       </div>
     </section>
 
@@ -581,7 +645,7 @@
         <details>
           <summary>How are user balances and leaderboard rankings stored?</summary>
           <p>
-            Your balance, verified tasks, and leaderboard rank sync with your backend connected to <strong>MongoDB Atlas</strong>, while also caching locally so your progress stays safe if the network drops.
+            Your user profile, balance, verified tasks, and leaderboard rank sync with your backend connected to <strong>MongoDB Atlas</strong>, while also caching locally so your progress stays safe if the network drops.
           </p>
         </details>
 
@@ -596,12 +660,9 @@
       <div class="card">
         <h2 class="card-title">Support & Contact Details</h2>
         <p class="card-desc" style="margin-bottom:8px;">
-          Need help with task verification, account sync, or bug reports? Reach out through our official channels:
+          Need help with task verification, account sync, or bug reports? Contact our support email:
         </p>
         <div style="font-size:13px;line-height:1.7;">
-          <div><strong>Bot:</strong> @Tmxqunbot</div>
-          <div><strong>GitHub / X:</strong> @timex2429</div>
-          <div><strong>Instagram:</strong> @tmxquantum245</div>
           <div><strong>Support Email:</strong> support@tmxquantum.app</div>
         </div>
       </div>
@@ -640,14 +701,14 @@
       API_BASE_URL: "", // e.g. "https://your-backend.vercel.app" or "" for same-origin /api/*
       ADSGRAM_BLOCK_ID: "40165",
       ROUND_SECONDS: 15,
-      STORAGE_KEY: "tmx_quantum_state_v2",
+      STORAGE_KEY: "tmx_quantum_state_v3",
       REQUEST_TIMEOUT_MS: 8000
     };
 
     const FALLBACK_LEADERBOARD = [
-      { user_id: "demo_1", username: "QuantumPioneer", balance: 1250 },
-      { user_id: "demo_2", username: "OyeMiner", balance: 890 },
-      { user_id: "demo_3", username: "TonVoyager", balance: 640 }
+      { user_id: "demo_1", username: "QuantumPioneer", balance: 1250, tasksCount: 3 },
+      { user_id: "demo_2", username: "OyeMiner", balance: 890, tasksCount: 2 },
+      { user_id: "demo_3", username: "TonVoyager", balance: 640, tasksCount: 2 }
     ];
 
     // =========================================================================
@@ -763,7 +824,7 @@
     }
 
     // =========================================================================
-    // TELEGRAM WEBAPP SAFE INITIALIZATION
+    // TELEGRAM WEBAPP & USER PROFILE
     // =========================================================================
     function getTelegramWebApp() {
       return window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
@@ -879,8 +940,27 @@
     }
 
     // =========================================================================
-    // LEADERBOARD SYNC & RENDERING
+    // USER DATA & LEADERBOARD SYNC / RENDERING
     // =========================================================================
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[<>&"]/g, (ch) => (
+        { "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" }[ch]
+      ));
+    }
+
+    function renderUserDataCard() {
+      const me = getCurrentUserProfile();
+      const nameEl = document.getElementById("profileDisplayName");
+      const idEl = document.getElementById("profileUserId");
+      const balEl = document.getElementById("profileBalance");
+
+      if (nameEl) nameEl.textContent = me.username;
+      if (idEl) {
+        idEl.textContent = `ID: ${me.user_id} • Verified Tasks: ${state.completedTasks.length}`;
+      }
+      if (balEl) balEl.textContent = `${Number(state.balance) || 0} TMX`;
+    }
+
     function syncLocalLeaderboardWithCurrentUser() {
       const me = getCurrentUserProfile();
       const merged = [...(state.leaderboard || FALLBACK_LEADERBOARD)];
@@ -888,7 +968,8 @@
       const myEntry = {
         user_id: me.user_id,
         username: me.username,
-        balance: Number(state.balance) || 0
+        balance: Number(state.balance) || 0,
+        tasksCount: state.completedTasks.length
       };
       if (idx >= 0) {
         merged[idx] = { ...merged[idx], ...myEntry };
@@ -896,7 +977,7 @@
         merged.push(myEntry);
       }
       merged.sort((a, b) => (Number(b.balance) || 0) - (Number(a.balance) || 0));
-      state.leaderboard = merged.slice(0, 20);
+      state.leaderboard = merged.slice(0, 25);
       saveLocalState();
     }
 
@@ -908,7 +989,7 @@
       const me = getCurrentUserProfile();
 
       if (!state.leaderboard.length) {
-        listEl.innerHTML = `<div class="card-desc">No leaderboard records yet.</div>`;
+        listEl.innerHTML = `<div class="card-desc">No user balances recorded yet.</div>`;
         return;
       }
 
@@ -917,13 +998,17 @@
           const rank = index + 1;
           const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `#${rank}`;
           const isMe = String(row.user_id) === String(me.user_id);
-          const safeName = String(row.username || `Miner_${row.user_id}`)
-            .replace(/[<>&"]/g, (ch) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" }[ch]));
+          const safeName = escapeHtml(row.username || `Miner_${row.user_id}`);
+          const safeId = escapeHtml(row.user_id || "unknown");
+          const tasksLabel = typeof row.tasksCount === "number" ? ` • ${row.tasksCount} tasks` : "";
           return `
             <div class="lb-item ${isMe ? "me" : ""}">
               <div class="lb-left">
                 <span class="lb-rank">${medal}</span>
-                <span class="lb-name">${safeName}${isMe ? " (You)" : ""}</span>
+                <div>
+                  <div class="lb-name">${safeName}${isMe ? " (You)" : ""}</div>
+                  <div class="lb-sub">ID: ${safeId}${tasksLabel}</div>
+                </div>
               </div>
               <span class="lb-score">${Number(row.balance) || 0} TMX</span>
             </div>
@@ -932,16 +1017,49 @@
         .join("");
     }
 
+    async function syncUserData(showFeedback = false) {
+      const profile = getCurrentUserProfile();
+      const syncRes = await callApi("/api/state", {
+        user_id: profile.user_id,
+        username: profile.username
+      });
+
+      if (syncRes.ok && typeof syncRes.data?.balance === "number") {
+        state.balance = syncRes.data.balance;
+        if (Array.isArray(syncRes.data.completedTasks)) {
+          state.completedTasks = syncRes.data.completedTasks;
+        }
+        if (syncRes.data.lastBonusDate) {
+          state.lastBonusDate = syncRes.data.lastBonusDate;
+        }
+        if (Array.isArray(syncRes.data.leaderboard)) {
+          state.leaderboard = syncRes.data.leaderboard;
+        }
+        saveLocalState();
+        renderUI();
+        if (showFeedback) {
+          showBanner(`Synced user data & balance (${state.balance} TMX) with MongoDB Atlas.`, "success");
+        }
+        return true;
+      }
+
+      renderUI();
+      if (showFeedback) {
+        showBanner("Using local user data & cached balances (API offline).", "info");
+      }
+      return false;
+    }
+
     async function loadLeaderboard(showFeedback = false) {
-      const res = await callApi("/api/leaderboard?limit=20", {}, "GET");
+      const res = await callApi("/api/leaderboard?limit=25", {}, "GET");
       if (res.ok && Array.isArray(res.data?.leaderboard)) {
         state.leaderboard = res.data.leaderboard;
         saveLocalState();
         renderLeaderboard();
-        if (showFeedback) showBanner("Leaderboard updated from MongoDB Atlas.", "success");
+        if (showFeedback) showBanner("Users & balances updated from MongoDB Atlas.", "success");
       } else {
         renderLeaderboard();
-        if (showFeedback) showBanner("Showing cached/local leaderboard (API offline).", "info");
+        if (showFeedback) showBanner("Showing cached/local user balances (API offline).", "info");
       }
     }
 
@@ -982,6 +1100,7 @@
         bonusBtn.textContent = "✓ Daily Bonus Claimed Today";
       }
 
+      renderUserDataCard();
       renderLeaderboard();
     }
 
@@ -992,7 +1111,7 @@
         document.getElementById(`nav-${t}`)?.classList.toggle("active", t === tabName);
       }
       if (tabName === "leaderboard") {
-        loadLeaderboard(false);
+        syncUserData(false).then(() => loadLeaderboard(false));
       }
     }
 
@@ -1143,10 +1262,30 @@
     // =========================================================================
     // TASKS & DAILY BONUS
     // =========================================================================
-    async function verifyTask(taskId, reward) {
+    function openTaskLink(url) {
+      if (!url) return;
+      const tg = getTelegramWebApp();
+      try {
+        if (url.startsWith("https://t.me/") && tg && typeof tg.openTelegramLink === "function") {
+          tg.openTelegramLink(url);
+        } else if (tg && typeof tg.openLink === "function") {
+          tg.openLink(url);
+        } else {
+          window.open(url, "_blank", "noopener,noreferrer");
+        }
+      } catch (err) {
+        recordLog("WARN", "Could not open task link", err.message);
+      }
+    }
+
+    async function verifyTask(taskId, reward, linkUrl = null) {
       if (state.completedTasks.includes(taskId)) {
         showBanner("Task already verified.", "info");
         return;
+      }
+
+      if (linkUrl) {
+        openTaskLink(linkUrl);
       }
 
       showBanner("Verifying task...", "info");
@@ -1200,29 +1339,12 @@
       initAdsgram();
       renderUI();
 
-      const profile = getCurrentUserProfile();
-      const syncRes = await callApi("/api/state", {
-        user_id: profile.user_id,
-        username: profile.username
-      });
-
-      if (syncRes.ok && typeof syncRes.data?.balance === "number") {
-        state.balance = syncRes.data.balance;
-        if (Array.isArray(syncRes.data.completedTasks)) {
-          state.completedTasks = syncRes.data.completedTasks;
-        }
-        if (syncRes.data.lastBonusDate) {
-          state.lastBonusDate = syncRes.data.lastBonusDate;
-        }
-        if (Array.isArray(syncRes.data.leaderboard)) {
-          state.leaderboard = syncRes.data.leaderboard;
-        }
-        saveLocalState();
-        renderUI();
-        showBanner("Synced with TMX-QUANTUM & MongoDB Atlas.", "success");
+      const synced = await syncUserData(false);
+      if (synced) {
+        showBanner("Synced user data & balances with TMX-QUANTUM & MongoDB Atlas.", "success");
       } else {
         await loadLeaderboard(false);
-        showBanner("Ready! Local save & cached leaderboard active until API connects.", "info");
+        showBanner("Ready! Local user data & cached balances active until API connects.", "info");
       }
     })();
   </script>
