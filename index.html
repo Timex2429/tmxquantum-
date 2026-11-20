@@ -7,6 +7,7 @@
   <meta name="description" content="TMX-QUANTUM is a Web3 Telegram Mini App built on The Open Network (TON) blockchain, enabling TON wallet connection, tap-to-mine rewards, and ecosystem tasks." />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+  <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
   <style>
     :root {
       --bg: #090614;
@@ -199,6 +200,19 @@
       background: linear-gradient(90deg, var(--primary), var(--primary-2));
     }
 
+    .btn-ton {
+      background: linear-gradient(90deg, #0284c7, #0098ea);
+      border: 1px solid rgba(125, 211, 252, 0.45);
+      margin-bottom: 8px;
+    }
+
+    .btn-ton-outline {
+      background: rgba(0, 152, 234, 0.12);
+      border: 1px solid rgba(0, 152, 234, 0.45);
+      color: #bae6fd;
+      margin-bottom: 0;
+    }
+
     .btn-ghost {
       background: var(--surface-2);
       border: 1px solid var(--border);
@@ -281,6 +295,14 @@
       font-size: 11.5px;
       color: var(--muted);
       margin-top: 2px;
+    }
+
+    .ton-wallet-tag {
+      font-size: 11.5px;
+      color: #7dd3fc;
+      margin-top: 4px;
+      font-weight: 600;
+      word-break: break-all;
     }
 
     .user-bal-tag {
@@ -638,9 +660,20 @@
           <div>
             <div id="profileDisplayName" style="font-weight:700;font-size:14px;">Miner</div>
             <div id="profileUserId" class="user-id-tag">ID: guest_local • Tasks: 0</div>
+            <div id="profileTonWallet" class="ton-wallet-tag">💎 TON Wallet: Not Connected</div>
           </div>
           <div id="profileBalance" class="user-bal-tag">0 TMX</div>
         </div>
+
+        <button id="connectTonBtn" class="btn btn-ton" type="button" onclick="handleConnectTonWallet()">
+          <span>💎</span>
+          <span id="connectTonLabel">Connect TON Wallet</span>
+        </button>
+
+        <button class="btn btn-ton-outline" type="button" onclick="openTonAppCatalog()">
+          <span>🌐</span>
+          <span>Open ton.app Ecosystem</span>
+        </button>
       </div>
 
       <div class="card">
@@ -755,6 +788,8 @@
     const CONFIG = {
       API_BASE_URL: "", // e.g. "https://your-backend.vercel.app" or "" for same-origin /api/*
       ADSGRAM_BLOCK_ID: "60934",
+      TON_APP_URL: "https://ton.app",
+      TON_MANIFEST_URL: "https://www.tmxquantum.site/tonconnect-manifest.json",
       ROUND_SECONDS: 15,
       STORAGE_KEY: "tmx_quantum_state_v3",
       REQUEST_TIMEOUT_MS: 8000
@@ -834,6 +869,7 @@
       boost2xActive: false,
       completedTasks: [],
       lastBonusDate: null,
+      tonWalletAddress: null,
       leaderboard: [...FALLBACK_LEADERBOARD]
     };
 
@@ -847,6 +883,7 @@
           ...parsed,
           isMining: false,
           timerSeconds: CONFIG.ROUND_SECONDS,
+          tonWalletAddress: parsed.tonWalletAddress || null,
           completedTasks: Array.isArray(parsed.completedTasks) ? parsed.completedTasks : [],
           leaderboard: Array.isArray(parsed.leaderboard) && parsed.leaderboard.length
             ? parsed.leaderboard
@@ -861,6 +898,7 @@
     const state = loadLocalState();
     let timerInterval = null;
     let adController = null;
+    let tonConnectUI = null;
 
     function saveLocalState() {
       try {
@@ -870,6 +908,7 @@
           boost2xActive: state.boost2xActive,
           completedTasks: state.completedTasks,
           lastBonusDate: state.lastBonusDate,
+          tonWalletAddress: state.tonWalletAddress || null,
           leaderboard: state.leaderboard
         };
         localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(toSave));
@@ -937,6 +976,121 @@
       } catch (err) {
         recordLog("ERROR", "Telegram WebApp init failed", err.message);
       }
+    }
+
+    // =========================================================================
+    // TON CONNECT & TON.APP INTERACTION
+    // =========================================================================
+    function shortenTonAddress(addr) {
+      if (!addr || typeof addr !== "string") return "";
+      if (addr.length <= 14) return addr;
+      return `${addr.slice(0, 6)}...${addr.slice(-6)}`;
+    }
+
+    function initTonConnect() {
+      try {
+        if (!window.TON_CONNECT_UI || typeof window.TON_CONNECT_UI.TonConnectUI !== "function") {
+          recordLog("WARN", "TON Connect UI script not available; manual address fallback enabled");
+          return;
+        }
+        const tg = getTelegramWebApp();
+        tonConnectUI = new window.TON_CONNECT_UI.TonConnectUI({
+          manifestUrl: CONFIG.TON_MANIFEST_URL,
+          actionsConfiguration: {
+            twaReturnUrl: tg?.initDataUnsafe?.user ? "https://t.me/Tmxqunbot/app" : window.location.href
+          }
+        });
+
+        tonConnectUI.onStatusChange((wallet) => {
+          if (wallet && wallet.account && wallet.account.address) {
+            state.tonWalletAddress = wallet.account.address;
+            saveLocalState();
+            renderUserDataCard();
+            callApi("/api/wallet/link", {
+              tonWalletAddress: state.tonWalletAddress,
+              tonAppTarget: CONFIG.TON_APP_URL
+            });
+            showBanner(`TON Wallet connected: ${shortenTonAddress(state.tonWalletAddress)}`, "success");
+          } else if (state.tonWalletAddress && !wallet) {
+            state.tonWalletAddress = null;
+            saveLocalState();
+            renderUserDataCard();
+          }
+        });
+        recordLog("INFO", "TON Connect UI initialized", { manifestUrl: CONFIG.TON_MANIFEST_URL });
+      } catch (err) {
+        recordLog("WARN", "TON Connect UI init fallback", err.message);
+      }
+    }
+
+    async function handleConnectTonWallet() {
+      try {
+        if (tonConnectUI) {
+          if (tonConnectUI.connected || state.tonWalletAddress) {
+            const shouldDisconnect = confirm(
+              `Connected TON Wallet: ${state.tonWalletAddress || "Active"}\n\nDisconnect wallet?`
+            );
+            if (!shouldDisconnect) return;
+            if (tonConnectUI.connected) {
+              await tonConnectUI.disconnect();
+            }
+            state.tonWalletAddress = null;
+            saveLocalState();
+            renderUserDataCard();
+            await callApi("/api/wallet/link", { tonWalletAddress: null });
+            showBanner("TON wallet disconnected.", "info");
+            return;
+          }
+          await tonConnectUI.openModal();
+          return;
+        }
+
+        // Manual TON address fallback if TON Connect modal isn't loaded
+        if (state.tonWalletAddress) {
+          const unlink = confirm(`Linked TON Wallet: ${state.tonWalletAddress}\n\nUnlink this address?`);
+          if (!unlink) return;
+          state.tonWalletAddress = null;
+          saveLocalState();
+          renderUserDataCard();
+          await callApi("/api/wallet/link", { tonWalletAddress: null });
+          showBanner("TON wallet unlinked.", "info");
+          return;
+        }
+
+        const input = prompt("Enter your TON wallet address (EQ... or UQ...):");
+        if (!input) return;
+        const cleanAddr = input.trim();
+        if (!/^(EQ|UQ|kQ|0Q)[A-Za-z0-9_-]{46}$/.test(cleanAddr)) {
+          showBanner("Please enter a valid TON wallet address starting with EQ or UQ.", "error");
+          return;
+        }
+
+        state.tonWalletAddress = cleanAddr;
+        saveLocalState();
+        renderUserDataCard();
+        const apiRes = await callApi("/api/wallet/link", {
+          tonWalletAddress: cleanAddr,
+          tonAppTarget: CONFIG.TON_APP_URL
+        });
+        showBanner(
+          apiRes.ok
+            ? `TON wallet linked (${shortenTonAddress(cleanAddr)}) and synced!`
+            : `TON wallet linked locally (${shortenTonAddress(cleanAddr)}).`,
+          "success"
+        );
+      } catch (err) {
+        recordLog("ERROR", "Connect TON wallet failed", err.message);
+        showBanner(`Wallet connection error: ${err.message}`, "error");
+      }
+    }
+
+    function openTonAppCatalog() {
+      const profile = getCurrentUserProfile();
+      recordLog("INFO", "Opening ton.app ecosystem", {
+        user_id: profile.user_id,
+        tonWalletAddress: state.tonWalletAddress || null
+      });
+      openTaskLink(CONFIG.TON_APP_URL);
     }
 
     // =========================================================================
@@ -1022,12 +1176,25 @@
       const nameEl = document.getElementById("profileDisplayName");
       const idEl = document.getElementById("profileUserId");
       const balEl = document.getElementById("profileBalance");
+      const walletEl = document.getElementById("profileTonWallet");
+      const connectBtnLabel = document.getElementById("connectTonLabel");
 
       if (nameEl) nameEl.textContent = me.username;
       if (idEl) {
         idEl.textContent = `ID: ${me.user_id} • Verified Tasks: ${state.completedTasks.length}`;
       }
       if (balEl) balEl.textContent = `${Number(state.balance) || 0} TMX`;
+
+      if (walletEl) {
+        walletEl.textContent = state.tonWalletAddress
+          ? `💎 TON Wallet: ${shortenTonAddress(state.tonWalletAddress)}`
+          : "💎 TON Wallet: Not Connected";
+      }
+      if (connectBtnLabel) {
+        connectBtnLabel.textContent = state.tonWalletAddress
+          ? "Disconnect / Change TON Wallet"
+          : "Connect TON Wallet";
+      }
     }
 
     function syncLocalLeaderboardWithCurrentUser() {
@@ -1100,6 +1267,9 @@
         }
         if (syncRes.data.lastBonusDate) {
           state.lastBonusDate = syncRes.data.lastBonusDate;
+        }
+        if (syncRes.data.tonWalletAddress) {
+          state.tonWalletAddress = syncRes.data.tonWalletAddress;
         }
         if (Array.isArray(syncRes.data.leaderboard)) {
           state.leaderboard = syncRes.data.leaderboard;
@@ -1410,6 +1580,7 @@
     (async function boot() {
       recordLog("INFO", "TMX-QUANTUM booting...");
       initTelegram();
+      initTonConnect();
       initAdsgram();
       renderUI();
 
