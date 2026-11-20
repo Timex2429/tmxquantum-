@@ -200,6 +200,11 @@
       background: linear-gradient(90deg, var(--primary), var(--primary-2));
     }
 
+    .btn-spin {
+      background: linear-gradient(90deg, #b45309, #d97706);
+      border: 1px solid rgba(251, 191, 36, 0.45);
+    }
+
     .btn-ton {
       background: linear-gradient(90deg, #0284c7, #0098ea);
       border: 1px solid rgba(125, 211, 252, 0.45);
@@ -310,6 +315,106 @@
       font-weight: 800;
       color: var(--accent);
       white-space: nowrap;
+    }
+
+    /* Spin & Win Wheel Box */
+    .spin-box {
+      background: var(--surface-2);
+      border: 1px solid rgba(245, 158, 11, 0.32);
+      border-radius: 14px;
+      padding: 14px;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .spin-wheel {
+      width: 126px;
+      height: 126px;
+      margin: 6px auto 12px;
+      border-radius: 50%;
+      border: 4px solid var(--accent);
+      background: conic-gradient(
+        #7c3aed 0deg 60deg,
+        #0284c7 60deg 120deg,
+        #059669 120deg 180deg,
+        #d97706 180deg 240deg,
+        #4f46e5 240deg 300deg,
+        #9333ea 300deg 360deg
+      );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 24px rgba(245, 158, 11, 0.25);
+      transition: transform 2.2s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+    }
+
+    .spin-wheel-core {
+      width: 78px;
+      height: 78px;
+      border-radius: 50%;
+      background: #0d081c;
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+      color: var(--accent);
+    }
+
+    .spin-result-text {
+      font-size: 12.5px;
+      color: #fde68a;
+      margin-bottom: 10px;
+      min-height: 18px;
+      font-weight: 600;
+    }
+
+    /* Referral Box */
+    .ref-link-box {
+      background: var(--surface-2);
+      border: 1px solid rgba(167, 139, 250, 0.3);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 11.5px;
+      color: #e9d5ff;
+      word-break: break-all;
+      margin-bottom: 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .ref-stats-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .ref-stat-pill {
+      background: var(--surface-2);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .ref-stat-num {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .ref-stat-lbl {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .ref-actions-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
     }
 
     .task-item, .lb-item {
@@ -525,7 +630,7 @@
         <span>TMX-QUANTUM</span>
         <span class="ton-badge">TON</span>
       </div>
-      <div class="balance-pill" id="headerBalance">0 TMX</div>
+      <div class="balance-pill" id="headerBalance">0 💎</div>
     </header>
 
     <!-- Live Status / Error Banner -->
@@ -556,7 +661,7 @@
         </div>
         <div>
           <div class="stat-label">Balance</div>
-          <div class="stat-value" id="balanceDisplay">0</div>
+          <div class="stat-value" id="balanceDisplay">0 💎</div>
         </div>
       </div>
 
@@ -584,7 +689,7 @@
       <section class="ton-card" aria-label="TON Blockchain Integration">
         <h2 class="ton-card-title">💎 Built on The Open Network (TON)</h2>
         <p class="ton-card-text">
-          <strong>TMX-QUANTUM</strong> is a Web3 Telegram Mini App powered by the <strong>TON blockchain</strong>. Users mine TMX points in 15-second sessions, complete ecosystem tasks, and link their <strong>TON wallet via TON Connect</strong> to verify on-chain identity and unlock future TON token distribution and rewards.
+          <strong>TMX-QUANTUM</strong> is a Web3 Telegram Mini App powered by the <strong>TON blockchain</strong>. Users mine 💎 tokens in 15-second sessions, complete ecosystem tasks, and link their <strong>TON wallet via TON Connect</strong> to verify on-chain identity and unlock future TON token distribution and rewards.
         </p>
       </section>
     </main>
@@ -592,17 +697,17 @@
     <!-- TASKS TAB -->
     <section id="panel-tasks" class="tab-panel">
       <div class="card">
-        <h2 class="card-title">Task Verification</h2>
+        <h2 class="card-title">Social & Ecosystem Tasks</h2>
         <p class="card-desc">
-          Complete tasks and official channel verifications below to earn bonus TMX rewards on TON.
+          Complete social tasks below to earn <strong>300 💎</strong> each, plus bonus ecosystem actions.
         </p>
 
         <div class="task-item">
           <div>
             <div style="font-weight:700;font-size:13px;">Launch Official Bot (@Tmxqunbot)</div>
-            <div class="task-meta">Reward: +25 TMX</div>
+            <div class="task-meta">Social Reward: +300 💎</div>
           </div>
-          <button class="btn btn-primary btn-ghost" id="task-bot-tmxqunbot" type="button" onclick="verifyTask('bot_tmxqunbot', 25, 'https://t.me/Tmxqunbot')">
+          <button class="btn btn-primary btn-ghost" id="task-bot-tmxqunbot" type="button" onclick="verifyTask('bot_tmxqunbot', 300, 'https://t.me/Tmxqunbot')">
             Verify
           </button>
         </div>
@@ -610,9 +715,9 @@
         <div class="task-item">
           <div>
             <div style="font-weight:700;font-size:13px;">Follow on X (@timex2429)</div>
-            <div class="task-meta">Reward: +20 TMX</div>
+            <div class="task-meta">Social Reward: +300 💎</div>
           </div>
-          <button class="btn btn-primary btn-ghost" id="task-x-timex2429" type="button" onclick="verifyTask('x_timex2429', 20, 'https://x.com/timex2429')">
+          <button class="btn btn-primary btn-ghost" id="task-x-timex2429" type="button" onclick="verifyTask('x_timex2429', 300, 'https://x.com/timex2429')">
             Verify
           </button>
         </div>
@@ -620,9 +725,9 @@
         <div class="task-item">
           <div>
             <div style="font-weight:700;font-size:13px;">Follow on Instagram (@tmxquantum245)</div>
-            <div class="task-meta">Reward: +20 TMX</div>
+            <div class="task-meta">Social Reward: +300 💎</div>
           </div>
-          <button class="btn btn-primary btn-ghost" id="task-ig-tmxquantum245" type="button" onclick="verifyTask('ig_tmxquantum245', 20, 'https://instagram.com/tmxquantum245')">
+          <button class="btn btn-primary btn-ghost" id="task-ig-tmxquantum245" type="button" onclick="verifyTask('ig_tmxquantum245', 300, 'https://instagram.com/tmxquantum245')">
             Verify
           </button>
         </div>
@@ -630,9 +735,9 @@
         <div class="task-item">
           <div>
             <div style="font-weight:700;font-size:13px;">Complete First 15s Mining Session</div>
-            <div class="task-meta">Reward: +15 TMX</div>
+            <div class="task-meta">Reward: +50 💎</div>
           </div>
-          <button class="btn btn-primary btn-ghost" id="task-first-mine" type="button" onclick="verifyTask('first_mine', 15)">
+          <button class="btn btn-primary btn-ghost" id="task-first-mine" type="button" onclick="verifyTask('first_mine', 50)">
             Verify
           </button>
         </div>
@@ -640,9 +745,9 @@
         <div class="task-item">
           <div>
             <div style="font-weight:700;font-size:13px;">Share TMX-QUANTUM with a Friend</div>
-            <div class="task-meta">Reward: +30 TMX</div>
+            <div class="task-meta">Reward: +100 💎</div>
           </div>
-          <button class="btn btn-primary btn-ghost" id="task-share-app" type="button" onclick="verifyTask('share_app', 30)">
+          <button class="btn btn-primary btn-ghost" id="task-share-app" type="button" onclick="verifyTask('share_app', 100)">
             Verify
           </button>
         </div>
@@ -662,7 +767,7 @@
             <div id="profileUserId" class="user-id-tag">ID: guest_local • Tasks: 0</div>
             <div id="profileTonWallet" class="ton-wallet-tag">💎 TON Wallet: Not Connected</div>
           </div>
-          <div id="profileBalance" class="user-bal-tag">0 TMX</div>
+          <div id="profileBalance" class="user-bal-tag">0 💎</div>
         </div>
 
         <button id="connectTonBtn" class="btn btn-ton" type="button" onclick="handleConnectTonWallet()">
@@ -688,22 +793,68 @@
       </div>
     </section>
 
-    <!-- BONUS TAB -->
+    <!-- BONUS TAB (DAILY BONUS + SPIN & WIN + REFERRAL PROGRAM) -->
     <section id="panel-bonus" class="tab-panel">
       <div class="card">
-        <h2 class="card-title">Daily Bonus Claim</h2>
+        <h2 class="card-title">🎁 Daily Bonus Claim</h2>
         <p class="card-desc">
-          Claim your daily quantum reward to boost your TMX balance.
+          Claim your daily quantum reward to boost your 💎 balance.
         </p>
         <button id="dailyBonusBtn" class="btn btn-primary" type="button" onclick="claimDailyBonus()">
-          🎁 Claim Daily Bonus (+20 TMX)
+          🎁 Claim Daily Bonus (+50 💎)
         </button>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">🎡 Spin & Win</h2>
+        <p class="card-desc">
+          Spin the quantum wheel once daily to win instant 💎 rewards (+25 💎 to +500 💎).
+        </p>
+        <div class="spin-box">
+          <div id="spinWheel" class="spin-wheel">
+            <div class="spin-wheel-core">
+              <span>💎</span>
+              <span id="wheelCenterLabel">SPIN</span>
+            </div>
+          </div>
+          <div id="spinResultText" class="spin-result-text">Ready for your daily spin!</div>
+          <button id="spinWinBtn" class="btn btn-spin" style="margin-bottom:0;" type="button" onclick="handleSpinAndWin()">
+            <span>🎡</span>
+            <span id="spinWinLabel">Spin & Win 💎</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">🤝 Referral Program</h2>
+        <p class="card-desc">
+          Invite friends to <strong>TMX-QUANTUM</strong> and earn <strong>+250 💎</strong> for every friend who joins with your link.
+        </p>
+        <div class="ref-stats-row">
+          <div class="ref-stat-pill">
+            <div id="referralCountDisplay" class="ref-stat-num">0</div>
+            <div class="ref-stat-lbl">Friends Invited</div>
+          </div>
+          <div class="ref-stat-pill">
+            <div id="referralEarnedDisplay" class="ref-stat-num">0 💎</div>
+            <div class="ref-stat-lbl">Referral Earned</div>
+          </div>
+        </div>
+        <div id="referralLinkBox" class="ref-link-box">https://t.me/Tmxqunbot?start=ref_guest_local</div>
+        <div class="ref-actions-row">
+          <button class="btn btn-primary" style="margin-bottom:0;" type="button" onclick="copyReferralLink()">
+            📋 Copy Link
+          </button>
+          <button class="btn btn-save" style="margin-bottom:0;" type="button" onclick="shareReferralInvite()">
+            🚀 Share Invite
+          </button>
+        </div>
       </div>
 
       <div class="card">
         <h2 class="card-title">App Diagnostics</h2>
         <p class="card-desc">
-          Toggle the live error console if taps, saves, or ads behave unexpectedly on your device.
+          Toggle the live error console if taps, saves, spins, or ads behave unexpectedly on your device.
         </p>
         <button class="btn btn-ghost" style="width:100%;" type="button" onclick="toggleDiag()">
           🛠️ Toggle Error & API Log
@@ -719,21 +870,21 @@
         <details open>
           <summary>How does TMX-QUANTUM use the TON blockchain?</summary>
           <p>
-            TMX-QUANTUM is built for The Open Network (TON) ecosystem inside Telegram. Your mined TMX balance and task achievements link to your Telegram identity and TON Connect wallet for on-chain reward eligibility and ecosystem utility.
+            TMX-QUANTUM is built for The Open Network (TON) ecosystem inside Telegram. Your mined 💎 balance and task achievements link to your Telegram identity and TON Connect wallet for on-chain reward eligibility and ecosystem utility.
           </p>
         </details>
 
         <details open>
           <summary>How does a 15-second mining round work?</summary>
           <p>
-            Tap the lightning button to start a 15-second round and tap repeatedly to build your Session count. When finished, tap <strong>Submit & Save Session</strong> to add points to your Balance.
+            Tap the lightning button to start a 15-second round and tap repeatedly to build your Session count. When finished, tap <strong>Submit & Save Session</strong> to add 💎 points to your Balance.
           </p>
         </details>
 
         <details>
-          <summary>How are user balances and leaderboard rankings stored?</summary>
+          <summary>How do Spin & Win and Referrals work?</summary>
           <p>
-            Your user profile, balance, verified tasks, and leaderboard rank sync with your backend connected to <strong>MongoDB Atlas</strong>, while also caching locally so your progress stays safe if the network drops.
+            You get one free Spin & Win chance every day for up to +500 💎, and you earn +250 💎 per referral invite. Progress syncs with <strong>MongoDB Atlas</strong> with local fallback.
           </p>
         </details>
 
@@ -748,7 +899,7 @@
       <div class="card">
         <h2 class="card-title">Support & Contact Details</h2>
         <p class="card-desc" style="margin-bottom:8px;">
-          Need help with task verification, account sync, or bug reports? Contact our support email:
+          Need help with task verification, referrals, account sync, or bug reports? Contact our support email:
         </p>
         <div style="font-size:13px;line-height:1.7;">
           <div><strong>Support Email:</strong> support@tmxquantum.app</div>
@@ -790,8 +941,12 @@
       ADSGRAM_BLOCK_ID: "60934",
       TON_APP_URL: "https://ton.app",
       TON_MANIFEST_URL: "https://www.tmxquantum.site/tonconnect-manifest.json",
+      BOT_USERNAME: "Tmxqunbot",
+      REFERRAL_REWARD: 250,
+      DAILY_BONUS_REWARD: 50,
+      SPIN_PRIZES: [25, 50, 100, 150, 250, 500],
       ROUND_SECONDS: 15,
-      STORAGE_KEY: "tmx_quantum_state_v3",
+      STORAGE_KEY: "tmx_quantum_state_v4",
       REQUEST_TIMEOUT_MS: 8000
     };
 
@@ -869,6 +1024,9 @@
       boost2xActive: false,
       completedTasks: [],
       lastBonusDate: null,
+      lastSpinDate: null,
+      referralCount: 0,
+      referralEarned: 0,
       tonWalletAddress: null,
       leaderboard: [...FALLBACK_LEADERBOARD]
     };
@@ -883,6 +1041,8 @@
           ...parsed,
           isMining: false,
           timerSeconds: CONFIG.ROUND_SECONDS,
+          referralCount: Number(parsed.referralCount) || 0,
+          referralEarned: Number(parsed.referralEarned) || 0,
           tonWalletAddress: parsed.tonWalletAddress || null,
           completedTasks: Array.isArray(parsed.completedTasks) ? parsed.completedTasks : [],
           leaderboard: Array.isArray(parsed.leaderboard) && parsed.leaderboard.length
@@ -899,6 +1059,8 @@
     let timerInterval = null;
     let adController = null;
     let tonConnectUI = null;
+    let currentWheelAngle = 0;
+    let isSpinning = false;
 
     function saveLocalState() {
       try {
@@ -908,6 +1070,9 @@
           boost2xActive: state.boost2xActive,
           completedTasks: state.completedTasks,
           lastBonusDate: state.lastBonusDate,
+          lastSpinDate: state.lastSpinDate,
+          referralCount: state.referralCount,
+          referralEarned: state.referralEarned,
           tonWalletAddress: state.tonWalletAddress || null,
           leaderboard: state.leaderboard
         };
@@ -997,7 +1162,7 @@
         tonConnectUI = new window.TON_CONNECT_UI.TonConnectUI({
           manifestUrl: CONFIG.TON_MANIFEST_URL,
           actionsConfiguration: {
-            twaReturnUrl: tg?.initDataUnsafe?.user ? "https://t.me/Tmxqunbot/app" : window.location.href
+            twaReturnUrl: tg?.initDataUnsafe?.user ? `https://t.me/${CONFIG.BOT_USERNAME}/app` : window.location.href
           }
         });
 
@@ -1045,7 +1210,6 @@
           return;
         }
 
-        // Manual TON address fallback if TON Connect modal isn't loaded
         if (state.tonWalletAddress) {
           const unlink = confirm(`Linked TON Wallet: ${state.tonWalletAddress}\n\nUnlink this address?`);
           if (!unlink) return;
@@ -1183,7 +1347,7 @@
       if (idEl) {
         idEl.textContent = `ID: ${me.user_id} • Verified Tasks: ${state.completedTasks.length}`;
       }
-      if (balEl) balEl.textContent = `${Number(state.balance) || 0} TMX`;
+      if (balEl) balEl.textContent = `${Number(state.balance) || 0} 💎`;
 
       if (walletEl) {
         walletEl.textContent = state.tonWalletAddress
@@ -1195,6 +1359,18 @@
           ? "Disconnect / Change TON Wallet"
           : "Connect TON Wallet";
       }
+    }
+
+    function renderReferralCard() {
+      const me = getCurrentUserProfile();
+      const refLink = `https://t.me/${CONFIG.BOT_USERNAME}?start=ref_${encodeURIComponent(me.user_id)}`;
+      const linkEl = document.getElementById("referralLinkBox");
+      const countEl = document.getElementById("referralCountDisplay");
+      const earnedEl = document.getElementById("referralEarnedDisplay");
+
+      if (linkEl) linkEl.textContent = refLink;
+      if (countEl) countEl.textContent = `${Number(state.referralCount) || 0}`;
+      if (earnedEl) earnedEl.textContent = `${Number(state.referralEarned) || 0} 💎`;
     }
 
     function syncLocalLeaderboardWithCurrentUser() {
@@ -1246,7 +1422,7 @@
                   <div class="lb-sub">ID: ${safeId}${tasksLabel}</div>
                 </div>
               </div>
-              <span class="lb-score">${Number(row.balance) || 0} TMX</span>
+              <span class="lb-score">${Number(row.balance) || 0} 💎</span>
             </div>
           `;
         })
@@ -1268,6 +1444,15 @@
         if (syncRes.data.lastBonusDate) {
           state.lastBonusDate = syncRes.data.lastBonusDate;
         }
+        if (syncRes.data.lastSpinDate) {
+          state.lastSpinDate = syncRes.data.lastSpinDate;
+        }
+        if (typeof syncRes.data.referralCount === "number") {
+          state.referralCount = syncRes.data.referralCount;
+        }
+        if (typeof syncRes.data.referralEarned === "number") {
+          state.referralEarned = syncRes.data.referralEarned;
+        }
         if (syncRes.data.tonWalletAddress) {
           state.tonWalletAddress = syncRes.data.tonWalletAddress;
         }
@@ -1277,7 +1462,7 @@
         saveLocalState();
         renderUI();
         if (showFeedback) {
-          showBanner(`Synced user data & balance (${state.balance} TMX) with MongoDB Atlas.`, "success");
+          showBanner(`Synced user data & balance (${state.balance} 💎) with MongoDB Atlas.`, "success");
         }
         return true;
       }
@@ -1306,8 +1491,8 @@
     // UI RENDERING
     // =========================================================================
     function renderUI() {
-      document.getElementById("headerBalance").textContent = `${state.balance} TMX`;
-      document.getElementById("balanceDisplay").textContent = `${state.balance}`;
+      document.getElementById("headerBalance").textContent = `${state.balance} 💎`;
+      document.getElementById("balanceDisplay").textContent = `${state.balance} 💎`;
       document.getElementById("sessionDisplay").textContent = `${state.sessionPoints}`;
       document.getElementById("timerDisplay").textContent = `${state.timerSeconds}s`;
 
@@ -1339,6 +1524,21 @@
         bonusBtn.textContent = "✓ Daily Bonus Claimed Today";
       }
 
+      const spinBtn = document.getElementById("spinWinBtn");
+      const spinLabel = document.getElementById("spinWinLabel");
+      const spinResult = document.getElementById("spinResultText");
+      if (spinBtn && spinLabel && !isSpinning) {
+        if (state.lastSpinDate === today) {
+          spinBtn.disabled = true;
+          spinLabel.textContent = "Daily Spin Used";
+          if (spinResult) spinResult.textContent = "Come back tomorrow for another free spin!";
+        } else {
+          spinBtn.disabled = false;
+          spinLabel.textContent = "Spin & Win 💎";
+        }
+      }
+
+      renderReferralCard();
       renderUserDataCard();
       renderLeaderboard();
     }
@@ -1491,8 +1691,8 @@
 
         showBanner(
           apiRes.ok
-            ? `Saved +${earned} TMX to MongoDB Atlas! Balance: ${state.balance} TMX.`
-            : `Saved +${earned} TMX locally (server offline). Balance: ${state.balance} TMX.`,
+            ? `Saved +${earned} 💎 to MongoDB Atlas! Balance: ${state.balance} 💎.`
+            : `Saved +${earned} 💎 locally (server offline). Balance: ${state.balance} 💎.`,
           "success"
         );
       } catch (err) {
@@ -1504,7 +1704,7 @@
     }
 
     // =========================================================================
-    // TASKS & DAILY BONUS
+    // TASKS, SPIN & WIN, REFERRALS & DAILY BONUS
     // =========================================================================
     function openTaskLink(url) {
       if (!url) return;
@@ -1549,7 +1749,7 @@
 
       saveLocalState();
       renderUI();
-      showBanner(`Task verified! +${reward} TMX added to your balance.`, "success");
+      showBanner(`Task verified! +${reward} 💎 added to your balance.`, "success");
     }
 
     async function claimDailyBonus() {
@@ -1559,7 +1759,7 @@
         return;
       }
 
-      const bonusReward = 20;
+      const bonusReward = CONFIG.DAILY_BONUS_REWARD;
       const apiRes = await callApi("/api/bonus/claim", { reward: bonusReward, date: today });
 
       if (apiRes.ok && typeof apiRes.data?.balance === "number") {
@@ -1571,7 +1771,102 @@
       state.lastBonusDate = today;
       saveLocalState();
       renderUI();
-      showBanner(`Daily bonus claimed! +${bonusReward} TMX.`, "success");
+      showBanner(`Daily bonus claimed! +${bonusReward} 💎.`, "success");
+    }
+
+    async function handleSpinAndWin() {
+      const today = new Date().toISOString().slice(0, 10);
+      if (isSpinning) return;
+      if (state.lastSpinDate === today) {
+        showBanner("You have already used today's Spin & Win.", "info");
+        return;
+      }
+
+      isSpinning = true;
+      const spinBtn = document.getElementById("spinWinBtn");
+      const wheelEl = document.getElementById("spinWheel");
+      const centerLabel = document.getElementById("wheelCenterLabel");
+      const resultText = document.getElementById("spinResultText");
+
+      if (spinBtn) spinBtn.disabled = true;
+      if (centerLabel) centerLabel.textContent = "•••";
+      if (resultText) resultText.textContent = "Spinning the quantum wheel...";
+
+      const prizes = CONFIG.SPIN_PRIZES;
+      const prizeIndex = Math.floor(Math.random() * prizes.length);
+      const prizeAmount = prizes[prizeIndex];
+      const sliceDeg = 360 / prizes.length;
+      const targetDeg = 360 * 5 + (360 - prizeIndex * sliceDeg);
+      currentWheelAngle += targetDeg;
+
+      if (wheelEl) {
+        wheelEl.style.transform = `rotate(${currentWheelAngle}deg)`;
+      }
+
+      setTimeout(async () => {
+        try {
+          const apiRes = await callApi("/api/spin/claim", { reward: prizeAmount, date: today });
+          if (apiRes.ok && typeof apiRes.data?.balance === "number") {
+            state.balance = apiRes.data.balance;
+          } else {
+            state.balance += prizeAmount;
+          }
+          state.lastSpinDate = today;
+          saveLocalState();
+
+          if (centerLabel) centerLabel.textContent = `+${prizeAmount}`;
+          if (resultText) resultText.textContent = `You won +${prizeAmount} 💎!`;
+          showBanner(`Spin & Win! You earned +${prizeAmount} 💎.`, "success");
+        } catch (err) {
+          recordLog("ERROR", "Spin & Win failed", err.message);
+          showBanner(`Spin error: ${err.message}`, "error");
+        } finally {
+          isSpinning = false;
+          renderUI();
+        }
+      }, 2250);
+    }
+
+    function getReferralLink() {
+      const me = getCurrentUserProfile();
+      return `https://t.me/${CONFIG.BOT_USERNAME}?start=ref_${encodeURIComponent(me.user_id)}`;
+    }
+
+    async function copyReferralLink() {
+      const link = getReferralLink();
+      try {
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+          await navigator.clipboard.writeText(link);
+        } else {
+          const temp = document.createElement("textarea");
+          temp.value = link;
+          document.body.appendChild(temp);
+          temp.select();
+          document.execCommand("copy");
+          document.body.removeChild(temp);
+        }
+        showBanner("Referral link copied! Share it to earn +250 💎 per friend.", "success");
+      } catch (err) {
+        recordLog("WARN", "Clipboard copy fallback", err.message);
+        showBanner(`Referral link: ${link}`, "info");
+      }
+    }
+
+    function shareReferralInvite() {
+      const link = getReferralLink();
+      const shareText = `Mine 💎 on TMX-QUANTUM (TON Telegram Mini App) and earn rewards! Join here:`;
+      const tg = getTelegramWebApp();
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareText)}`;
+
+      try {
+        if (tg && typeof tg.openTelegramLink === "function") {
+          tg.openTelegramLink(shareUrl);
+        } else {
+          window.open(shareUrl, "_blank", "noopener,noreferrer");
+        }
+      } catch (err) {
+        recordLog("WARN", "Share invite fallback", err.message);
+      }
     }
 
     // =========================================================================
