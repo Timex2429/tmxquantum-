@@ -2287,7 +2287,70 @@
         }
       };
     }
+    // Guaranteed override at end of <script> to fix `show is not defined`
+    window.showBanner = function (text, type = "info") {
+      const banner = document.getElementById("statusBanner");
+      if (!banner) return;
+      banner.textContent = text;
+      banner.className = `status-banner ${type}`;
+    };
 
+    window.handleSubmitSession = async function () {
+      if (state.isMining) {
+        window.showBanner("Wait for the 15s timer to finish before submitting.", "info");
+        return;
+      }
+
+      if (state.sessionPoints <= 0) {
+        window.showBanner("Tap to start a mining round first so you have session points to save.", "info");
+        return;
+      }
+
+      const saveBtn = document.getElementById("saveBtn");
+      if (saveBtn) saveBtn.disabled = true;
+
+      const multiplier = state.boost2xActive ? 2 : 1;
+      const earned = state.sessionPoints * multiplier;
+
+      try {
+        const apiRes = await callApi("/api/mine/claim", {
+          sessionPoints: state.sessionPoints,
+          points: earned,
+          multiplier,
+          earned
+        });
+
+        const serverBal = apiRes.ok ? extractBalance(apiRes.data) : null;
+        if (serverBal !== null) {
+          state.balance = serverBal;
+        } else {
+          state.balance += earned;
+        }
+
+        if (Array.isArray(apiRes.data?.leaderboard)) {
+          state.leaderboard = apiRes.data.leaderboard;
+        }
+
+        state.sessionPoints = 0;
+        state.timerSeconds = CONFIG.ROUND_SECONDS;
+        state.roundCompleted = false;
+        state.boost2xActive = false;
+        saveLocalState();
+        renderUI();
+
+        window.showBanner(
+          apiRes.ok
+            ? `Saved +${earned} 💎! Balance: ${state.balance} 💎.`
+            : `Saved +${earned} 💎 locally (${apiRes.error || "API offline"}). Balance: ${state.balance} 💎.`,
+          "success"
+        );
+      } catch (err) {
+        recordLog("ERROR", "Submit session failed", err?.message || String(err));
+        window.showBanner(`Could not save session: ${err?.message || String(err)}`, "error");
+      } finally {
+        if (saveBtn) saveBtn.disabled = false;
+      }
+    };
   </script>
 </body>
 </html>
