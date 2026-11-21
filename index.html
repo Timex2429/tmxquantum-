@@ -2203,6 +2203,91 @@
         showBanner(`Active! Balance: ${state.balance} 💎 (local cache until API connects).`, "info");
       }
     })();
+        // --- Patch: Fix showBanner split & surface exact API validation errors ---
+    if (typeof showBanner !== "function") {
+      window.showBanner = function (text, type = "info") {
+        const banner = document.getElementById("statusBanner");
+        if (!banner) return;
+        banner.textContent = text;
+        banner.className = `status-banner ${type}`;
+      };
+    }
+
+    // Wrap callApi so failed 400/422 responses log the backend's actual error detail
+    if (typeof callApi === "function" && !callApi.__patched) {
+      const originalCallApi = callApi;
+      window.callApi = async function (path, payload = {}, method = "POST") {
+        const res = await originalCallApi(path, payload, method);
+        if (!res.ok) {
+          recordLog("WARN", `API error detail for ${path}`, {
+            error: res.error,
+            payloadKeys: Object.keys(payload || {})
+          });
+        }
+        return res;
+      };
+      window.callApi.__patched = true;
+    }
+
+    // Fix handleSubmitSession if it had the split `show` + `Banner(` call
+    if (typeof handleSubmitSession === "function") {
+      window.handleSubmitSession = async function () {
+        if (state.isMining) {
+          showBanner("Wait for the 15s timer to finish before submitting.", "info");
+          return;
+        }
+        if (state.sessionPoints <= 0) {
+          showBanner("Tap to start a mining round first so you have session points to save.", "info");
+          return;
+        }
+
+        const saveBtn = document.getElementById("saveBtn");
+        if (saveBtn) saveBtn.disabled = true;
+
+        const multiplier = state.boost2xActive ? 2 : 1;
+        const earned = state.sessionPoints * multiplier;
+
+        try {
+          const apiRes = await callApi("/api/mine/claim", {
+            sessionPoints: state.sessionPoints,
+            points: earned,
+            multiplier,
+            earned
+          });
+
+          const serverBal = apiRes.ok ? extractBalance(apiRes.data) : null;
+          if (serverBal !== null) {
+            state.balance = serverBal;
+          } else {
+            state.balance += earned;
+          }
+
+          if (Array.isArray(apiRes.data?.leaderboard)) {
+            state.leaderboard = apiRes.data.leaderboard;
+          }
+
+          state.sessionPoints = 0;
+          state.timerSeconds = CONFIG.ROUND_SECONDS;
+          state.roundCompleted = false;
+          state.boost2xActive = false;
+          saveLocalState();
+          renderUI();
+
+          showBanner(
+            apiRes.ok
+              ? `Saved +${earned} 💎! Balance: ${state.balance} 💎.`
+              : `Saved +${earned} 💎 locally (${apiRes.error || "API check"}). Balance: ${state.balance} 💎.`,
+            "success"
+          );
+        } catch (err) {
+          recordLog("ERROR", "Submit session failed", err?.message || String(err));
+          showBanner(`Could not save session: ${err?.message || String(err)}`, "error");
+        } finally {
+          if (saveBtn) saveBtn.disabled = false;
+        }
+      };
+    }
+
   </script>
 </body>
 </html>
