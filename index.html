@@ -228,6 +228,12 @@
       width: auto;
     }
 
+    .btn-verify-ready {
+      background: linear-gradient(90deg, #059669, #10b981);
+      border: 1px solid rgba(110, 231, 183, 0.5);
+      color: #fff;
+    }
+
     /* Cards & Lists */
     .card {
       background: var(--surface);
@@ -282,6 +288,39 @@
       color: var(--muted);
       margin: 0 0 12px;
       line-height: 1.45;
+    }
+
+    .streak-bar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .streak-day {
+      background: var(--surface-2);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 6px 2px;
+      text-align: center;
+      font-size: 10.5px;
+      color: var(--muted);
+    }
+
+    .streak-day.claimed {
+      background: rgba(16, 185, 129, 0.18);
+      border-color: rgba(52, 211, 153, 0.45);
+      color: #a7f3d0;
+      font-weight: 700;
+    }
+
+    .streak-day.day7 {
+      border-color: rgba(245, 158, 11, 0.45);
+    }
+
+    .streak-day.day7.claimed {
+      background: rgba(245, 158, 11, 0.22);
+      color: #fde68a;
     }
 
     .user-summary-box {
@@ -699,7 +738,7 @@
       <div class="card">
         <h2 class="card-title">Social & Ecosystem Tasks</h2>
         <p class="card-desc">
-          Complete social tasks below to earn <strong>300 💎</strong> each, plus bonus ecosystem actions.
+          Tap <strong>Open</strong> to complete each social action first, then tap <strong>Verify</strong> to claim <strong>300 💎</strong> per social task.
         </p>
 
         <div class="task-item">
@@ -707,8 +746,8 @@
             <div style="font-weight:700;font-size:13px;">Launch Official Bot (@Tmxqunbot)</div>
             <div class="task-meta">Social Reward: +300 💎</div>
           </div>
-          <button class="btn btn-primary btn-ghost" id="task-bot-tmxqunbot" type="button" onclick="verifyTask('bot_tmxqunbot', 300, 'https://t.me/Tmxqunbot')">
-            Verify
+          <button class="btn btn-primary btn-ghost" id="task-bot-tmxqunbot" type="button" onclick="handleSocialTaskAction('bot_tmxqunbot', 300, 'https://t.me/Tmxqunbot')">
+            Open
           </button>
         </div>
 
@@ -717,8 +756,8 @@
             <div style="font-weight:700;font-size:13px;">Follow on X (@timex2429)</div>
             <div class="task-meta">Social Reward: +300 💎</div>
           </div>
-          <button class="btn btn-primary btn-ghost" id="task-x-timex2429" type="button" onclick="verifyTask('x_timex2429', 300, 'https://x.com/timex2429')">
-            Verify
+          <button class="btn btn-primary btn-ghost" id="task-x-timex2429" type="button" onclick="handleSocialTaskAction('x_timex2429', 300, 'https://x.com/timex2429')">
+            Open
           </button>
         </div>
 
@@ -727,8 +766,28 @@
             <div style="font-weight:700;font-size:13px;">Follow on Instagram (@tmxquantum245)</div>
             <div class="task-meta">Social Reward: +300 💎</div>
           </div>
-          <button class="btn btn-primary btn-ghost" id="task-ig-tmxquantum245" type="button" onclick="verifyTask('ig_tmxquantum245', 300, 'https://instagram.com/tmxquantum245')">
-            Verify
+          <button class="btn btn-primary btn-ghost" id="task-ig-tmxquantum245" type="button" onclick="handleSocialTaskAction('ig_tmxquantum245', 300, 'https://instagram.com/tmxquantum245')">
+            Open
+          </button>
+        </div>
+
+        <div class="task-item">
+          <div>
+            <div style="font-weight:700;font-size:13px;">Follow on Facebook (TMX-QUANTUM)</div>
+            <div class="task-meta">Social Reward: +300 💎</div>
+          </div>
+          <button class="btn btn-primary btn-ghost" id="task-fb-tmxquantum" type="button" onclick="handleSocialTaskAction('fb_tmxquantum', 300, 'https://www.facebook.com/profile.php?id=61595898467380')">
+            Open
+          </button>
+        </div>
+
+        <div class="task-item">
+          <div>
+            <div style="font-weight:700;font-size:13px;">Follow on TikTok (@tmxquantum)</div>
+            <div class="task-meta">Social Reward: +300 💎</div>
+          </div>
+          <button class="btn btn-primary btn-ghost" id="task-tt-tmxquantum" type="button" onclick="handleSocialTaskAction('tt_tmxquantum', 300, 'https://www.tiktok.com/@tmxquantum')">
+            Open
           </button>
         </div>
 
@@ -793,15 +852,16 @@
       </div>
     </section>
 
-    <!-- BONUS TAB (DAILY BONUS + SPIN & WIN + REFERRAL PROGRAM) -->
+    <!-- BONUS TAB (DAILY LOGIN STREAK + SPIN & WIN + REFERRAL PROGRAM) -->
     <section id="panel-bonus" class="tab-panel">
       <div class="card">
-        <h2 class="card-title">🎁 Daily Bonus Claim</h2>
-        <p class="card-desc">
-          Claim your daily quantum reward to boost your 💎 balance.
+        <h2 class="card-title">🎁 7-Day Daily Login Bonus</h2>
+        <p class="card-desc" id="dailyBonusDesc">
+          Claim <strong>+200 💎</strong> each day you log in, plus an extra <strong>+2,000 💎</strong> bonus on Day 7 of a consistent 7-day streak!
         </p>
+        <div id="streakBar" class="streak-bar" aria-label="7-Day Login Streak"></div>
         <button id="dailyBonusBtn" class="btn btn-primary" type="button" onclick="claimDailyBonus()">
-          🎁 Claim Daily Bonus (+50 💎)
+          🎁 Claim Daily Login (+200 💎)
         </button>
       </div>
 
@@ -875,9 +935,9 @@
         </details>
 
         <details open>
-          <summary>How does a 15-second mining round work?</summary>
+          <summary>How does the 7-day login reward work?</summary>
           <p>
-            Tap the lightning button to start a 15-second round and tap repeatedly to build your Session count. When finished, tap <strong>Submit & Save Session</strong> to add 💎 points to your Balance.
+            Log in and claim daily for <strong>+200 💎</strong> per day. If you claim consistently for 7 consecutive days, Day 7 awards your <strong>+200 💎</strong> daily reward plus a <strong>+2,000 💎</strong> 7-day streak bonus. Missing a day resets your streak back to Day 1.
           </p>
         </details>
 
@@ -938,15 +998,16 @@
     // =========================================================================
     const CONFIG = {
       API_BASE_URL: "", // e.g. "https://your-backend.vercel.app" or "" for same-origin /api/*
-      ADSGRAM_BLOCK_ID: "60934",
+      ADSGRAM_BLOCK_ID: "61181",
       TON_APP_URL: "https://ton.app",
       TON_MANIFEST_URL: "https://www.tmxquantum.site/tonconnect-manifest.json",
       BOT_USERNAME: "Tmxqunbot",
       REFERRAL_REWARD: 250,
-      DAILY_BONUS_REWARD: 50,
+      DAILY_LOGIN_REWARD: 200,
+      SEVENTH_DAY_BONUS: 2000,
       SPIN_PRIZES: [25, 50, 100, 150, 250, 500],
       ROUND_SECONDS: 15,
-      STORAGE_KEY: "tmx_quantum_state_v4",
+      STORAGE_KEY: "tmx_quantum_state_v5",
       REQUEST_TIMEOUT_MS: 8000
     };
 
@@ -995,8 +1056,7 @@
     window.addEventListener("error", (event) => {
       const msg = event?.message || "Unknown script error";
       const loc = event?.filename ? `${event.filename}:${event.lineno}` : "";
-      recordLog("ERROR", `Uncaught Error: ${msg}`, loc);
-      showBanner(`Error: ${msg}`, "error");
+      recordLog("ERROR", `Uncaught Error: ${msg}`, loc); showBanner(`Error: ${msg}`, "error");
     });
 
     window.addEventListener("unhandledrejection", (event) => {
@@ -1009,160 +1069,11 @@
       const banner = document.getElementById("statusBanner");
       if (!banner) return;
       banner.textContent = text;
-      banner.className = `status-banner ${type}`;
-    }
-
-    // =========================================================================
-    // APPLICATION STATE & SAFE PERSISTENCE
-    // =========================================================================
-    const defaultState = {
-      balance: 0,
-      sessionPoints: 0,
-      timerSeconds: CONFIG.ROUND_SECONDS,
-      isMining: false,
-      roundCompleted: false,
-      boost2xActive: false,
-      completedTasks: [],
-      lastBonusDate: null,
-      lastSpinDate: null,
-      referralCount: 0,
-      referralEarned: 0,
-      tonWalletAddress: null,
-      leaderboard: [...FALLBACK_LEADERBOARD]
-    };
-
-    function loadLocalState() {
-      try {
-        const raw = localStorage.getItem(CONFIG.STORAGE_KEY);
-        if (!raw) return { ...defaultState };
-        const parsed = JSON.parse(raw);
-        return {
-          ...defaultState,
-          ...parsed,
-          isMining: false,
-          timerSeconds: CONFIG.ROUND_SECONDS,
-          referralCount: Number(parsed.referralCount) || 0,
-          referralEarned: Number(parsed.referralEarned) || 0,
-          tonWalletAddress: parsed.tonWalletAddress || null,
-          completedTasks: Array.isArray(parsed.completedTasks) ? parsed.completedTasks : [],
-          leaderboard: Array.isArray(parsed.leaderboard) && parsed.leaderboard.length
-            ? parsed.leaderboard
-            : [...FALLBACK_LEADERBOARD]
-        };
-      } catch (err) {
-        recordLog("WARN", "localStorage unavailable, using in-memory state", err.message);
-        return { ...defaultState };
-      }
-    }
-
-    const state = loadLocalState();
-    let timerInterval = null;
-    let adController = null;
-    let tonConnectUI = null;
-    let currentWheelAngle = 0;
-    let isSpinning = false;
-
-    function saveLocalState() {
-      try {
-        const toSave = {
-          balance: state.balance,
-          sessionPoints: state.sessionPoints,
-          boost2xActive: state.boost2xActive,
-          completedTasks: state.completedTasks,
-          lastBonusDate: state.lastBonusDate,
-          lastSpinDate: state.lastSpinDate,
-          referralCount: state.referralCount,
-          referralEarned: state.referralEarned,
-          tonWalletAddress: state.tonWalletAddress || null,
-          leaderboard: state.leaderboard
-        };
-        localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(toSave));
-      } catch (err) {
-        recordLog("WARN", "Could not persist to localStorage", err.message);
-      }
-    }
-
-    // =========================================================================
-    // TELEGRAM WEBAPP & USER PROFILE
-    // =========================================================================
-    function getTelegramWebApp() {
-      return window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-    }
-
-    function getTelegramInitData() {
-      const tg = getTelegramWebApp();
-      if (tg && typeof tg.initData === "string" && tg.initData.trim().length > 0) {
-        return tg.initData.trim();
-      }
-      const queryId = tg?.initDataUnsafe?.query_id;
-      if (queryId) {
-        return `query_id=${encodeURIComponent(String(queryId))}`;
+      banner.className = `status-banner ${type}`; }  // ========================================================================= // APPLICATION STATE & SAFE PERSISTENCE // ========================================================================= const defaultState = { balance: 0, sessionPoints: 0, timerSeconds: CONFIG.ROUND_SECONDS, isMining: false, roundCompleted: false, boost2xActive: false, visitedTasks: [], completedTasks: [], lastBonusDate: null, loginStreak: 0, lastSpinDate: null, referralCount: 0, referralEarned: 0, tonWalletAddress: null, leaderboard: [...FALLBACK_LEADERBOARD] };  function loadLocalState() { try { const raw = localStorage.getItem(CONFIG.STORAGE_KEY); if (!raw) return { ...defaultState }; const parsed = JSON.parse(raw); return { ...defaultState, ...parsed, isMining: false, timerSeconds: CONFIG.ROUND_SECONDS, loginStreak: Number(parsed.loginStreak) \vert{}\vert{} 0, referralCount: Number(parsed.referralCount) \vert{}\vert{} 0, referralEarned: Number(parsed.referralEarned) \vert{}\vert{} 0, tonWalletAddress: parsed.tonWalletAddress \vert{}\vert{} null, visitedTasks: Array.isArray(parsed.visitedTasks) ? parsed.visitedTasks : [], completedTasks: Array.isArray(parsed.completedTasks) ? parsed.completedTasks : [], leaderboard: Array.isArray(parsed.leaderboard) && parsed.leaderboard.length ? parsed.leaderboard : [...FALLBACK_LEADERBOARD] }; } catch (err) { recordLog("WARN", "localStorage unavailable, using in-memory state", err.message); return { ...defaultState }; } }  const state = loadLocalState(); let timerInterval = null; let adController = null; let tonConnectUI = null; let currentWheelAngle = 0; let isSpinning = false;  function saveLocalState() { try { const toSave = { balance: state.balance, sessionPoints: state.sessionPoints, boost2xActive: state.boost2xActive, visitedTasks: state.visitedTasks, completedTasks: state.completedTasks, lastBonusDate: state.lastBonusDate, loginStreak: state.loginStreak, lastSpinDate: state.lastSpinDate, referralCount: state.referralCount, referralEarned: state.referralEarned, tonWalletAddress: state.tonWalletAddress \vert{}\vert{} null, leaderboard: state.leaderboard }; localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(toSave)); } catch (err) { recordLog("WARN", "Could not persist to localStorage", err.message); } }  // ========================================================================= // DATE & STREAK HELPERS // ========================================================================= function getTodayDateStr() { return new Date().toISOString().slice(0, 10); }  function getYesterdayDateStr() { const d = new Date(); d.setUTCDate(d.getUTCDate() - 1); return d.toISOString().slice(0, 10); }  function getNextStreakDay() { const yesterday = getYesterdayDateStr(); if (!state.lastBonusDate) return 1; if (state.lastBonusDate === yesterday) { return state.loginStreak >= 7 ? 1 : state.loginStreak + 1; } return 1; }  // ========================================================================= // TELEGRAM WEBAPP & USER PROFILE // ========================================================================= function getTelegramWebApp() { return window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null; }  function getTelegramInitData() { const tg = getTelegramWebApp(); if (tg && typeof tg.initData === "string" && tg.initData.trim().length > 0) { return tg.initData.trim(); } const queryId = tg?.initDataUnsafe?.query_id; if (queryId) { return `query_id=${encodeURIComponent(String(queryId))}`;
       }
       const profile = getCurrentUserProfile();
-      return `user_id=${encodeURIComponent(String(profile.user_id))}`;
-    }
-
-    function getCurrentUserProfile() {
-      const tg = getTelegramWebApp();
-      const u = tg?.initDataUnsafe?.user;
-      if (u && u.id) {
-        const displayName = u.username
-          ? `@${u.username}`
-          : [u.first_name, u.last_name].filter(Boolean).join(" ") || `User_${u.id}`;
-        return {
-          user_id: String(u.id),
-          username: displayName,
-          first_name: u.first_name || ""
-        };
-      }
-      return {
-        user_id: "guest_local",
-        username: "You (Local)",
-        first_name: "You"
-      };
-    }
-
-    function initTelegram() {
-      const tg = getTelegramWebApp();
-      if (!tg) {
-        recordLog("INFO", "Running outside Telegram WebApp (browser/preview mode)");
-        return;
-      }
-
-      try {
-        if (typeof tg.ready === "function") tg.ready();
-        if (typeof tg.expand === "function") tg.expand();
-        recordLog("INFO", "Telegram WebApp initialized", {
-          version: tg.version || "unknown",
-          platform: tg.platform || "unknown",
-          hasInitData: Boolean(tg.initData && tg.initData.length > 0),
-          userId: tg.initDataUnsafe?.user?.id || null
-        });
-      } catch (err) {
-        recordLog("ERROR", "Telegram WebApp init failed", err.message);
-      }
-    }
-
-    // =========================================================================
-    // TON CONNECT & TON.APP INTERACTION
-    // =========================================================================
-    function shortenTonAddress(addr) {
-      if (!addr || typeof addr !== "string") return "";
-      if (addr.length <= 14) return addr;
-      return `${addr.slice(0, 6)}...${addr.slice(-6)}`;
-    }
-
-    function initTonConnect() {
-      try {
-        if (!window.TON_CONNECT_UI || typeof window.TON_CONNECT_UI.TonConnectUI !== "function") {
-          recordLog("WARN", "TON Connect UI script not available; manual address fallback enabled");
-          return;
-        }
-        const tg = getTelegramWebApp();
-        tonConnectUI = new window.TON_CONNECT_UI.TonConnectUI({
-          manifestUrl: CONFIG.TON_MANIFEST_URL,
-          actionsConfiguration: {
-            twaReturnUrl: tg?.initDataUnsafe?.user ? `https://t.me/${CONFIG.BOT_USERNAME}/app` : window.location.href
+      return `user_id=${encodeURIComponent(String(profile.user_id))}`; }  function getCurrentUserProfile() { const tg = getTelegramWebApp(); const u = tg?.initDataUnsafe?.user; if (u && u.id) { const displayName = u.username ? `@${u.username}`
+          : [u.first_name, u.last_name].filter(Boolean).join(" ") || `User_${u.id}`; return { user_id: String(u.id), username: displayName, first_name: u.first_name \vert{}\vert{} "" }; } return { user_id: "guest_local", username: "You (Local)", first_name: "You" }; }  function initTelegram() { const tg = getTelegramWebApp(); if (!tg) { recordLog("INFO", "Running outside Telegram WebApp (browser/preview mode)"); return; }  try { if (typeof tg.ready === "function") tg.ready(); if (typeof tg.expand === "function") tg.expand(); recordLog("INFO", "Telegram WebApp initialized", { version: tg.version \vert{}\vert{} "unknown", platform: tg.platform \vert{}\vert{} "unknown", hasInitData: Boolean(tg.initData && tg.initData.length > 0), userId: tg.initDataUnsafe?.user?.id \vert{}\vert{} null }); } catch (err) { recordLog("ERROR", "Telegram WebApp init failed", err.message); } }  // ========================================================================= // TON CONNECT & TON.APP INTERACTION // ========================================================================= function shortenTonAddress(addr) { if (!addr \vert{}\vert{} typeof addr !== "string") return ""; if (addr.length <= 14) return addr; return `${addr.slice(0, 6)}...${addr.slice(-6)}`; }  function initTonConnect() { try { if (!window.TON_CONNECT_UI \vert{}\vert{} typeof window.TON_CONNECT_UI.TonConnectUI !== "function") { recordLog("WARN", "TON Connect UI script not available; manual address fallback enabled"); return; } const tg = getTelegramWebApp(); tonConnectUI = new window.TON_CONNECT_UI.TonConnectUI({ manifestUrl: CONFIG.TON_MANIFEST_URL, actionsConfiguration: { twaReturnUrl: tg?.initDataUnsafe?.user ? `https://t.me/${CONFIG.BOT_USERNAME}/app` : window.location.href
           }
         });
 
@@ -1211,682 +1122,4 @@
         }
 
         if (state.tonWalletAddress) {
-          const unlink = confirm(`Linked TON Wallet: ${state.tonWalletAddress}\n\nUnlink this address?`);
-          if (!unlink) return;
-          state.tonWalletAddress = null;
-          saveLocalState();
-          renderUserDataCard();
-          await callApi("/api/wallet/link", { tonWalletAddress: null });
-          showBanner("TON wallet unlinked.", "info");
-          return;
-        }
-
-        const input = prompt("Enter your TON wallet address (EQ... or UQ...):");
-        if (!input) return;
-        const cleanAddr = input.trim();
-        if (!/^(EQ|UQ|kQ|0Q)[A-Za-z0-9_-]{46}$/.test(cleanAddr)) {
-          showBanner("Please enter a valid TON wallet address starting with EQ or UQ.", "error");
-          return;
-        }
-
-        state.tonWalletAddress = cleanAddr;
-        saveLocalState();
-        renderUserDataCard();
-        const apiRes = await callApi("/api/wallet/link", {
-          tonWalletAddress: cleanAddr,
-          tonAppTarget: CONFIG.TON_APP_URL
-        });
-        showBanner(
-          apiRes.ok
-            ? `TON wallet linked (${shortenTonAddress(cleanAddr)}) and synced!`
-            : `TON wallet linked locally (${shortenTonAddress(cleanAddr)}).`,
-          "success"
-        );
-      } catch (err) {
-        recordLog("ERROR", "Connect TON wallet failed", err.message);
-        showBanner(`Wallet connection error: ${err.message}`, "error");
-      }
-    }
-
-    function openTonAppCatalog() {
-      const profile = getCurrentUserProfile();
-      recordLog("INFO", "Opening ton.app ecosystem", {
-        user_id: profile.user_id,
-        tonWalletAddress: state.tonWalletAddress || null
-      });
-      openTaskLink(CONFIG.TON_APP_URL);
-    }
-
-    // =========================================================================
-    // BACKEND API HELPER (MONGODB ATLAS VIA API)
-    // =========================================================================
-    async function callApi(path, payload = {}, method = "POST") {
-      const base = (CONFIG.API_BASE_URL || "").replace(/\/+$/, "");
-      const cleanPath = path.startsWith("/") ? path : `/${path}`;
-      const url = `${base}${cleanPath}`;
-      const tg = getTelegramWebApp();
-      const profile = getCurrentUserProfile();
-      const initDataStr = getTelegramInitData();
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), CONFIG.REQUEST_TIMEOUT_MS);
-
-      const options = {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          "X-Telegram-Init-Data": initDataStr
-        },
-        signal: controller.signal
-      };
-
-      if (method !== "GET") {
-        options.body = JSON.stringify({
-          ...payload,
-          user_id: profile.user_id,
-          username: profile.username,
-          initData: initDataStr,
-          user: tg?.initDataUnsafe?.user || null
-        });
-      }
-
-      try {
-        const res = await fetch(url, options);
-        clearTimeout(timeoutId);
-
-        const text = await res.text();
-        let data = {};
-        try {
-          data = text ? JSON.parse(text) : {};
-        } catch {
-          data = { raw: text };
-        }
-
-        if (!res.ok) {
-          throw new Error(data.error || data.message || `HTTP ${res.status} on ${cleanPath}`);
-        }
-
-        recordLog("INFO", `API ${cleanPath} -> ${res.status}`, data);
-        return { ok: true, data };
-      } catch (err) {
-        clearTimeout(timeoutId);
-        const reason = err.name === "AbortError" ? "Request timed out" : err.message;
-        recordLog("WARN", `API ${cleanPath} fallback triggered`, reason);
-        return { ok: false, error: reason };
-      }
-    }
-
-    async function runHealthCheck() {
-      showBanner("Testing backend & MongoDB Atlas connection...", "info");
-      const result = await callApi("/api/health", { ping: true });
-      if (result.ok) {
-        showBanner("Backend & MongoDB Atlas API reachable and healthy.", "success");
-      } else {
-        showBanner(`Backend check note: ${result.error} (Local fallback active)`, "info");
-      }
-    }
-
-    // =========================================================================
-    // USER DATA & LEADERBOARD SYNC / RENDERING
-    // =========================================================================
-    function escapeHtml(value) {
-      return String(value ?? "").replace(/[<>&"]/g, (ch) => (
-        { "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" }[ch]
-      ));
-    }
-
-    function renderUserDataCard() {
-      const me = getCurrentUserProfile();
-      const nameEl = document.getElementById("profileDisplayName");
-      const idEl = document.getElementById("profileUserId");
-      const balEl = document.getElementById("profileBalance");
-      const walletEl = document.getElementById("profileTonWallet");
-      const connectBtnLabel = document.getElementById("connectTonLabel");
-
-      if (nameEl) nameEl.textContent = me.username;
-      if (idEl) {
-        idEl.textContent = `ID: ${me.user_id} • Verified Tasks: ${state.completedTasks.length}`;
-      }
-      if (balEl) balEl.textContent = `${Number(state.balance) || 0} 💎`;
-
-      if (walletEl) {
-        walletEl.textContent = state.tonWalletAddress
-          ? `💎 TON Wallet: ${shortenTonAddress(state.tonWalletAddress)}`
-          : "💎 TON Wallet: Not Connected";
-      }
-      if (connectBtnLabel) {
-        connectBtnLabel.textContent = state.tonWalletAddress
-          ? "Disconnect / Change TON Wallet"
-          : "Connect TON Wallet";
-      }
-    }
-
-    function renderReferralCard() {
-      const me = getCurrentUserProfile();
-      const refLink = `https://t.me/${CONFIG.BOT_USERNAME}?start=ref_${encodeURIComponent(me.user_id)}`;
-      const linkEl = document.getElementById("referralLinkBox");
-      const countEl = document.getElementById("referralCountDisplay");
-      const earnedEl = document.getElementById("referralEarnedDisplay");
-
-      if (linkEl) linkEl.textContent = refLink;
-      if (countEl) countEl.textContent = `${Number(state.referralCount) || 0}`;
-      if (earnedEl) earnedEl.textContent = `${Number(state.referralEarned) || 0} 💎`;
-    }
-
-    function syncLocalLeaderboardWithCurrentUser() {
-      const me = getCurrentUserProfile();
-      const merged = [...(state.leaderboard || FALLBACK_LEADERBOARD)];
-      const idx = merged.findIndex((item) => String(item.user_id) === String(me.user_id));
-      const myEntry = {
-        user_id: me.user_id,
-        username: me.username,
-        balance: Number(state.balance) || 0,
-        tasksCount: state.completedTasks.length
-      };
-      if (idx >= 0) {
-        merged[idx] = { ...merged[idx], ...myEntry };
-      } else {
-        merged.push(myEntry);
-      }
-      merged.sort((a, b) => (Number(b.balance) || 0) - (Number(a.balance) || 0));
-      state.leaderboard = merged.slice(0, 25);
-      saveLocalState();
-    }
-
-    function renderLeaderboard() {
-      const listEl = document.getElementById("leaderboardList");
-      if (!listEl) return;
-
-      syncLocalLeaderboardWithCurrentUser();
-      const me = getCurrentUserProfile();
-
-      if (!state.leaderboard.length) {
-        listEl.innerHTML = `<div class="card-desc">No user balances recorded yet.</div>`;
-        return;
-      }
-
-      listEl.innerHTML = state.leaderboard
-        .map((row, index) => {
-          const rank = index + 1;
-          const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `#${rank}`;
-          const isMe = String(row.user_id) === String(me.user_id);
-          const safeName = escapeHtml(row.username || `Miner_${row.user_id}`);
-          const safeId = escapeHtml(row.user_id || "unknown");
-          const tasksLabel = typeof row.tasksCount === "number" ? ` • ${row.tasksCount} tasks` : "";
-          return `
-            <div class="lb-item ${isMe ? "me" : ""}">
-              <div class="lb-left">
-                <span class="lb-rank">${medal}</span>
-                <div>
-                  <div class="lb-name">${safeName}${isMe ? " (You)" : ""}</div>
-                  <div class="lb-sub">ID: ${safeId}${tasksLabel}</div>
-                </div>
-              </div>
-              <span class="lb-score">${Number(row.balance) || 0} 💎</span>
-            </div>
-          `;
-        })
-        .join("");
-    }
-
-    async function syncUserData(showFeedback = false) {
-      const profile = getCurrentUserProfile();
-      const syncRes = await callApi("/api/state", {
-        user_id: profile.user_id,
-        username: profile.username
-      });
-
-      if (syncRes.ok && typeof syncRes.data?.balance === "number") {
-        state.balance = syncRes.data.balance;
-        if (Array.isArray(syncRes.data.completedTasks)) {
-          state.completedTasks = syncRes.data.completedTasks;
-        }
-        if (syncRes.data.lastBonusDate) {
-          state.lastBonusDate = syncRes.data.lastBonusDate;
-        }
-        if (syncRes.data.lastSpinDate) {
-          state.lastSpinDate = syncRes.data.lastSpinDate;
-        }
-        if (typeof syncRes.data.referralCount === "number") {
-          state.referralCount = syncRes.data.referralCount;
-        }
-        if (typeof syncRes.data.referralEarned === "number") {
-          state.referralEarned = syncRes.data.referralEarned;
-        }
-        if (syncRes.data.tonWalletAddress) {
-          state.tonWalletAddress = syncRes.data.tonWalletAddress;
-        }
-        if (Array.isArray(syncRes.data.leaderboard)) {
-          state.leaderboard = syncRes.data.leaderboard;
-        }
-        saveLocalState();
-        renderUI();
-        if (showFeedback) {
-          showBanner(`Synced user data & balance (${state.balance} 💎) with MongoDB Atlas.`, "success");
-        }
-        return true;
-      }
-
-      renderUI();
-      if (showFeedback) {
-        showBanner("Using local user data & cached balances (API offline).", "info");
-      }
-      return false;
-    }
-
-    async function loadLeaderboard(showFeedback = false) {
-      const res = await callApi("/api/leaderboard?limit=25", {}, "GET");
-      if (res.ok && Array.isArray(res.data?.leaderboard)) {
-        state.leaderboard = res.data.leaderboard;
-        saveLocalState();
-        renderLeaderboard();
-        if (showFeedback) showBanner("Users & balances updated from MongoDB Atlas.", "success");
-      } else {
-        renderLeaderboard();
-        if (showFeedback) showBanner("Showing cached/local user balances (API offline).", "info");
-      }
-    }
-
-    // =========================================================================
-    // UI RENDERING
-    // =========================================================================
-    function renderUI() {
-      document.getElementById("headerBalance").textContent = `${state.balance} 💎`;
-      document.getElementById("balanceDisplay").textContent = `${state.balance} 💎`;
-      document.getElementById("sessionDisplay").textContent = `${state.sessionPoints}`;
-      document.getElementById("timerDisplay").textContent = `${state.timerSeconds}s`;
-
-      const tapLabel = document.getElementById("tapLabel");
-      if (state.isMining) {
-        tapLabel.textContent = "KEEP TAPPING!";
-      } else if (state.roundCompleted) {
-        tapLabel.textContent = "ROUND READY";
-      } else {
-        tapLabel.textContent = "TAP TO START";
-      }
-
-      const boostLabel = document.getElementById("boostLabel");
-      boostLabel.textContent = state.boost2xActive
-        ? "2X Boost Active for This Session ✓"
-        : "Watch Ad for 2X Boost";
-
-      for (const taskId of state.completedTasks) {
-        const btn = document.getElementById(`task-${taskId.replaceAll("_", "-")}`);
-        if (btn) {
-          btn.outerHTML = `<span class="badge-done">✓ Verified</span>`;
-        }
-      }
-
-      const today = new Date().toISOString().slice(0, 10);
-      const bonusBtn = document.getElementById("dailyBonusBtn");
-      if (bonusBtn && state.lastBonusDate === today) {
-        bonusBtn.disabled = true;
-        bonusBtn.textContent = "✓ Daily Bonus Claimed Today";
-      }
-
-      const spinBtn = document.getElementById("spinWinBtn");
-      const spinLabel = document.getElementById("spinWinLabel");
-      const spinResult = document.getElementById("spinResultText");
-      if (spinBtn && spinLabel && !isSpinning) {
-        if (state.lastSpinDate === today) {
-          spinBtn.disabled = true;
-          spinLabel.textContent = "Daily Spin Used";
-          if (spinResult) spinResult.textContent = "Come back tomorrow for another free spin!";
-        } else {
-          spinBtn.disabled = false;
-          spinLabel.textContent = "Spin & Win 💎";
-        }
-      }
-
-      renderReferralCard();
-      renderUserDataCard();
-      renderLeaderboard();
-    }
-
-    function switchTab(tabName) {
-      const tabs = ["mine", "tasks", "leaderboard", "bonus", "support"];
-      for (const t of tabs) {
-        document.getElementById(`panel-${t}`)?.classList.toggle("active", t === tabName);
-        document.getElementById(`nav-${t}`)?.classList.toggle("active", t === tabName);
-      }
-      if (tabName === "leaderboard") {
-        syncUserData(false).then(() => loadLeaderboard(false));
-      }
-    }
-
-    // =========================================================================
-    // MINING TIMER, TAP, AD BOOST & SESSION SUBMISSION
-    // =========================================================================
-    function startMiningRound() {
-      if (state.isMining) return;
-      clearInterval(timerInterval);
-
-      state.isMining = true;
-      state.roundCompleted = false;
-      state.timerSeconds = CONFIG.ROUND_SECONDS;
-      state.sessionPoints = 1;
-      renderUI();
-      showBanner("15-second mining round started! Tap fast.", "info");
-
-      timerInterval = setInterval(() => {
-        state.timerSeconds -= 1;
-        if (state.timerSeconds <= 0) {
-          state.timerSeconds = 0;
-          state.isMining = false;
-          state.roundCompleted = true;
-          clearInterval(timerInterval);
-          renderUI();
-          showBanner("Round finished! Boost 2X or tap Submit & Save Session.", "success");
-        } else {
-          renderUI();
-        }
-      }, 1000);
-    }
-
-    function handleTap() {
-      try {
-        if (!state.isMining) {
-          startMiningRound();
-          return;
-        }
-        state.sessionPoints += 1;
-        renderUI();
-      } catch (err) {
-        recordLog("ERROR", "Tap handler failed", err.message);
-        showBanner(`Tap error: ${err.message}`, "error");
-      }
-    }
-
-    function initAdsgram() {
-      try {
-        const initDataStr = getTelegramInitData();
-        if (window.Adsgram && typeof window.Adsgram.init === "function" && CONFIG.ADSGRAM_BLOCK_ID) {
-          adController = window.Adsgram.init({
-            blockId: CONFIG.ADSGRAM_BLOCK_ID,
-            initData: initDataStr,
-            debug: false
-          });
-          recordLog("INFO", "Adsgram AdController initialized", {
-            blockId: CONFIG.ADSGRAM_BLOCK_ID,
-            hasInitData: Boolean(initDataStr)
-          });
-        } else {
-          recordLog("WARN", "Adsgram SDK not loaded yet or blockId missing");
-        }
-      } catch (err) {
-        recordLog("ERROR", "Adsgram init error", err.message);
-      }
-    }
-
-    async function handleWatchAdBoost() {
-      if (state.boost2xActive) {
-        showBanner("2X Boost is already active for your current session!", "info");
-        return;
-      }
-
-      const boostBtn = document.getElementById("boostBtn");
-      boostBtn.disabled = true;
-      showBanner("Loading rewarded ad...", "info");
-
-      try {
-        initAdsgram();
-        if (adController && typeof adController.show === "function") {
-          await adController.show();
-          state.boost2xActive = true;
-          saveLocalState();
-          renderUI();
-          showBanner("Ad completed! 2X Boost activated for this session.", "success");
-        } else {
-          throw new Error("Ad SDK unavailable in this environment");
-        }
-      } catch (err) {
-        const msg = err?.description || err?.message || "Ad closed or unavailable";
-        recordLog("WARN", "Ad boost did not complete", msg);
-        showBanner(`Ad boost unavailable (${msg}). You can still save your session.`, "info");
-      } finally {
-        boostBtn.disabled = false;
-      }
-    }
-
-    async function handleSubmitSession() {
-      if (state.isMining) {
-        showBanner("Wait for the 15s timer to finish before submitting.", "info");
-        return;
-      }
-
-      if (state.sessionPoints <= 0) {
-        showBanner("Tap to start a mining round first so you have session points to save.", "info");
-        return;
-      }
-
-      const saveBtn = document.getElementById("saveBtn");
-      saveBtn.disabled = true;
-
-      const multiplier = state.boost2xActive ? 2 : 1;
-      const earned = state.sessionPoints * multiplier;
-
-      try {
-        const apiRes = await callApi("/api/mine/claim", {
-          sessionPoints: state.sessionPoints,
-          multiplier,
-          earned
-        });
-
-        if (apiRes.ok && typeof apiRes.data?.balance === "number") {
-          state.balance = apiRes.data.balance;
-        } else {
-          state.balance += earned;
-        }
-
-        if (Array.isArray(apiRes.data?.leaderboard)) {
-          state.leaderboard = apiRes.data.leaderboard;
-        }
-
-        state.sessionPoints = 0;
-        state.timerSeconds = CONFIG.ROUND_SECONDS;
-        state.roundCompleted = false;
-        state.boost2xActive = false;
-        saveLocalState();
-        renderUI();
-
-        showBanner(
-          apiRes.ok
-            ? `Saved +${earned} 💎 to MongoDB Atlas! Balance: ${state.balance} 💎.`
-            : `Saved +${earned} 💎 locally (server offline). Balance: ${state.balance} 💎.`,
-          "success"
-        );
-      } catch (err) {
-        recordLog("ERROR", "Submit session failed", err.message);
-        showBanner(`Could not save session: ${err.message}`, "error");
-      } finally {
-        saveBtn.disabled = false;
-      }
-    }
-
-    // =========================================================================
-    // TASKS, SPIN & WIN, REFERRALS & DAILY BONUS
-    // =========================================================================
-    function openTaskLink(url) {
-      if (!url) return;
-      const tg = getTelegramWebApp();
-      try {
-        if (url.startsWith("https://t.me/") && tg && typeof tg.openTelegramLink === "function") {
-          tg.openTelegramLink(url);
-        } else if (tg && typeof tg.openLink === "function") {
-          tg.openLink(url);
-        } else {
-          window.open(url, "_blank", "noopener,noreferrer");
-        }
-      } catch (err) {
-        recordLog("WARN", "Could not open task link", err.message);
-      }
-    }
-
-    async function verifyTask(taskId, reward, linkUrl = null) {
-      if (state.completedTasks.includes(taskId)) {
-        showBanner("Task already verified.", "info");
-        return;
-      }
-
-      if (linkUrl) {
-        openTaskLink(linkUrl);
-      }
-
-      showBanner("Verifying task...", "info");
-      const apiRes = await callApi("/api/tasks/verify", { taskId, reward });
-
-      if (apiRes.ok && typeof apiRes.data?.balance === "number") {
-        state.balance = apiRes.data.balance;
-      } else {
-        state.balance += reward;
-      }
-
-      if (Array.isArray(apiRes.data?.completedTasks)) {
-        state.completedTasks = apiRes.data.completedTasks;
-      } else if (!state.completedTasks.includes(taskId)) {
-        state.completedTasks.push(taskId);
-      }
-
-      saveLocalState();
-      renderUI();
-      showBanner(`Task verified! +${reward} 💎 added to your balance.`, "success");
-    }
-
-    async function claimDailyBonus() {
-      const today = new Date().toISOString().slice(0, 10);
-      if (state.lastBonusDate === today) {
-        showBanner("You have already claimed today's bonus.", "info");
-        return;
-      }
-
-      const bonusReward = CONFIG.DAILY_BONUS_REWARD;
-      const apiRes = await callApi("/api/bonus/claim", { reward: bonusReward, date: today });
-
-      if (apiRes.ok && typeof apiRes.data?.balance === "number") {
-        state.balance = apiRes.data.balance;
-      } else {
-        state.balance += bonusReward;
-      }
-
-      state.lastBonusDate = today;
-      saveLocalState();
-      renderUI();
-      showBanner(`Daily bonus claimed! +${bonusReward} 💎.`, "success");
-    }
-
-    async function handleSpinAndWin() {
-      const today = new Date().toISOString().slice(0, 10);
-      if (isSpinning) return;
-      if (state.lastSpinDate === today) {
-        showBanner("You have already used today's Spin & Win.", "info");
-        return;
-      }
-
-      isSpinning = true;
-      const spinBtn = document.getElementById("spinWinBtn");
-      const wheelEl = document.getElementById("spinWheel");
-      const centerLabel = document.getElementById("wheelCenterLabel");
-      const resultText = document.getElementById("spinResultText");
-
-      if (spinBtn) spinBtn.disabled = true;
-      if (centerLabel) centerLabel.textContent = "•••";
-      if (resultText) resultText.textContent = "Spinning the quantum wheel...";
-
-      const prizes = CONFIG.SPIN_PRIZES;
-      const prizeIndex = Math.floor(Math.random() * prizes.length);
-      const prizeAmount = prizes[prizeIndex];
-      const sliceDeg = 360 / prizes.length;
-      const targetDeg = 360 * 5 + (360 - prizeIndex * sliceDeg);
-      currentWheelAngle += targetDeg;
-
-      if (wheelEl) {
-        wheelEl.style.transform = `rotate(${currentWheelAngle}deg)`;
-      }
-
-      setTimeout(async () => {
-        try {
-          const apiRes = await callApi("/api/spin/claim", { reward: prizeAmount, date: today });
-          if (apiRes.ok && typeof apiRes.data?.balance === "number") {
-            state.balance = apiRes.data.balance;
-          } else {
-            state.balance += prizeAmount;
-          }
-          state.lastSpinDate = today;
-          saveLocalState();
-
-          if (centerLabel) centerLabel.textContent = `+${prizeAmount}`;
-          if (resultText) resultText.textContent = `You won +${prizeAmount} 💎!`;
-          showBanner(`Spin & Win! You earned +${prizeAmount} 💎.`, "success");
-        } catch (err) {
-          recordLog("ERROR", "Spin & Win failed", err.message);
-          showBanner(`Spin error: ${err.message}`, "error");
-        } finally {
-          isSpinning = false;
-          renderUI();
-        }
-      }, 2250);
-    }
-
-    function getReferralLink() {
-      const me = getCurrentUserProfile();
-      return `https://t.me/${CONFIG.BOT_USERNAME}?start=ref_${encodeURIComponent(me.user_id)}`;
-    }
-
-    async function copyReferralLink() {
-      const link = getReferralLink();
-      try {
-        if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
-          await navigator.clipboard.writeText(link);
-        } else {
-          const temp = document.createElement("textarea");
-          temp.value = link;
-          document.body.appendChild(temp);
-          temp.select();
-          document.execCommand("copy");
-          document.body.removeChild(temp);
-        }
-        showBanner("Referral link copied! Share it to earn +250 💎 per friend.", "success");
-      } catch (err) {
-        recordLog("WARN", "Clipboard copy fallback", err.message);
-        showBanner(`Referral link: ${link}`, "info");
-      }
-    }
-
-    function shareReferralInvite() {
-      const link = getReferralLink();
-      const shareText = `Mine 💎 on TMX-QUANTUM (TON Telegram Mini App) and earn rewards! Join here:`;
-      const tg = getTelegramWebApp();
-      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareText)}`;
-
-      try {
-        if (tg && typeof tg.openTelegramLink === "function") {
-          tg.openTelegramLink(shareUrl);
-        } else {
-          window.open(shareUrl, "_blank", "noopener,noreferrer");
-        }
-      } catch (err) {
-        recordLog("WARN", "Share invite fallback", err.message);
-      }
-    }
-
-    // =========================================================================
-    // BOOTSTRAP
-    // =========================================================================
-    (async function boot() {
-      recordLog("INFO", "TMX-QUANTUM booting...");
-      initTelegram();
-      initTonConnect();
-      initAdsgram();
-      renderUI();
-
-      const synced = await syncUserData(false);
-      if (synced) {
-        showBanner("Synced user data & balances with TMX-QUANTUM & MongoDB Atlas.", "success");
-      } else {
-        await loadLeaderboard(false);
-        showBanner("Ready! Local user data & cached balances active until API connects.", "info");
-      }
-    })();
-  </script>
-</body>
-</html>
+          const unlink = confirm(`Linked TON Wallet: ${
