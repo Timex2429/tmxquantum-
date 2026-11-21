@@ -724,7 +724,7 @@
         <span id="saveLabel">Submit & Save Session</span>
       </button>
 
-      <!-- Visible TON Blockchain Ecosystem Integration Section (Required for ton.app verification) -->
+      <!-- Visible TON Blockchain Ecosystem Integration Section -->
       <section class="ton-card" aria-label="TON Blockchain Integration">
         <h2 class="ton-card-title">💎 Built on The Open Network (TON)</h2>
         <p class="ton-card-text">
@@ -997,7 +997,7 @@
     // CONFIGURATION
     // =========================================================================
     const CONFIG = {
-      API_BASE_URL: "", // e.g. "https://your-backend.vercel.app" or "" for same-origin /api/*
+      API_BASE_URL: "", // Set to your backend origin if hosted separately (e.g. "https://your-api.onrender.com")
       ADSGRAM_BLOCK_ID: "61181",
       TON_APP_URL: "https://ton.app",
       TON_MANIFEST_URL: "https://www.tmxquantum.site/tonconnect-manifest.json",
@@ -1007,7 +1007,7 @@
       SEVENTH_DAY_BONUS: 2000,
       SPIN_PRIZES: [25, 50, 100, 150, 250, 500],
       ROUND_SECONDS: 15,
-      STORAGE_KEY: "tmx_quantum_state_v5",
+      STORAGE_KEY: "tmx_quantum_state_v6",
       REQUEST_TIMEOUT_MS: 8000
     };
 
@@ -1056,7 +1056,8 @@
     window.addEventListener("error", (event) => {
       const msg = event?.message || "Unknown script error";
       const loc = event?.filename ? `${event.filename}:${event.lineno}` : "";
-      recordLog("ERROR", `Uncaught Error: ${msg}`, loc); showBanner(`Error: ${msg}`, "error");
+      recordLog("ERROR", `Uncaught Error: ${msg}`, loc);
+      showBanner(`Error: ${msg}`, "error");
     });
 
     window.addEventListener("unhandledrejection", (event) => {
@@ -1069,11 +1070,189 @@
       const banner = document.getElementById("statusBanner");
       if (!banner) return;
       banner.textContent = text;
-      banner.className = `status-banner ${type}`; }  // ========================================================================= // APPLICATION STATE & SAFE PERSISTENCE // ========================================================================= const defaultState = { balance: 0, sessionPoints: 0, timerSeconds: CONFIG.ROUND_SECONDS, isMining: false, roundCompleted: false, boost2xActive: false, visitedTasks: [], completedTasks: [], lastBonusDate: null, loginStreak: 0, lastSpinDate: null, referralCount: 0, referralEarned: 0, tonWalletAddress: null, leaderboard: [...FALLBACK_LEADERBOARD] };  function loadLocalState() { try { const raw = localStorage.getItem(CONFIG.STORAGE_KEY); if (!raw) return { ...defaultState }; const parsed = JSON.parse(raw); return { ...defaultState, ...parsed, isMining: false, timerSeconds: CONFIG.ROUND_SECONDS, loginStreak: Number(parsed.loginStreak) \vert{}\vert{} 0, referralCount: Number(parsed.referralCount) \vert{}\vert{} 0, referralEarned: Number(parsed.referralEarned) \vert{}\vert{} 0, tonWalletAddress: parsed.tonWalletAddress \vert{}\vert{} null, visitedTasks: Array.isArray(parsed.visitedTasks) ? parsed.visitedTasks : [], completedTasks: Array.isArray(parsed.completedTasks) ? parsed.completedTasks : [], leaderboard: Array.isArray(parsed.leaderboard) && parsed.leaderboard.length ? parsed.leaderboard : [...FALLBACK_LEADERBOARD] }; } catch (err) { recordLog("WARN", "localStorage unavailable, using in-memory state", err.message); return { ...defaultState }; } }  const state = loadLocalState(); let timerInterval = null; let adController = null; let tonConnectUI = null; let currentWheelAngle = 0; let isSpinning = false;  function saveLocalState() { try { const toSave = { balance: state.balance, sessionPoints: state.sessionPoints, boost2xActive: state.boost2xActive, visitedTasks: state.visitedTasks, completedTasks: state.completedTasks, lastBonusDate: state.lastBonusDate, loginStreak: state.loginStreak, lastSpinDate: state.lastSpinDate, referralCount: state.referralCount, referralEarned: state.referralEarned, tonWalletAddress: state.tonWalletAddress \vert{}\vert{} null, leaderboard: state.leaderboard }; localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(toSave)); } catch (err) { recordLog("WARN", "Could not persist to localStorage", err.message); } }  // ========================================================================= // DATE & STREAK HELPERS // ========================================================================= function getTodayDateStr() { return new Date().toISOString().slice(0, 10); }  function getYesterdayDateStr() { const d = new Date(); d.setUTCDate(d.getUTCDate() - 1); return d.toISOString().slice(0, 10); }  function getNextStreakDay() { const yesterday = getYesterdayDateStr(); if (!state.lastBonusDate) return 1; if (state.lastBonusDate === yesterday) { return state.loginStreak >= 7 ? 1 : state.loginStreak + 1; } return 1; }  // ========================================================================= // TELEGRAM WEBAPP & USER PROFILE // ========================================================================= function getTelegramWebApp() { return window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null; }  function getTelegramInitData() { const tg = getTelegramWebApp(); if (tg && typeof tg.initData === "string" && tg.initData.trim().length > 0) { return tg.initData.trim(); } const queryId = tg?.initDataUnsafe?.query_id; if (queryId) { return `query_id=${encodeURIComponent(String(queryId))}`;
+      banner.className = `status-banner ${type}`;
+    }
+
+    // =========================================================================
+    // APPLICATION STATE & SAFE PERSISTENCE
+    // =========================================================================
+    const defaultState = {
+      balance: 0,
+      sessionPoints: 0,
+      timerSeconds: CONFIG.ROUND_SECONDS,
+      isMining: false,
+      roundCompleted: false,
+      boost2xActive: false,
+      visitedTasks: [],
+      completedTasks: [],
+      lastBonusDate: null,
+      loginStreak: 0,
+      lastSpinDate: null,
+      referralCount: 0,
+      referralEarned: 0,
+      tonWalletAddress: null,
+      leaderboard: [...FALLBACK_LEADERBOARD]
+    };
+
+    function loadLocalState() {
+      try {
+        const raw = localStorage.getItem(CONFIG.STORAGE_KEY);
+        if (!raw) return { ...defaultState };
+        const parsed = JSON.parse(raw);
+        return {
+          ...defaultState,
+          ...parsed,
+          isMining: false,
+          timerSeconds: CONFIG.ROUND_SECONDS,
+          balance: Number(parsed.balance) || 0,
+          loginStreak: Number(parsed.loginStreak) || 0,
+          referralCount: Number(parsed.referralCount) || 0,
+          referralEarned: Number(parsed.referralEarned) || 0,
+          tonWalletAddress: parsed.tonWalletAddress || null,
+          visitedTasks: Array.isArray(parsed.visitedTasks) ? parsed.visitedTasks : [],
+          completedTasks: Array.isArray(parsed.completedTasks) ? parsed.completedTasks : [],
+          leaderboard: Array.isArray(parsed.leaderboard) && parsed.leaderboard.length
+            ? parsed.leaderboard
+            : [...FALLBACK_LEADERBOARD]
+        };
+      } catch (err) {
+        recordLog("WARN", "localStorage unavailable, using in-memory state", err.message);
+        return { ...defaultState };
+      }
+    }
+
+    const state = loadLocalState();
+    let timerInterval = null;
+    let adController = null;
+    let tonConnectUI = null;
+    let currentWheelAngle = 0;
+    let isSpinning = false;
+
+    function saveLocalState() {
+      try {
+        const toSave = {
+          balance: state.balance,
+          sessionPoints: state.sessionPoints,
+          boost2xActive: state.boost2xActive,
+          visitedTasks: state.visitedTasks,
+          completedTasks: state.completedTasks,
+          lastBonusDate: state.lastBonusDate,
+          loginStreak: state.loginStreak,
+          lastSpinDate: state.lastSpinDate,
+          referralCount: state.referralCount,
+          referralEarned: state.referralEarned,
+          tonWalletAddress: state.tonWalletAddress || null,
+          leaderboard: state.leaderboard
+        };
+        localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(toSave));
+      } catch (err) {
+        recordLog("WARN", "Could not persist to localStorage", err.message);
+      }
+    }
+
+    // =========================================================================
+    // DATE & STREAK HELPERS
+    // =========================================================================
+    function getTodayDateStr() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function getYesterdayDateStr() {
+      const d = new Date();
+      d.setUTCDate(d.getUTCDate() - 1);
+      return d.toISOString().slice(0, 10);
+    }
+
+    function getNextStreakDay() {
+      const yesterday = getYesterdayDateStr();
+      if (!state.lastBonusDate) return 1;
+      if (state.lastBonusDate === yesterday) {
+        return state.loginStreak >= 7 ? 1 : state.loginStreak + 1;
+      }
+      return 1;
+    }
+
+    // =========================================================================
+    // TELEGRAM WEBAPP & USER PROFILE
+    // =========================================================================
+    function getTelegramWebApp() {
+      return window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+    }
+
+    function getTelegramInitData() {
+      const tg = getTelegramWebApp();
+      if (tg && typeof tg.initData === "string" && tg.initData.trim().length > 0) {
+        return tg.initData.trim();
+      }
+      const queryId = tg?.initDataUnsafe?.query_id;
+      if (queryId) {
+        return `query_id=${encodeURIComponent(String(queryId))}`;
       }
       const profile = getCurrentUserProfile();
-      return `user_id=${encodeURIComponent(String(profile.user_id))}`; }  function getCurrentUserProfile() { const tg = getTelegramWebApp(); const u = tg?.initDataUnsafe?.user; if (u && u.id) { const displayName = u.username ? `@${u.username}`
-          : [u.first_name, u.last_name].filter(Boolean).join(" ") || `User_${u.id}`; return { user_id: String(u.id), username: displayName, first_name: u.first_name \vert{}\vert{} "" }; } return { user_id: "guest_local", username: "You (Local)", first_name: "You" }; }  function initTelegram() { const tg = getTelegramWebApp(); if (!tg) { recordLog("INFO", "Running outside Telegram WebApp (browser/preview mode)"); return; }  try { if (typeof tg.ready === "function") tg.ready(); if (typeof tg.expand === "function") tg.expand(); recordLog("INFO", "Telegram WebApp initialized", { version: tg.version \vert{}\vert{} "unknown", platform: tg.platform \vert{}\vert{} "unknown", hasInitData: Boolean(tg.initData && tg.initData.length > 0), userId: tg.initDataUnsafe?.user?.id \vert{}\vert{} null }); } catch (err) { recordLog("ERROR", "Telegram WebApp init failed", err.message); } }  // ========================================================================= // TON CONNECT & TON.APP INTERACTION // ========================================================================= function shortenTonAddress(addr) { if (!addr \vert{}\vert{} typeof addr !== "string") return ""; if (addr.length <= 14) return addr; return `${addr.slice(0, 6)}...${addr.slice(-6)}`; }  function initTonConnect() { try { if (!window.TON_CONNECT_UI \vert{}\vert{} typeof window.TON_CONNECT_UI.TonConnectUI !== "function") { recordLog("WARN", "TON Connect UI script not available; manual address fallback enabled"); return; } const tg = getTelegramWebApp(); tonConnectUI = new window.TON_CONNECT_UI.TonConnectUI({ manifestUrl: CONFIG.TON_MANIFEST_URL, actionsConfiguration: { twaReturnUrl: tg?.initDataUnsafe?.user ? `https://t.me/${CONFIG.BOT_USERNAME}/app` : window.location.href
+      return `user_id=${encodeURIComponent(String(profile.user_id))}`;
+    }
+
+    function getCurrentUserProfile() {
+      const tg = getTelegramWebApp();
+      const u = tg?.initDataUnsafe?.user;
+      if (u && u.id) {
+        const displayName = u.username
+          ? `@${u.username}`
+          : [u.first_name, u.last_name].filter(Boolean).join(" ") || `User_${u.id}`;
+        return {
+          user_id: String(u.id),
+          username: displayName,
+          first_name: u.first_name || ""
+        };
+      }
+      return {
+        user_id: "guest_local",
+        username: "You (Local)",
+        first_name: "You"
+      };
+    }
+
+    function initTelegram() {
+      const tg = getTelegramWebApp();
+      if (!tg) {
+        recordLog("INFO", "Running outside Telegram WebApp (browser/preview mode)");
+        return;
+      }
+
+      try {
+        if (typeof tg.ready === "function") tg.ready();
+        if (typeof tg.expand === "function") tg.expand();
+        recordLog("INFO", "Telegram WebApp initialized", {
+          version: tg.version || "unknown",
+          platform: tg.platform || "unknown",
+          hasInitData: Boolean(tg.initData && tg.initData.length > 0),
+          userId: tg.initDataUnsafe?.user?.id || null
+        });
+      } catch (err) {
+        recordLog("ERROR", "Telegram WebApp init failed", err.message);
+      }
+    }
+
+    // =========================================================================
+    // TON CONNECT & TON.APP INTERACTION
+    // =========================================================================
+    function shortenTonAddress(addr) {
+      if (!addr || typeof addr !== "string") return "";
+      if (addr.length <= 14) return addr;
+      return `${addr.slice(0, 6)}...${addr.slice(-6)}`;
+    }
+
+    function initTonConnect() {
+      try {
+        if (!window.TON_CONNECT_UI || typeof window.TON_CONNECT_UI.TonConnectUI !== "function") {
+          recordLog("WARN", "TON Connect UI script not available; manual address fallback enabled");
+          return;
+        }
+        const tg = getTelegramWebApp();
+        tonConnectUI = new window.TON_CONNECT_UI.TonConnectUI({
+          manifestUrl: CONFIG.TON_MANIFEST_URL,
+          actionsConfiguration: {
+            twaReturnUrl: tg?.initDataUnsafe?.user ? `https://t.me/${CONFIG.BOT_USERNAME}/app` : window.location.href
           }
         });
 
@@ -1122,4 +1301,159 @@
         }
 
         if (state.tonWalletAddress) {
-          const unlink = confirm(`Linked TON Wallet: ${
+          const unlink = confirm(`Linked TON Wallet: ${state.tonWalletAddress}\n\nUnlink this address?`);
+          if (!unlink) return;
+          state.tonWalletAddress = null;
+          saveLocalState();
+          renderUserDataCard();
+          await callApi("/api/wallet/link", { tonWalletAddress: null });
+          showBanner("TON wallet unlinked.", "info");
+          return;
+        }
+
+        const input = prompt("Enter your TON wallet address (EQ... or UQ...):");
+        if (!input) return;
+        const cleanAddr = input.trim();
+        if (!/^(EQ|UQ|kQ|0Q)[A-Za-z0-9_-]{46}$/.test(cleanAddr)) {
+          showBanner("Please enter a valid TON wallet address starting with EQ or UQ.", "error");
+          return;
+        }
+
+        state.tonWalletAddress = cleanAddr;
+        saveLocalState();
+        renderUserDataCard();
+        const apiRes = await callApi("/api/wallet/link", {
+          tonWalletAddress: cleanAddr,
+          tonAppTarget: CONFIG.TON_APP_URL
+        });
+        showBanner(
+          apiRes.ok
+            ? `TON wallet linked (${shortenTonAddress(cleanAddr)}) and synced!`
+            : `TON wallet linked locally (${shortenTonAddress(cleanAddr)}).`,
+          "success"
+        );
+      } catch (err) {
+        recordLog("ERROR", "Connect TON wallet failed", err.message);
+        showBanner(`Wallet connection error: ${err.message}`, "error");
+      }
+    }
+
+    function openTonAppCatalog() {
+      const profile = getCurrentUserProfile();
+      recordLog("INFO", "Opening ton.app ecosystem", {
+        user_id: profile.user_id,
+        tonWalletAddress: state.tonWalletAddress || null
+      });
+      openTaskLink(CONFIG.TON_APP_URL);
+    }
+
+    // =========================================================================
+    // BACKEND API HELPER (MONGODB ATLAS VIA API)
+    // =========================================================================
+    function extractPayload(raw) {
+      if (!raw || typeof raw !== "object") return {};
+      if (raw.data && typeof raw.data === "object" && !Array.isArray(raw.data)) {
+        return { ...raw, ...raw.data };
+      }
+      if (raw.user && typeof raw.user === "object" && !Array.isArray(raw.user)) {
+        return { ...raw, ...raw.user };
+      }
+      return raw;
+    }
+
+    function extractBalance(raw) {
+      const p = extractPayload(raw);
+      const candidates = [p.balance, p.tmx_balance, p.points, p.score];
+      for (const c of candidates) {
+        if (typeof c === "number" && Number.isFinite(c)) return c;
+        if (typeof c === "string" && c.trim() !== "" && Number.isFinite(Number(c))) return Number(c);
+      }
+      return null;
+    }
+
+    async function callApi(path, payload = {}, method = "POST") {
+      const base = (CONFIG.API_BASE_URL || "").replace(/\/+$/, "");
+      const cleanPath = path.startsWith("/") ? path : `/${path}`;
+      const profile = getCurrentUserProfile();
+      const initDataStr = getTelegramInitData();
+
+      let url = `${base}${cleanPath}`;
+      if (method === "GET") {
+        const sep = url.includes("?") ? "&" : "?";
+        url = `${url}${sep}user_id=${encodeURIComponent(profile.user_id)}`;
+      }
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), CONFIG.REQUEST_TIMEOUT_MS);
+
+      const options = {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          "X-Telegram-Init-Data": initDataStr
+        },
+        signal: controller.signal
+      };
+
+      if (method !== "GET") {
+        options.body = JSON.stringify({
+          ...payload,
+          user_id: profile.user_id,
+          username: profile.username,
+          initData: initDataStr,
+          user: getTelegramWebApp()?.initDataUnsafe?.user || null
+        });
+      }
+
+      try {
+        const res = await fetch(url, options);
+        clearTimeout(timeoutId);
+
+        const text = await res.text();
+        let parsed = {};
+        try {
+          parsed = text ? JSON.parse(text) : {};
+        } catch {
+          parsed = { raw: text };
+        }
+
+        if (!res.ok) {
+          throw new Error(parsed.error || parsed.message || `HTTP ${res.status} on ${cleanPath}`);
+        }
+
+        const data = extractPayload(parsed);
+        recordLog("INFO", `API ${cleanPath} -> ${res.status}`, data);
+        return { ok: true, data };
+      } catch (err) {
+        clearTimeout(timeoutId);
+        const reason = err.name === "AbortError" ? "Request timed out" : err.message;
+        recordLog("WARN", `API ${cleanPath} fallback triggered`, reason);
+        return { ok: false, error: reason };
+      }
+    }
+
+    async function runHealthCheck() {
+      showBanner("Testing backend & MongoDB Atlas connection...", "info");
+      const result = await callApi("/api/health", { ping: true });
+      if (result.ok) {
+        showBanner("Backend & MongoDB Atlas API reachable and healthy.", "success");
+      } else {
+        showBanner(`Backend check note: ${result.error} (Local fallback active)`, "info");
+      }
+    }
+
+    // =========================================================================
+    // USER DATA & LEADERBOARD SYNC / RENDERING
+    // =========================================================================
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[<>&"]/g, (ch) => (
+        { "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" }[ch]
+      ));
+    }
+
+    function applyServerState(data) {
+      const serverBal = extractBalance(data);
+      if (serverBal !== null) {
+        state.balance = serverBal;
+      }
+      if (Array.isArray(data.
