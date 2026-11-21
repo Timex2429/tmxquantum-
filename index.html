@@ -56,7 +56,6 @@
       padding: 10px 14px;
       margin-bottom: 14px;
     }
-
     .brand {
       display: flex;
       align-items: center;
@@ -680,8 +679,8 @@
       <div class="diag-header">
         <span>🛠️ Live Error & API Log</span>
         <div style="display:flex;gap:6px;">
-          <button class="btn btn-ghost" type="button" onclick="runHealthCheck()">Test API</button>
-          <button class="btn btn-ghost" type="button" onclick="clearLogs()">Clear</button>
+          <button class="btn btn-ghost" id="btnTestApi" type="button">Test API</button>
+          <button class="btn btn-ghost" id="btnClearLogs" type="button">Clear</button>
         </div>
       </div>
       <div id="diagLogs" class="diag-logs">Initializing diagnostics...</div>
@@ -705,7 +704,7 @@
       </div>
 
       <div class="mine-zone">
-        <button id="tapBtn" class="tap-btn" type="button" onclick="handleTap()">
+        <button id="tapBtn" class="tap-btn" type="button">
           <span class="tap-bolt">⚡</span>
           <span id="tapLabel">TAP TO START</span>
         </button>
@@ -714,12 +713,12 @@
         </p>
       </div>
 
-      <button id="boostBtn" class="btn btn-boost" type="button" onclick="handleWatchAdBoost()">
+      <button id="boostBtn" class="btn btn-boost" type="button">
         <span>📺</span>
         <span id="boostLabel">Watch Ad for 2X Boost</span>
       </button>
 
-      <button id="saveBtn" class="btn btn-save" type="button" onclick="handleSubmitSession()">
+      <button id="saveBtn" class="btn btn-save" type="button">
         <span>💾</span>
         <span id="saveLabel">Submit & Save Session</span>
       </button>
@@ -746,9 +745,7 @@
             <div style="font-weight:700;font-size:13px;">Launch Official Bot (@Tmxqunbot)</div>
             <div class="task-meta">Social Reward: +300 💎</div>
           </div>
-          <button class="btn btn-primary btn-ghost" id="task-bot-tmxqunbot" type="button" onclick="handleSocialTaskAction('bot_tmxqunbot', 300, 'https://t.me/Tmxqunbot')">
-            Open
-          </button>
+          <button class="btn btn-primary btn-ghost" id="task-bot-tmxqunbot" type="button">Open</button>
         </div>
 
         <div class="task-item">
@@ -756,9 +753,7 @@
             <div style="font-weight:700;font-size:13px;">Follow on X (@timex2429)</div>
             <div class="task-meta">Social Reward: +300 💎</div>
           </div>
-          <button class="btn btn-primary btn-ghost" id="task-x-timex2429" type="button" onclick="handleSocialTaskAction('x_timex2429', 300, 'https://x.com/timex2429')">
-            Open
-          </button>
+          <button class="btn btn-primary btn-ghost" id="task-x-timex2429" type="button">Open</button>
         </div>
 
         <div class="task-item">
@@ -766,9 +761,7 @@
             <div style="font-weight:700;font-size:13px;">Follow on Instagram (@tmxquantum245)</div>
             <div class="task-meta">Social Reward: +300 💎</div>
           </div>
-          <button class="btn btn-primary btn-ghost" id="task-ig-tmxquantum245" type="button" onclick="handleSocialTaskAction('ig_tmxquantum245', 300, 'https://instagram.com/tmxquantum245')">
-            Open
-          </button>
+          <button class="btn btn-primary btn-ghost" id="task-ig-tmxquantum245" type="button">Open</button>
         </div>
 
         <div class="task-item">
@@ -776,9 +769,7 @@
             <div style="font-weight:700;font-size:13px;">Follow on Facebook (TMX-QUANTUM)</div>
             <div class="task-meta">Social Reward: +300 💎</div>
           </div>
-          <button class="btn btn-primary btn-ghost" id="task-fb-tmxquantum" type="button" onclick="handleSocialTaskAction('fb_tmxquantum', 300, 'https://www.facebook.com/profile.php?id=61595898467380')">
-            Open
-          </button>
+          <button class="btn btn-primary btn-ghost" id="task-fb-tmxquantum" type="button">Open</button>
         </div>
 
         <div class="task-item">
@@ -786,9 +777,7 @@
             <div style="font-weight:700;font-size:13px;">Follow on TikTok (@tmxquantum)</div>
             <div class="task-meta">Social Reward: +300 💎</div>
           </div>
-          <button class="btn btn-primary btn-ghost" id="task-tt-tmxquantum" type="button" onclick="handleSocialTaskAction('tt_tmxquantum', 300, 'https://www.tiktok.com/@tmxquantum')">
-            Open
-          </button>
+          <button class="btn btn-primary btn-ghost" id="task-tt-tmxquantum" type="button">Open</button>
         </div>
 
         <div class="task-item">
@@ -796,9 +785,7 @@
             <div style="font-weight:700;font-size:13px;">Complete First 15s Mining Session</div>
             <div class="task-meta">Reward: +50 💎</div>
           </div>
-          <button class="btn btn-primary btn-ghost" id="task-first-mine" type="button" onclick="verifyTask('first_mine', 50)">
-            Verify
-          </button>
+          <button class="btn btn-primary btn-ghost" id="task-first-mine" type="button">Verify</button>
         </div>
 
         <div class="task-item">
@@ -806,9 +793,7 @@
             <div style="font-weight:700;font-size:13px;">Share TMX-QUANTUM with a Friend</div>
             <div class="task-meta">Reward: +100 💎</div>
           </div>
-          <button class="btn btn-primary btn-ghost" id="task-share-app" type="button" onclick="verifyTask('share_app', 100)">
-            Verify
-          </button>
+          <button class="btn btn-primary btn-ghost" id="task-share-app" type="button">Verify</button>
         </div>
       </div>
     </section>
@@ -818,7 +803,7 @@
       <div class="card">
         <div class="card-header-row">
           <h2 class="card-title" style="margin:0;">👤 Your User Data & Balance</h2>
-          <button class="btn btn-ghost" type="button" onclick="syncUserData(true)">Sync Data</button>
+          <button class="btn btn-ghost" id="btnSyncData" type="button">Sync Data</button>
         </div>
         <div class="user-summary-box">
           <div>
@@ -829,12 +814,12 @@
           <div id="profileBalance" class="user-bal-tag">0 💎</div>
         </div>
 
-        <button id="connectTonBtn" class="btn btn-ton" type="button" onclick="handleConnectTonWallet()">
+        <button id="connectTonBtn" class="btn btn-ton" type="button">
           <span>💎</span>
           <span id="connectTonLabel">Connect TON Wallet</span>
         </button>
 
-        <button class="btn btn-ton-outline" type="button" onclick="openTonAppCatalog()">
+        <button class="btn btn-ton-outline" id="btnTonCatalog" type="button">
           <span>🌐</span>
           <span>Open ton.app Ecosystem</span>
         </button>
@@ -843,7 +828,7 @@
       <div class="card">
         <div class="card-header-row">
           <h2 class="card-title" style="margin:0;">🏆 Users & Balances Leaderboard</h2>
-          <button class="btn btn-ghost" type="button" onclick="loadLeaderboard(true)">Refresh</button>
+          <button class="btn btn-ghost" id="btnRefreshLb" type="button">Refresh</button>
         </div>
         <p class="card-desc">
           User balances and rankings synced from MongoDB Atlas (with local fallback when offline).
@@ -860,7 +845,7 @@
           Claim <strong>+200 💎</strong> each day you log in, plus an extra <strong>+2,000 💎</strong> bonus on Day 7 of a consistent 7-day streak!
         </p>
         <div id="streakBar" class="streak-bar" aria-label="7-Day Login Streak"></div>
-        <button id="dailyBonusBtn" class="btn btn-primary" type="button" onclick="claimDailyBonus()">
+        <button id="dailyBonusBtn" class="btn btn-primary" type="button">
           🎁 Claim Daily Login (+200 💎)
         </button>
       </div>
@@ -878,7 +863,7 @@
             </div>
           </div>
           <div id="spinResultText" class="spin-result-text">Ready for your daily spin!</div>
-          <button id="spinWinBtn" class="btn btn-spin" style="margin-bottom:0;" type="button" onclick="handleSpinAndWin()">
+          <button id="spinWinBtn" class="btn btn-spin" style="margin-bottom:0;" type="button">
             <span>🎡</span>
             <span id="spinWinLabel">Spin & Win 💎</span>
           </button>
@@ -902,10 +887,10 @@
         </div>
         <div id="referralLinkBox" class="ref-link-box">https://t.me/Tmxqunbot?start=ref_guest_local</div>
         <div class="ref-actions-row">
-          <button class="btn btn-primary" style="margin-bottom:0;" type="button" onclick="copyReferralLink()">
+          <button class="btn btn-primary" id="btnCopyRef" style="margin-bottom:0;" type="button">
             📋 Copy Link
           </button>
-          <button class="btn btn-save" style="margin-bottom:0;" type="button" onclick="shareReferralInvite()">
+          <button class="btn btn-save" id="btnShareRef" style="margin-bottom:0;" type="button">
             🚀 Share Invite
           </button>
         </div>
@@ -916,7 +901,7 @@
         <p class="card-desc">
           Toggle the live error console if taps, saves, spins, or ads behave unexpectedly on your device.
         </p>
-        <button class="btn btn-ghost" style="width:100%;" type="button" onclick="toggleDiag()">
+        <button class="btn btn-ghost" id="btnToggleDiag" style="width:100%;" type="button">
           🛠️ Toggle Error & API Log
         </button>
       </div>
@@ -970,34 +955,31 @@
 
   <!-- Bottom Navigation -->
   <nav class="bottom-nav" aria-label="Primary Navigation">
-    <button class="nav-btn active" id="nav-mine" type="button" onclick="switchTab('mine')">
+    <button class="nav-btn active" id="nav-mine" data-tab="mine" type="button">
       <span class="nav-icon">⚡</span>
       <span>Mine</span>
     </button>
-    <button class="nav-btn" id="nav-tasks" type="button" onclick="switchTab('tasks')">
+    <button class="nav-btn" id="nav-tasks" data-tab="tasks" type="button">
       <span class="nav-icon">📋</span>
       <span>Tasks</span>
     </button>
-    <button class="nav-btn" id="nav-leaderboard" type="button" onclick="switchTab('leaderboard')">
+    <button class="nav-btn" id="nav-leaderboard" data-tab="leaderboard" type="button">
       <span class="nav-icon">🏆</span>
       <span>Ranks</span>
     </button>
-    <button class="nav-btn" id="nav-bonus" type="button" onclick="switchTab('bonus')">
+    <button class="nav-btn" id="nav-bonus" data-tab="bonus" type="button">
       <span class="nav-icon">🎁</span>
       <span>Bonus</span>
     </button>
-    <button class="nav-btn" id="nav-support" type="button" onclick="switchTab('support')">
+    <button class="nav-btn" id="nav-support" data-tab="support" type="button">
       <span class="nav-icon">❓</span>
       <span>FAQ</span>
     </button>
   </nav>
 
   <script>
-    // =========================================================================
-    // CONFIGURATION
-    // =========================================================================
     const CONFIG = {
-      API_BASE_URL: "", // Set to your backend origin if hosted separately (e.g. "https://your-api.onrender.com")
+      API_BASE_URL: "",
       ADSGRAM_BLOCK_ID: "61181",
       TON_APP_URL: "https://ton.app",
       TON_MANIFEST_URL: "https://www.tmxquantum.site/tonconnect-manifest.json",
@@ -1007,8 +989,8 @@
       SEVENTH_DAY_BONUS: 2000,
       SPIN_PRIZES: [25, 50, 100, 150, 250, 500],
       ROUND_SECONDS: 15,
-      STORAGE_KEY: "tmx_quantum_state_v6",
-      REQUEST_TIMEOUT_MS: 8000
+      STORAGE_KEY: "tmx_quantum_state_v8",
+      REQUEST_TIMEOUT_MS: 4500
     };
 
     const FALLBACK_LEADERBOARD = [
@@ -1017,9 +999,16 @@
       { user_id: "demo_3", username: "TonVoyager", balance: 640, tasksCount: 2 }
     ];
 
-    // =========================================================================
-    // ERROR CAPTURE & DIAGNOSTIC LOGGER
-    // =========================================================================
+    const TASK_DEFS = [
+      { id: "bot_tmxqunbot", elId: "task-bot-tmxqunbot", reward: 300, url: "https://t.me/Tmxqunbot", requiresVisit: true },
+      { id: "x_timex2429", elId: "task-x-timex2429", reward: 300, url: "https://x.com/timex2429", requiresVisit: true },
+      { id: "ig_tmxquantum245", elId: "task-ig-tmxquantum245", reward: 300, url: "https://instagram.com/tmxquantum245", requiresVisit: true },
+      { id: "fb_tmxquantum", elId: "task-fb-tmxquantum", reward: 300, url: "https://www.facebook.com/profile.php?id=61595898467380", requiresVisit: true },
+      { id: "tt_tmxquantum", elId: "task-tt-tmxquantum", reward: 300, url: "https://www.tiktok.com/@tmxquantum", requiresVisit: true },
+      { id: "first_mine", elId: "task-first-mine", reward: 50, url: null, requiresVisit: false },
+      { id: "share_app", elId: "task-share-app", reward: 100, url: null, requiresVisit: false }
+    ];
+
     const logs = [];
 
     function recordLog(level, message, meta = null) {
@@ -1073,9 +1062,6 @@
       banner.className = `status-banner ${type}`;
     }
 
-    // =========================================================================
-    // APPLICATION STATE & SAFE PERSISTENCE
-    // =========================================================================
     const defaultState = {
       balance: 0,
       sessionPoints: 0,
@@ -1090,13 +1076,32 @@
       lastSpinDate: null,
       referralCount: 0,
       referralEarned: 0,
+      referredBy: null,
       tonWalletAddress: null,
       leaderboard: [...FALLBACK_LEADERBOARD]
     };
 
+    const memoryFallback = {};
+
+    function storageRead(key) {
+      try {
+        return localStorage.getItem(key);
+      } catch {
+        return memoryFallback[key] || null;
+      }
+    }
+
+    function storageWrite(key, value) {
+      try {
+        localStorage.setItem(key, value);
+      } catch {
+        memoryFallback[key] = value;
+      }
+    }
+
     function loadLocalState() {
       try {
-        const raw = localStorage.getItem(CONFIG.STORAGE_KEY);
+        const raw = storageRead(CONFIG.STORAGE_KEY);
         if (!raw) return { ...defaultState };
         const parsed = JSON.parse(raw);
         return {
@@ -1108,6 +1113,7 @@
           loginStreak: Number(parsed.loginStreak) || 0,
           referralCount: Number(parsed.referralCount) || 0,
           referralEarned: Number(parsed.referralEarned) || 0,
+          referredBy: parsed.referredBy || null,
           tonWalletAddress: parsed.tonWalletAddress || null,
           visitedTasks: Array.isArray(parsed.visitedTasks) ? parsed.visitedTasks : [],
           completedTasks: Array.isArray(parsed.completedTasks) ? parsed.completedTasks : [],
@@ -1116,7 +1122,7 @@
             : [...FALLBACK_LEADERBOARD]
         };
       } catch (err) {
-        recordLog("WARN", "localStorage unavailable, using in-memory state", err.message);
+        recordLog("WARN", "State load fallback to defaults", err.message);
         return { ...defaultState };
       }
     }
@@ -1129,30 +1135,24 @@
     let isSpinning = false;
 
     function saveLocalState() {
-      try {
-        const toSave = {
-          balance: state.balance,
-          sessionPoints: state.sessionPoints,
-          boost2xActive: state.boost2xActive,
-          visitedTasks: state.visitedTasks,
-          completedTasks: state.completedTasks,
-          lastBonusDate: state.lastBonusDate,
-          loginStreak: state.loginStreak,
-          lastSpinDate: state.lastSpinDate,
-          referralCount: state.referralCount,
-          referralEarned: state.referralEarned,
-          tonWalletAddress: state.tonWalletAddress || null,
-          leaderboard: state.leaderboard
-        };
-        localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(toSave));
-      } catch (err) {
-        recordLog("WARN", "Could not persist to localStorage", err.message);
-      }
+      const toSave = {
+        balance: state.balance,
+        sessionPoints: state.sessionPoints,
+        boost2xActive: state.boost2xActive,
+        visitedTasks: state.visitedTasks,
+        completedTasks: state.completedTasks,
+        lastBonusDate: state.lastBonusDate,
+        loginStreak: state.loginStreak,
+        lastSpinDate: state.lastSpinDate,
+        referralCount: state.referralCount,
+        referralEarned: state.referralEarned,
+        referredBy: state.referredBy || null,
+        tonWalletAddress: state.tonWalletAddress || null,
+        leaderboard: state.leaderboard
+      };
+      storageWrite(CONFIG.STORAGE_KEY, JSON.stringify(toSave));
     }
 
-    // =========================================================================
-    // DATE & STREAK HELPERS
-    // =========================================================================
     function getTodayDateStr() {
       return new Date().toISOString().slice(0, 10);
     }
@@ -1172,70 +1172,144 @@
       return 1;
     }
 
-    // =========================================================================
-    // TELEGRAM WEBAPP & USER PROFILE
-    // =========================================================================
     function getTelegramWebApp() {
-      return window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+      return
+      window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
     }
 
-    function getTelegramInitData() {
+    function parseInitDataString(rawInitData) {
+      const out = { user: null, startParam: null, authDate: null, hash: null, queryId: null };
+      if (!rawInitData || typeof rawInitData !== "string") return out;
+      try {
+        const params = new URLSearchParams(rawInitData);
+        out.startParam = params.get("start_param");
+        out.authDate = params.get("auth_date");
+        out.hash = params.get("hash");
+        out.queryId = params.get("query_id");
+        const userStr = params.get("user");
+        if (userStr) {
+          out.user = JSON.parse(userStr);
+        }
+      } catch (err) {
+        recordLog("WARN", "Failed parsing initData string", err.message);
+      }
+      return out;
+    }
+
+    function getRawInitData() {
       const tg = getTelegramWebApp();
       if (tg && typeof tg.initData === "string" && tg.initData.trim().length > 0) {
         return tg.initData.trim();
       }
-      const queryId = tg?.initDataUnsafe?.query_id;
-      if (queryId) {
-        return `query_id=${encodeURIComponent(String(queryId))}`;
-      }
-      const profile = getCurrentUserProfile();
-      return `user_id=${encodeURIComponent(String(profile.user_id))}`;
+      try {
+        const searchParams = new URLSearchParams(window.location.search || "");
+        const fromQuery = searchParams.get("tgWebAppData") || searchParams.get("initData");
+        if (fromQuery && fromQuery.trim().length > 0) {
+          return fromQuery.trim();
+        }
+      } catch {}
+      return "";
+    }
+
+    function getInitDataBundle() {
+      const tg = getTelegramWebApp();
+      const rawInitData = getRawInitData();
+      const parsedFromRaw = parseInitDataString(rawInitData);
+      const unsafe = tg?.initDataUnsafe || {};
+      const user = unsafe.user || parsedFromRaw.user || null;
+      const startParam = unsafe.start_param || parsedFromRaw.startParam || null;
+      const queryId = unsafe.query_id || parsedFromRaw.queryId || null;
+
+      return {
+        initData: rawInitData,
+        initDataUnsafe: {
+          ...parsedFromRaw,
+          ...unsafe,
+          user,
+          start_param: startParam,
+          query_id: queryId
+        },
+        user,
+        startParam
+      };
     }
 
     function getCurrentUserProfile() {
-      const tg = getTelegramWebApp();
-      const u = tg?.initDataUnsafe?.user;
-      if (u && u.id) {
-        const displayName = u.username
-          ? `@${u.username}`
-          : [u.first_name, u.last_name].filter(Boolean).join(" ") || `User_${u.id}`;
+      const { user } = getInitDataBundle();
+      if (user && user.id) {
+        const displayName = user.username
+          ? `@${user.username}`
+          : [user.first_name, user.last_name].filter(Boolean).join(" ") || `User_${user.id}`;
         return {
-          user_id: String(u.id),
+          user_id: String(user.id),
           username: displayName,
-          first_name: u.first_name || ""
+          first_name: user.first_name || "",
+          last_name: user.last_name || "",
+          language_code: user.language_code || "",
+          is_premium: Boolean(user.is_premium)
         };
       }
       return {
         user_id: "guest_local",
         username: "You (Local)",
-        first_name: "You"
+        first_name: "You",
+        last_name: "",
+        language_code: "en",
+        is_premium: false
       };
+    }
+
+    function getTelegramInitDataForTransport() {
+      const { initData, initDataUnsafe } = getInitDataBundle();
+      if (initData) return initData;
+      if (initDataUnsafe.query_id) {
+        return `query_id=${encodeURIComponent(String(initDataUnsafe.query_id))}`;
+      }
+      const profile = getCurrentUserProfile();
+      return `user_id=${encodeURIComponent(String(profile.user_id))}`;
+    }
+
+    function captureStartParamReferral() {
+      const { startParam } = getInitDataBundle();
+      const profile = getCurrentUserProfile();
+      if (!startParam) return;
+      const match = String(startParam).match(/^ref_(.+)$/);
+      if (!match) return;
+      const referrerId = decodeURIComponent(match[1]).trim();
+      if (!referrerId || referrerId === profile.user_id || state.referredBy) return;
+      state.referredBy = referrerId;
+      saveLocalState();
+      recordLog("INFO", "Captured referral start_param from initData", { referredBy: referrerId });
     }
 
     function initTelegram() {
       const tg = getTelegramWebApp();
+      const { initData, user, startParam } = getInitDataBundle();
+      captureStartParamReferral();
+
       if (!tg) {
-        recordLog("INFO", "Running outside Telegram WebApp (browser/preview mode)");
+        recordLog("INFO", "Running outside Telegram WebApp (browser/preview mode)", {
+          hasInitData: Boolean(initData),
+          startParam: startParam || null
+        });
         return;
       }
 
       try {
         if (typeof tg.ready === "function") tg.ready();
         if (typeof tg.expand === "function") tg.expand();
-        recordLog("INFO", "Telegram WebApp initialized", {
+        recordLog("INFO", "Telegram WebApp initialized with initData", {
           version: tg.version || "unknown",
           platform: tg.platform || "unknown",
-          hasInitData: Boolean(tg.initData && tg.initData.length > 0),
-          userId: tg.initDataUnsafe?.user?.id || null
+          hasInitData: Boolean(initData),
+          userId: user?.id || null,
+          startParam: startParam || null
         });
       } catch (err) {
         recordLog("ERROR", "Telegram WebApp init failed", err.message);
       }
     }
 
-    // =========================================================================
-    // TON CONNECT & TON.APP INTERACTION
-    // =========================================================================
     function shortenTonAddress(addr) {
       if (!addr || typeof addr !== "string") return "";
       if (addr.length <= 14) return addr;
@@ -1248,11 +1322,11 @@
           recordLog("WARN", "TON Connect UI script not available; manual address fallback enabled");
           return;
         }
-        const tg = getTelegramWebApp();
+        const { user } = getInitDataBundle();
         tonConnectUI = new window.TON_CONNECT_UI.TonConnectUI({
           manifestUrl: CONFIG.TON_MANIFEST_URL,
           actionsConfiguration: {
-            twaReturnUrl: tg?.initDataUnsafe?.user ? `https://t.me/${CONFIG.BOT_USERNAME}/app` : window.location.href
+            twaReturnUrl: user?.id ? `https://t.me/${CONFIG.BOT_USERNAME}/app` : window.location.href
           }
         });
 
@@ -1272,7 +1346,7 @@
             renderUserDataCard();
           }
         });
-        recordLog("INFO", "TON Connect UI initialized", { manifestUrl: CONFIG.TON_MANIFEST_URL });
+        recordLog("INFO", "TON Connect UI initialized");
       } catch (err) {
         recordLog("WARN", "TON Connect UI init fallback", err.message);
       }
@@ -1347,9 +1421,6 @@
       openTaskLink(CONFIG.TON_APP_URL);
     }
 
-    // =========================================================================
-    // BACKEND API HELPER (MONGODB ATLAS VIA API)
-    // =========================================================================
     function extractPayload(raw) {
       if (!raw || typeof raw !== "object") return {};
       if (raw.data && typeof raw.data === "object" && !Array.isArray(raw.data)) {
@@ -1375,12 +1446,16 @@
       const base = (CONFIG.API_BASE_URL || "").replace(/\/+$/, "");
       const cleanPath = path.startsWith("/") ? path : `/${path}`;
       const profile = getCurrentUserProfile();
-      const initDataStr = getTelegramInitData();
+      const { initData, initDataUnsafe, startParam } = getInitDataBundle();
+      const transportInitData = getTelegramInitDataForTransport();
 
       let url = `${base}${cleanPath}`;
       if (method === "GET") {
         const sep = url.includes("?") ? "&" : "?";
         url = `${url}${sep}user_id=${encodeURIComponent(profile.user_id)}`;
+        if (initData) {
+          url = `${url}&initData=${encodeURIComponent(initData)}`;
+        }
       }
 
       const controller = new AbortController();
@@ -1390,7 +1465,7 @@
         method,
         headers: {
           "Content-Type": "application/json",
-          "X-Telegram-Init-Data": initDataStr
+          "X-Telegram-Init-Data": transportInitData
         },
         signal: controller.signal
       };
@@ -1400,8 +1475,10 @@
           ...payload,
           user_id: profile.user_id,
           username: profile.username,
-          initData: initDataStr,
-          user: getTelegramWebApp()?.initDataUnsafe?.user || null
+          initData,
+          initDataUnsafe,
+          start_param: startParam || state.referredBy || null,
+          user: initDataUnsafe.user || null
         });
       }
 
@@ -1442,9 +1519,6 @@
       }
     }
 
-    // =========================================================================
-    // USER DATA & LEADERBOARD SYNC / RENDERING
-    // =========================================================================
     function escapeHtml(value) {
       return String(value ?? "").replace(/[<>&"]/g, (ch) => (
         { "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" }[ch]
@@ -1452,8 +1526,683 @@
     }
 
     function applyServerState(data) {
+      if (!data || typeof data !== "object") return;
       const serverBal = extractBalance(data);
       if (serverBal !== null) {
         state.balance = serverBal;
       }
-      if (Array.isArray(data.
+      if (Array.isArray(data.visitedTasks)) {
+        state.visitedTasks = data.visitedTasks;
+      }
+      if (Array.isArray(data.completedTasks)) {
+        state.completedTasks = data.completedTasks;
+      }
+      if (data.lastBonusDate) {
+        state.lastBonusDate = data.lastBonusDate;
+      }
+      if (typeof data.loginStreak === "number") {
+        state.loginStreak = data.loginStreak;
+      }
+      if (data.lastSpinDate) {
+        state.lastSpinDate = data.lastSpinDate;
+      }
+      if (typeof data.referralCount === "number") {
+        state.referralCount = data.referralCount;
+      }
+      if (typeof data.referralEarned === "number") {
+        state.referralEarned = data.referralEarned;
+      }
+      if (data.tonWalletAddress !== undefined) {
+        state.tonWalletAddress = data.tonWalletAddress || null;
+      }
+      if (Array.isArray(data.leaderboard) && data.leaderboard.length > 0) {
+        state.leaderboard = data.leaderboard;
+      }
+      saveLocalState();
+    }
+
+    function renderUserDataCard() {
+      const me = getCurrentUserProfile();
+      const nameEl = document.getElementById("profileDisplayName");
+      const idEl = document.getElementById("profileUserId");
+      const balEl = document.getElementById("profileBalance");
+      const walletEl = document.getElementById("profileTonWallet");
+      const connectBtnLabel = document.getElementById("connectTonLabel");
+
+      if (nameEl) nameEl.textContent = me.username;
+      if (idEl) {
+        idEl.textContent = `ID: ${me.user_id} • Verified Tasks: ${state.completedTasks.length}`;
+      }
+      if (balEl) balEl.textContent = `${Number(state.balance) || 0} 💎`;
+
+      if (walletEl) {
+        walletEl.textContent = state.tonWalletAddress
+          ? `💎 TON Wallet: ${shortenTonAddress(state.tonWalletAddress)}`
+          : "💎 TON Wallet: Not Connected";
+      }
+      if (connectBtnLabel) {
+        connectBtnLabel.textContent = state.tonWalletAddress
+          ? "Disconnect / Change TON Wallet"
+          : "Connect TON Wallet";
+      }
+    }
+
+    function renderReferralCard() {
+      const me = getCurrentUserProfile();
+      const refLink = `https://t.me/${CONFIG.BOT_USERNAME}?start=ref_${encodeURIComponent(me.user_id)}`;
+      const linkEl = document.getElementById("referralLinkBox");
+      const countEl = document.getElementById("referralCountDisplay");
+      const earnedEl = document.getElementById("referralEarnedDisplay");
+
+      if (linkEl) linkEl.textContent = refLink;
+      if (countEl) countEl.textContent = `${Number(state.referralCount) || 0}`;
+      if (earnedEl) earnedEl.textContent = `${Number(state.referralEarned) || 0} 💎`;
+    }
+
+    function renderStreakBar() {
+      const barEl = document.getElementById("streakBar");
+      if (!barEl) return;
+
+      const today = getTodayDateStr();
+      const yesterday = getYesterdayDateStr();
+      const activeStreak = (state.lastBonusDate === today || state.lastBonusDate === yesterday)
+        ? state.loginStreak
+        : 0;
+
+      let html = "";
+      for (let day = 1; day <= 7; day++) {
+        const isClaimed = day <= activeStreak;
+        const isDay7 = day === 7;
+        const label = isDay7 ? "D7 +2k" : `D${day}`;
+        html += `<div class="streak-day ${isClaimed ? "claimed" : ""} ${isDay7 ? "day7" : ""}">${label}</div>`;
+      }
+      barEl.innerHTML = html;
+    }
+
+    function syncLocalLeaderboardWithCurrentUser() {
+      const me = getCurrentUserProfile();
+      const merged = [...(state.leaderboard || FALLBACK_LEADERBOARD)];
+      const idx = merged.findIndex((item) => String(item.user_id) === String(me.user_id));
+      const myEntry = {
+        user_id: me.user_id,
+        username: me.username,
+        balance: Number(state.balance) || 0,
+        tasksCount: state.completedTasks.length
+      };
+      if (idx >= 0) {
+        merged[idx] = { ...merged[idx], ...myEntry };
+      } else {
+        merged.push(myEntry);
+      }
+      merged.sort((a, b) => (Number(b.balance) || 0) - (Number(a.balance) || 0));
+      state.leaderboard = merged.slice(0, 25);
+      saveLocalState();
+    }
+
+    function renderLeaderboard() {
+      const listEl = document.getElementById("leaderboardList");
+      if (!listEl) return;
+
+      syncLocalLeaderboardWithCurrentUser();
+      const me = getCurrentUserProfile();
+
+      if (!state.leaderboard.length) {
+        listEl.innerHTML = `<div class="card-desc">No user balances recorded yet.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = state.leaderboard
+        .map((row, index) => {
+          const rank = index + 1;
+          const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `#${rank}`;
+          const isMe = String(row.user_id) === String(me.user_id);
+          const safeName = escapeHtml(row.username || `Miner_${row.user_id}`);
+          const safeId = escapeHtml(row.user_id || "unknown");
+          const tasksLabel = typeof row.tasksCount === "number" ? ` • ${row.tasksCount} tasks` : "";
+          return `
+            <div class="lb-item ${isMe ? "me" : ""}">
+              <div class="lb-left">
+                <span class="lb-rank">${medal}</span>
+                <div>
+                  <div class="lb-name">${safeName}${isMe ? " (You)" : ""}</div>
+                  <div class="lb-sub">ID: ${safeId}${tasksLabel}</div>
+                </div>
+              </div>
+              <span class="lb-score">${Number(row.balance) || 0} 💎</span>
+            </div>
+          `;
+        })
+        .join("");
+    }
+
+    async function syncUserData(showFeedback = false) {
+      const profile = getCurrentUserProfile();
+      const { startParam } = getInitDataBundle();
+      const syncRes = await callApi("/api/state", {
+        user_id: profile.user_id,
+        username: profile.username,
+        start_param: startParam || state.referredBy || null
+      });
+
+      if (syncRes.ok && extractBalance(syncRes.data) !== null) {
+        applyServerState(syncRes.data);
+        renderUI();
+        if (showFeedback) {
+          showBanner(`Synced user data & balance (${state.balance} 💎) with MongoDB Atlas.`, "success");
+        }
+        return true;
+      }
+
+      renderUI();
+      if (showFeedback) {
+        showBanner(`Using local user data & balance (${state.balance} 💎) — API offline.`, "info");
+      }
+      return false;
+    }
+
+    async function loadLeaderboard(showFeedback = false) {
+      const res = await callApi("/api/leaderboard?limit=25", {}, "GET");
+      const rows = Array.isArray(res.data?.leaderboard)
+        ? res.data.leaderboard
+        : (Array.isArray(res.data?.users) ? res.data.users : null);
+
+      if (res.ok && rows) {
+        state.leaderboard = rows;
+        saveLocalState();
+        renderLeaderboard();
+        if (showFeedback) showBanner("Users & balances updated from MongoDB Atlas.", "success");
+      } else {
+        renderLeaderboard();
+        if (showFeedback) showBanner("Showing cached/local user balances (API offline).", "info");
+      }
+    }
+
+    function renderTasksUI() {
+      for (const task of TASK_DEFS) {
+        const el = document.getElementById(task.elId);
+        if (!el) continue;
+
+        if (state.completedTasks.includes(task.id)) {
+          if (el.tagName === "BUTTON") {
+            const badge = document.createElement("span");
+            badge.className = "badge-done";
+            badge.id = task.elId;
+            badge.textContent = "✓ Verified";
+            el.replaceWith(badge);
+          } else {
+            el.textContent = "✓ Verified";
+          }
+          continue;
+        }
+
+        if (task.requiresVisit && state.visitedTasks.includes(task.id)) {
+          el.className = "btn btn-verify-ready btn-ghost";
+          el.textContent = "Verify";
+        } else if (task.requiresVisit) {
+          el.className = "btn btn-primary btn-ghost";
+          el.textContent = "Open";
+        } else {
+          el.className = "btn btn-primary btn-ghost";
+          el.textContent = "Verify";
+        }
+      }
+    }
+
+    function renderUI() {
+      document.getElementById("headerBalance").textContent = `${state.balance} 💎`;
+      document.getElementById("balanceDisplay").textContent = `${state.balance} 💎`;
+      document.getElementById("sessionDisplay").textContent = `${state.sessionPoints}`;
+      document.getElementById("timerDisplay").textContent = `${state.timerSeconds}s`;
+
+      const tapLabel = document.getElementById("tapLabel");
+      if (state.isMining) {
+        tapLabel.textContent = "KEEP TAPPING!";
+      } else if (state.roundCompleted) {
+        tapLabel.textContent = "ROUND READY";
+      } else {
+        tapLabel.textContent = "TAP TO START";
+      }
+
+      const boostLabel = document.getElementById("boostLabel");
+      boostLabel.textContent = state.boost2xActive
+        ? "2X Boost Active for This Session ✓"
+        : "Watch Ad for 2X Boost";
+
+      renderTasksUI();
+
+      const today = getTodayDateStr();
+      const bonusBtn = document.getElementById("dailyBonusBtn");
+      const bonusDesc = document.getElementById("dailyBonusDesc");
+      const nextDay = getNextStreakDay();
+      const nextReward = nextDay === 7
+        ? CONFIG.DAILY_LOGIN_REWARD + CONFIG.SEVENTH_DAY_BONUS
+        : CONFIG.DAILY_LOGIN_REWARD;
+
+      if (bonusDesc) {
+        bonusDesc.innerHTML = `Earn <strong>+${CONFIG.DAILY_LOGIN_REWARD} 💎</strong> daily, plus an extra <strong>+${CONFIG.SEVENTH_DAY_BONUS} 💎</strong> on Day 7 of a consistent 7-day login streak (Current streak: <strong>${state.loginStreak}/7</strong>).`;
+      }
+
+      if (bonusBtn) {
+        if (state.lastBonusDate === today) {
+          bonusBtn.disabled = true;
+          bonusBtn.textContent = `✓ Day ${state.loginStreak} Claimed Today`;
+        } else {
+          bonusBtn.disabled = false;
+          bonusBtn.textContent = `🎁 Claim Day ${nextDay} Login (+${nextReward} 💎)`;
+        }
+      }
+
+      renderStreakBar();
+
+      const spinBtn = document.getElementById("spinWinBtn");
+      const spinLabel = document.getElementById("spinWinLabel");
+      const spinResult = document.getElementById("spinResultText");
+      if (spinBtn && spinLabel && !isSpinning) {
+        if (state.lastSpinDate === today) {
+          spinBtn.disabled = true;
+          spinLabel.textContent = "Daily Spin Used";
+          if (spinResult) spinResult.textContent = "Come back tomorrow for another free spin!";
+        } else {
+          spinBtn.disabled = false;
+          spinLabel.textContent = "Spin & Win 💎";
+        }
+      }
+
+      renderReferralCard();
+      renderUserDataCard();
+      renderLeaderboard();
+    }
+
+    function switchTab(tabName) {
+      const tabs = ["mine", "tasks", "leaderboard", "bonus", "support"];
+      for (const t of tabs) {
+        document.getElementById(`panel-${t}`)?.classList.toggle("active", t === tabName);
+        document.getElementById(`nav-${t}`)?.classList.toggle("active", t === tabName);
+      }
+      if (tabName === "leaderboard") {
+        syncUserData(false).then(() => loadLeaderboard(false));
+      }
+    }
+
+    function startMiningRound() {
+      if (state.isMining) return;
+      clearInterval(timerInterval);
+
+      state.isMining = true;
+      state.roundCompleted = false;
+      state.timerSeconds = CONFIG.ROUND_SECONDS;
+      state.sessionPoints = 1;
+      renderUI();
+      showBanner("15-second mining round started! Tap fast.", "info");
+
+      timerInterval = setInterval(() => {
+        state.timerSeconds -= 1;
+        if (state.timerSeconds <= 0) {
+          state.timerSeconds = 0;
+          state.isMining = false;
+          state.roundCompleted = true;
+          clearInterval(timerInterval);
+          renderUI();
+          showBanner("Round finished! Boost 2X or tap Submit & Save Session.", "success");
+        } else {
+          renderUI();
+        }
+      }, 1000);
+    }
+
+    function handleTap() {
+      try {
+        if (!state.isMining) {
+          startMiningRound();
+          return;
+        }
+        state.sessionPoints += 1;
+        renderUI();
+      } catch (err) {
+        recordLog("ERROR", "Tap handler failed", err.message);
+        showBanner(`Tap error: ${err.message}`, "error");
+      }
+    }
+
+    function initAdsgram() {
+      try {
+        const initDataStr = getTelegramInitDataForTransport();
+        if (window.Adsgram && typeof window.Adsgram.init === "function" && CONFIG.ADSGRAM_BLOCK_ID) {
+          adController = window.Adsgram.init({
+            blockId: CONFIG.ADSGRAM_BLOCK_ID,
+            initData: initDataStr,
+            debug: false
+          });
+          recordLog("INFO", "Adsgram AdController initialized");
+        }
+      } catch (err) {
+        recordLog("ERROR", "Adsgram init error", err.message);
+      }
+    }
+
+    async function handleWatchAdBoost() {
+      if (state.boost2xActive) {
+        showBanner("2X Boost is already active for your current session!", "info");
+        return;
+      }
+
+      const boostBtn = document.getElementById("boostBtn");
+      boostBtn.disabled = true;
+      showBanner("Loading rewarded ad...", "info");
+
+      try {
+        initAdsgram();
+        if (adController && typeof adController.show === "function") {
+          await adController.show();
+          state.boost2xActive = true;
+          saveLocalState();
+          renderUI();
+          showBanner("Ad completed! 2X Boost activated for this session.", "success");
+        } else {
+          throw new Error("Ad SDK unavailable in this environment");
+        }
+      } catch (err) {
+        const msg = err?.description || err?.message || "Ad closed or unavailable";
+        recordLog("WARN", "Ad boost did not complete", msg);
+        showBanner(`Ad boost unavailable (${msg}). You can still save your session.`, "info");
+      } finally {
+        boostBtn.disabled = false;
+      }
+    }
+
+    async function handleSubmitSession() {
+      if (state.isMining) {
+        showBanner("Wait for the 15s timer to finish before submitting.", "info");
+        return;
+      }
+
+      if (state.sessionPoints <= 0) {
+        showBanner("Tap to start a mining round first so you have session points to save.", "info");
+        return;
+      }
+
+      const saveBtn = document.getElementById("saveBtn");
+      saveBtn.disabled = true;
+
+      const multiplier = state.boost2xActive ? 2 : 1;
+      const earned = state.sessionPoints * multiplier;
+
+      try {
+        const apiRes = await callApi("/api/mine/claim", {
+          sessionPoints: state.sessionPoints,
+          multiplier,
+          earned
+        });
+
+        const serverBal = apiRes.ok ? extractBalance(apiRes.data) : null;
+        if (serverBal !== null) {
+          state.balance = serverBal;
+        } else {
+          state.balance += earned;
+        }
+
+        if (Array.isArray(apiRes.data?.leaderboard)) {
+          state.leaderboard = apiRes.data.leaderboard;
+        }
+
+        state.sessionPoints = 0;
+        state.timerSeconds = CONFIG.ROUND_SECONDS;
+        state.roundCompleted = false;
+        state.boost2xActive = false;
+        saveLocalState();
+        renderUI();
+
+        show
+      Banner(
+          apiRes.ok
+            ? `Saved +${earned} 💎! Balance: ${state.balance} 💎.`
+            : `Saved +${earned} 💎 locally (API offline). Balance: ${state.balance} 💎.`,
+          "success"
+        );
+      } catch (err) {
+        recordLog("ERROR", "Submit session failed", err.message);
+        showBanner(`Could not save session: ${err.message}`, "error");
+      } finally {
+        saveBtn.disabled = false;
+      }
+    }
+
+    function openTaskLink(url) {
+      if (!url) return;
+      const tg = getTelegramWebApp();
+      try {
+        if (url.startsWith("https://t.me/") && tg && typeof tg.openTelegramLink === "function") {
+          tg.openTelegramLink(url);
+        } else if (tg && typeof tg.openLink === "function") {
+          tg.openLink(url);
+        } else {
+          window.open(url, "_blank", "noopener,noreferrer");
+        }
+      } catch (err) {
+        recordLog("WARN", "Could not open task link", err.message);
+      }
+    }
+
+    async function handleTaskClick(task) {
+      if (state.completedTasks.includes(task.id)) {
+        showBanner("Task already verified.", "info");
+        return;
+      }
+
+      if (task.requiresVisit && !state.visitedTasks.includes(task.id)) {
+        if (task.url) openTaskLink(task.url);
+        state.visitedTasks.push(task.id);
+        saveLocalState();
+        renderUI();
+        showBanner("Channel opened! Complete the action, then tap Verify to claim reward.", "info");
+        return;
+      }
+
+      showBanner("Verifying task...", "info");
+      const apiRes = await callApi("/api/tasks/verify", {
+        taskId: task.id,
+        reward: task.reward,
+        visited: state.visitedTasks.includes(task.id)
+      });
+
+      const serverBal = apiRes.ok ? extractBalance(apiRes.data) : null;
+      if (serverBal !== null) {
+        state.balance = serverBal;
+      } else {
+        state.balance += task.reward;
+      }
+
+      if (Array.isArray(apiRes.data?.completedTasks)) {
+        state.completedTasks = apiRes.data.completedTasks;
+      } else if (!state.completedTasks.includes(task.id)) {
+        state.completedTasks.push(task.id);
+      }
+
+      saveLocalState();
+      renderUI();
+      showBanner(`Task verified! +${task.reward} 💎 added to your balance.`, "success");
+    }
+
+    async function claimDailyBonus() {
+      const today = getTodayDateStr();
+      if (state.lastBonusDate === today) {
+        showBanner("You have already claimed today's login bonus.", "info");
+        return;
+      }
+
+      const nextStreak = getNextStreakDay();
+      const isSeventhDay = nextStreak === 7;
+      const totalReward = CONFIG.DAILY_LOGIN_REWARD + (isSeventhDay ? CONFIG.SEVENTH_DAY_BONUS : 0);
+
+      const apiRes = await callApi("/api/bonus/claim", {
+        reward: totalReward,
+        baseReward: CONFIG.DAILY_LOGIN_REWARD,
+        streakBonus: isSeventhDay ? CONFIG.SEVENTH_DAY_BONUS : 0,
+        streakDay: nextStreak,
+        date: today
+      });
+
+      const serverBal = apiRes.ok ? extractBalance(apiRes.data) : null;
+      if (serverBal !== null) {
+        state.balance = serverBal;
+      } else {
+        state.balance += totalReward;
+      }
+
+      state.loginStreak = (typeof apiRes.data?.loginStreak === "number")
+        ? apiRes.data.loginStreak
+        : nextStreak;
+      state.lastBonusDate = today;
+      saveLocalState();
+      renderUI();
+
+      showBanner(
+        isSeventhDay
+          ? `7-Day Streak Complete! Claimed +${CONFIG.DAILY_LOGIN_REWARD} 💎 + +${CONFIG.SEVENTH_DAY_BONUS} 💎 bonus (+${totalReward} 💎 total)!`
+          : `Day ${state.loginStreak}/7 login claimed! +${totalReward} 💎 added.`,
+        "success"
+      );
+    }
+
+    async function handleSpinAndWin() {
+      const today = getTodayDateStr();
+      if (isSpinning) return;
+      if (state.lastSpinDate === today) {
+        showBanner("You have already used today's Spin & Win.", "info");
+        return;
+      }
+
+      isSpinning = true;
+      const spinBtn = document.getElementById("spinWinBtn");
+      const wheelEl = document.getElementById("spinWheel");
+      const centerLabel = document.getElementById("wheelCenterLabel");
+      const resultText = document.getElementById("spinResultText");
+
+      if (spinBtn) spinBtn.disabled = true;
+      if (centerLabel) centerLabel.textContent = "•••";
+      if (resultText) resultText.textContent = "Spinning the quantum wheel...";
+
+      const prizes = CONFIG.SPIN_PRIZES;
+      const prizeIndex = Math.floor(Math.random() * prizes.length);
+      const prizeAmount = prizes[prizeIndex];
+      const sliceDeg = 360 / prizes.length;
+      const targetDeg = 360 * 5 + (360 - prizeIndex * sliceDeg);
+      currentWheelAngle += targetDeg;
+
+      if (wheelEl) {
+        wheelEl.style.transform = `rotate(${currentWheelAngle}deg)`;
+      }
+
+      setTimeout(async () => {
+        try {
+          const apiRes = await callApi("/api/spin/claim", { reward: prizeAmount, date: today });
+          const serverBal = apiRes.ok ? extractBalance(apiRes.data) : null;
+          if (serverBal !== null) {
+            state.balance = serverBal;
+          } else {
+            state.balance += prizeAmount;
+          }
+          state.lastSpinDate = today;
+          saveLocalState();
+
+          if (centerLabel) centerLabel.textContent = `+${prizeAmount}`;
+          if (resultText) resultText.textContent = `You won +${prizeAmount} 💎!`;
+          showBanner(`Spin & Win! You earned +${prizeAmount} 💎.`, "success");
+        } catch (err) {
+          recordLog("ERROR", "Spin & Win failed", err.message);
+          showBanner(`Spin error: ${err.message}`, "error");
+        } finally {
+          isSpinning = false;
+          renderUI();
+        }
+      }, 2250);
+    }
+
+    function getReferralLink() {
+      const me = getCurrentUserProfile();
+      return `https://t.me/${CONFIG.BOT_USERNAME}?start=ref_${encodeURIComponent(me.user_id)}`;
+    }
+
+    async function copyReferralLink() {
+      const link = getReferralLink();
+      try {
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+          await navigator.clipboard.writeText(link);
+        } else {
+          const temp = document.createElement("textarea");
+          temp.value = link;
+          document.body.appendChild(temp);
+          temp.select();
+          document.execCommand("copy");
+          document.body.removeChild(temp);
+        }
+        showBanner("Referral link copied! Share it to earn +250 💎 per friend.", "success");
+      } catch (err) {
+        recordLog("WARN", "Clipboard copy fallback", err.message);
+        showBanner(`Referral link: ${link}`, "info");
+      }
+    }
+
+    function shareReferralInvite() {
+      const link = getReferralLink();
+      const shareText = `Mine 💎 on TMX-QUANTUM (TON Telegram Mini App) and earn rewards! Join here:`;
+      const tg = getTelegramWebApp();
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareText)}`;
+
+      try {
+        if (tg && typeof tg.openTelegramLink === "function") {
+          tg.openTelegramLink(shareUrl);
+        } else {
+          window.open(shareUrl, "_blank", "noopener,noreferrer");
+        }
+      } catch (err) {
+        recordLog("WARN", "Share invite fallback", err.message);
+      }
+    }
+
+    function bindEvents() {
+      document.getElementById("tapBtn")?.addEventListener("click", handleTap);
+      document.getElementById("boostBtn")?.addEventListener("click", handleWatchAdBoost);
+      document.getElementById("saveBtn")?.addEventListener("click", handleSubmitSession);
+
+      document.getElementById("btnSyncData")?.addEventListener("click", () => syncUserData(true));
+      document.getElementById("btnRefreshLb")?.addEventListener("click", () => loadLeaderboard(true));
+      document.getElementById("connectTonBtn")?.addEventListener("click", handleConnectTonWallet);
+      document.getElementById("btnTonCatalog")?.addEventListener("click", openTonAppCatalog);
+
+      document.getElementById("dailyBonusBtn")?.addEventListener("click", claimDailyBonus);
+      document.getElementById("spinWinBtn")?.addEventListener("click", handleSpinAndWin);
+      document.getElementById("btnCopyRef")?.addEventListener("click", copyReferralLink);
+      document.getElementById("btnShareRef")?.addEventListener("click", shareReferralInvite);
+      document.getElementById("btnToggleDiag")?.addEventListener("click", toggleDiag);
+      document.getElementById("btnTestApi")?.addEventListener("click", runHealthCheck);
+      document.getElementById("btnClearLogs")?.addEventListener("click", clearLogs);
+
+      for (const task of TASK_DEFS) {
+        document.getElementById(task.elId)?.addEventListener("click", () => handleTaskClick(task));
+      }
+
+      document.querySelectorAll(".nav-btn[data-tab]").forEach((btn) => {
+        btn.addEventListener("click", () => switchTab(btn.getAttribute("data-tab")));
+      });
+    }
+
+    (async function boot() {
+      recordLog("INFO", "TMX-QUANTUM booting...");
+      bindEvents();
+      initTelegram();
+      initTonConnect();
+      initAdsgram();
+      renderUI();
+
+      const synced = await syncUserData(false);
+      if (synced) {
+        showBanner(`Synced user data & balance (${state.balance} 💎).`, "success");
+      } else {
+        await loadLeaderboard(false);
+        showBanner(`Active! Balance: ${state.balance} 💎 (local cache until API connects).`, "info");
+      }
+    })();
+  </script>
+</body>
+</html>
