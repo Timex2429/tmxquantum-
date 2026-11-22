@@ -3,25 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>TMX-QUANTUM • Web3 Telegram Mini App on TON Blockchain</title>
-  <meta name="description" content="TMX-QUANTUM is a Web3 Telegram Mini App built on The Open Network (TON) blockchain, enabling TON wallet connection, tap-to-mine rewards, and ecosystem tasks." />
+  <title>TMX-QUANTUM • TON Quantum Mining Mini App</title>
+  <meta name="description" content="TMX-QUANTUM is a Telegram Mini App built on The Open Network (TON), featuring quantum mining rounds, ecosystem tasks, daily streaks, and TON Connect wallet linking." />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
   <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
   <style>
     :root {
-      --bg: #090614;
-      --surface: #130d26;
-      --surface-2: #1c1338;
-      --border: rgba(168, 85, 247, 0.25);
+      --bg: #050a14;
+      --surface: #0b1526;
+      --surface-2: #102038;
+      --border: rgba(56, 189, 248, 0.22);
       --ton-blue: #0098ea;
-      --text: #f5f3ff;
-      --muted: #a79ec7;
-      --primary: #7c3aed;
-      --primary-2: #4f46e5;
-      --accent: #f59e0b;
+      --text: #f0f9ff;
+      --muted: #8aa4c2;
+      --primary: #0284c7;
+      --primary-2: #0ea5e9;
+      --accent: #22d3ee;
       --success: #10b981;
-      --danger: #ef4444;
+      --danger: #f43f5e;
     }
 
     * {
@@ -31,9 +31,12 @@
 
     body {
       margin: 0;
-      padding: 0 0 84px 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: radial-gradient(circle at top, #1d103d 0%, var(--bg) 65%);
+      padding: 0 0 86px 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background:
+        radial-gradient(circle at 50% -10%, rgba(6, 182, 212, 0.22), transparent 55%),
+        radial-gradient(circle at 85% 20%, rgba(0, 152, 234, 0.12), transparent 45%),
+        var(--bg);
       color: var(--text);
       min-height: 100vh;
     }
@@ -50,37 +53,38 @@
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      background: var(--surface);
+      background: rgba(11, 21, 38, 0.92);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 10px 14px;
+      border-radius: 16px;
+      padding: 11px 14px;
       margin-bottom: 14px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
     }
 
     .brand {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-weight: 700;
-      font-size: 15px;
-      letter-spacing: 0.3px;
+      font-weight: 800;
+      font-size: 14.5px;
+      letter-spacing: 0.4px;
     }
 
     .ton-badge {
       background: rgba(0, 152, 234, 0.16);
-      border: 1px solid rgba(0, 152, 234, 0.45);
+      border: 1px solid rgba(56, 189, 248, 0.4);
       color: #7dd3fc;
       font-size: 10px;
       font-weight: 700;
-      padding: 2px 7px;
+      padding: 2px 8px;
       border-radius: 999px;
-      letter-spacing: 0.4px;
+      letter-spacing: 0.5px;
     }
 
     .balance-pill {
-      background: rgba(124, 58, 237, 0.2);
-      border: 1px solid rgba(167, 139, 250, 0.4);
-      color: #ede9fe;
+      background: rgba(34, 211, 238, 0.12);
+      border: 1px solid rgba(34, 211, 238, 0.38);
+      color: #cffafe;
       padding: 6px 12px;
       border-radius: 999px;
       font-weight: 700;
@@ -97,25 +101,25 @@
       border: 1px solid var(--border);
       border-radius: 16px;
       padding: 12px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
       text-align: center;
     }
 
     .stat-label {
-      font-size: 11px;
+      font-size: 10.5px;
       color: var(--muted);
-      letter-spacing: 0.8px;
+      letter-spacing: 0.9px;
       text-transform: uppercase;
       margin-bottom: 4px;
     }
 
     .stat-value {
-      font-size: 20px;
+      font-size: 19px;
       font-weight: 800;
       color: var(--accent);
     }
 
-    /* Tap Mining Circle */
+    /* Quantum Core Mining Control */
     .mine-zone {
       display: flex;
       flex-direction: column;
@@ -124,31 +128,35 @@
     }
 
     .tap-btn {
-      width: 190px;
-      height: 190px;
+      width: 188px;
+      height: 188px;
       border-radius: 50%;
-      border: 3px solid var(--accent);
-      background: radial-gradient(circle at 35% 30%, #9333ea, #4c1d95 75%);
-      box-shadow: 0 0 35px rgba(124, 58, 237, 0.45), inset 0 0 20px rgba(255, 255, 255, 0.12);
+      border: 2px solid rgba(34, 211, 238, 0.8);
+      background:
+        radial-gradient(circle at 35% 28%, rgba(34, 211, 238, 0.45), rgba(2, 132, 199, 0.85) 55%, #082f49 100%);
+      box-shadow:
+        0 0 36px rgba(6, 182, 212, 0.32),
+        inset 0 0 22px rgba(240, 249, 255, 0.14);
       color: #fff;
       font-weight: 800;
-      font-size: 15px;
-      letter-spacing: 1px;
+      font-size: 14px;
+      letter-spacing: 1.1px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 8px;
       cursor: pointer;
-      transition: transform 0.08s ease, filter 0.15s ease;
+      transition: transform 0.08s ease, box-shadow 0.15s ease;
     }
 
     .tap-btn:active {
       transform: scale(0.95);
+      box-shadow: 0 0 20px rgba(34, 211, 238, 0.45);
     }
 
     .tap-bolt {
-      font-size: 42px;
+      font-size: 40px;
       line-height: 1;
     }
 
@@ -156,17 +164,17 @@
       color: var(--muted);
       font-size: 12px;
       text-align: center;
-      margin: 14px 0 16px;
+      margin: 14px 0 14px;
     }
 
     /* Action Buttons */
     .btn {
       width: 100%;
-      padding: 14px 16px;
+      padding: 13.5px 16px;
       border-radius: 12px;
       border: none;
       font-weight: 700;
-      font-size: 14px;
+      font-size: 13.5px;
       color: #fff;
       cursor: pointer;
       margin-bottom: 10px;
@@ -187,13 +195,13 @@
     }
 
     .btn-boost {
-      background: linear-gradient(90deg, #92400e, #b45309);
-      border: 1px solid rgba(245, 158, 11, 0.45);
+      background: linear-gradient(90deg, #0e7490, #0369a1);
+      border: 1px solid rgba(34, 211, 238, 0.4);
     }
 
     .btn-save {
-      background: linear-gradient(90deg, #1d4ed8, #0369a1);
-      border: 1px solid rgba(125, 211, 252, 0.35);
+      background: linear-gradient(90deg, #047857, #059669);
+      border: 1px solid rgba(52, 211, 153, 0.38);
     }
 
     .btn-primary {
@@ -201,19 +209,19 @@
     }
 
     .btn-spin {
-      background: linear-gradient(90deg, #b45309, #d97706);
-      border: 1px solid rgba(251, 191, 36, 0.45);
+      background: linear-gradient(90deg, #0369a1, #0891b2);
+      border: 1px solid rgba(34, 211, 238, 0.45);
     }
 
     .btn-ton {
-      background: linear-gradient(90deg, #0284c7, #0098ea);
+      background: linear-gradient(90deg, #0284c7, var(--ton-blue));
       border: 1px solid rgba(125, 211, 252, 0.45);
       margin-bottom: 8px;
     }
 
     .btn-ton-outline {
-      background: rgba(0, 152, 234, 0.12);
-      border: 1px solid rgba(0, 152, 234, 0.45);
+      background: rgba(0, 152, 234, 0.1);
+      border: 1px solid rgba(0, 152, 234, 0.42);
       color: #bae6fd;
       margin-bottom: 0;
     }
@@ -238,17 +246,17 @@
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 16px;
       padding: 14px;
       margin-bottom: 12px;
     }
 
     .ton-card {
-      background: linear-gradient(145deg, rgba(0, 152, 234, 0.14), rgba(19, 13, 38, 0.95));
-      border: 1px solid rgba(0, 152, 234, 0.38);
-      border-radius: 14px;
+      background: linear-gradient(150deg, rgba(2, 132, 199, 0.16), rgba(11, 21, 38, 0.96));
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 16px;
       padding: 14px;
-      margin-top: 14px;
+      margin-top: 12px;
       margin-bottom: 12px;
     }
 
@@ -264,7 +272,7 @@
 
     .ton-card-text {
       font-size: 12.5px;
-      color: #dbeafe;
+      color: #e0f2fe;
       margin: 0;
       line-height: 1.5;
     }
@@ -299,7 +307,7 @@
 
     .streak-day {
       background: var(--surface-2);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(148, 163, 184, 0.14);
       border-radius: 8px;
       padding: 6px 2px;
       text-align: center;
@@ -315,17 +323,17 @@
     }
 
     .streak-day.day7 {
-      border-color: rgba(245, 158, 11, 0.45);
+      border-color: rgba(34, 211, 238, 0.45);
     }
 
     .streak-day.day7.claimed {
-      background: rgba(245, 158, 11, 0.22);
-      color: #fde68a;
+      background: rgba(34, 211, 238, 0.2);
+      color: #cffafe;
     }
 
     .user-summary-box {
       background: var(--surface-2);
-      border: 1px solid rgba(167, 139, 250, 0.3);
+      border: 1px solid rgba(56, 189, 248, 0.25);
       border-radius: 12px;
       padding: 12px;
       margin-bottom: 12px;
@@ -359,7 +367,7 @@
     /* Spin & Win Wheel Box */
     .spin-box {
       background: var(--surface-2);
-      border: 1px solid rgba(245, 158, 11, 0.32);
+      border: 1px solid rgba(34, 211, 238, 0.28);
       border-radius: 14px;
       padding: 14px;
       text-align: center;
@@ -371,19 +379,19 @@
       height: 126px;
       margin: 6px auto 12px;
       border-radius: 50%;
-      border: 4px solid var(--accent);
+      border: 3px solid var(--accent);
       background: conic-gradient(
-        #7c3aed 0deg 60deg,
-        #0284c7 60deg 120deg,
+        #0284c7 0deg 60deg,
+        #0891b2 60deg 120deg,
         #059669 120deg 180deg,
-        #d97706 180deg 240deg,
-        #4f46e5 240deg 300deg,
-        #9333ea 300deg 360deg
+        #0369a1 180deg 240deg,
+        #0e7490 240deg 300deg,
+        #06b6d4 300deg 360deg
       );
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 0 24px rgba(245, 158, 11, 0.25);
+      box-shadow: 0 0 24px rgba(34, 211, 238, 0.2);
       transition: transform 2.2s cubic-bezier(0.17, 0.67, 0.12, 0.99);
     }
 
@@ -391,8 +399,8 @@
       width: 78px;
       height: 78px;
       border-radius: 50%;
-      background: #0d081c;
-      border: 2px solid rgba(255, 255, 255, 0.25);
+      background: #06101f;
+      border: 2px solid rgba(240, 249, 255, 0.25);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -404,7 +412,7 @@
 
     .spin-result-text {
       font-size: 12.5px;
-      color: #fde68a;
+      color: #a5f3fc;
       margin-bottom: 10px;
       min-height: 18px;
       font-weight: 600;
@@ -413,11 +421,11 @@
     /* Referral Box */
     .ref-link-box {
       background: var(--surface-2);
-      border: 1px solid rgba(167, 139, 250, 0.3);
+      border: 1px solid rgba(56, 189, 248, 0.25);
       border-radius: 10px;
       padding: 10px 12px;
       font-size: 11.5px;
-      color: #e9d5ff;
+      color: #bae6fd;
       word-break: break-all;
       margin-bottom: 10px;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -432,7 +440,7 @@
 
     .ref-stat-pill {
       background: var(--surface-2);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(148, 163, 184, 0.14);
       border-radius: 10px;
       padding: 10px;
       text-align: center;
@@ -463,14 +471,14 @@
       gap: 10px;
       padding: 12px;
       background: var(--surface-2);
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(148, 163, 184, 0.12);
       border-radius: 12px;
       margin-bottom: 10px;
     }
 
     .lb-item.me {
-      border-color: rgba(245, 158, 11, 0.6);
-      background: rgba(124, 58, 237, 0.22);
+      border-color: rgba(34, 211, 238, 0.55);
+      background: rgba(6, 182, 212, 0.14);
     }
 
     .lb-left {
@@ -503,7 +511,7 @@
     .lb-score {
       font-weight: 800;
       font-size: 13px;
-      color: #c4b5fd;
+      color: #7dd3fc;
       white-space: nowrap;
     }
 
@@ -537,29 +545,29 @@
 
     .status-banner.info {
       display: block;
-      background: rgba(59, 130, 246, 0.16);
-      border: 1px solid rgba(96, 165, 250, 0.45);
-      color: #dbeafe;
+      background: rgba(2, 132, 199, 0.18);
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      color: #e0f2fe;
     }
 
     .status-banner.success {
       display: block;
-      background: rgba(16, 185, 129, 0.16);
+      background: rgba(16, 185, 129, 0.18);
       border: 1px solid rgba(52, 211, 153, 0.45);
       color: #d1fae5;
     }
 
     .status-banner.error {
       display: block;
-      background: rgba(239, 68, 68, 0.18);
-      border: 1px solid rgba(248, 113, 113, 0.5);
-      color: #fee2e2;
+      background: rgba(244, 63, 94, 0.18);
+      border: 1px solid rgba(251, 113, 133, 0.5);
+      color: #ffe4e6;
     }
 
     /* FAQ & Support */
     details {
       background: var(--surface-2);
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(148, 163, 184, 0.14);
       border-radius: 10px;
       padding: 10px 12px;
       margin-bottom: 8px;
@@ -582,8 +590,8 @@
     /* Diagnostic Drawer */
     .diag-box {
       display: none;
-      background: #07050f;
-      border: 1px solid rgba(248, 113, 113, 0.45);
+      background: #040811;
+      border: 1px solid rgba(251, 113, 133, 0.45);
       border-radius: 12px;
       padding: 12px;
       margin-bottom: 14px;
@@ -600,7 +608,7 @@
       margin-bottom: 8px;
       font-size: 12px;
       font-weight: 700;
-      color: #fca5a5;
+      color: #fda4af;
     }
 
     .diag-logs {
@@ -628,8 +636,8 @@
       bottom: 0;
       left: 0;
       right: 0;
-      background: rgba(15, 10, 31, 0.96);
-      backdrop-filter: blur(10px);
+      background: rgba(7, 14, 26, 0.96);
+      backdrop-filter: blur(12px);
       border-top: 1px solid var(--border);
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -651,7 +659,7 @@
     }
 
     .nav-btn.active {
-      color: #c4b5fd;
+      color: var(--accent);
     }
 
     .nav-icon {
@@ -684,7 +692,7 @@
           <button class="btn btn-ghost" id="btnClearLogs" type="button">Clear</button>
         </div>
       </div>
-      <div id="diagLogs" class="diag-logs">Initializing diagnostics...</div>
+      <div id="diagLogs" class="diag-logs">Initializing telemetry log...</div>
     </section>
 
     <!-- MINE TAB -->
@@ -710,7 +718,7 @@
           <span id="tapLabel">TAP TO START</span>
         </button>
         <p class="helper-text">
-          15-second mining round • Optional 2X ad boost after timer ends
+          15-second quantum pulse round • Optional 2X rewarded boost
         </p>
       </div>
 
@@ -724,11 +732,11 @@
         <span id="saveLabel">Submit & Save Session</span>
       </button>
 
-      <!-- Visible TON Blockchain Ecosystem Integration Section -->
+      <!-- TON Blockchain Ecosystem Card -->
       <section class="ton-card" aria-label="TON Blockchain Integration">
-        <h2 class="ton-card-title">💎 Built on The Open Network (TON)</h2>
+        <h2 class="ton-card-title">💎 TON Ecosystem & Wallet Link</h2>
         <p class="ton-card-text">
-          <strong>TMX-QUANTUM</strong> is a Web3 Telegram Mini App powered by the <strong>TON blockchain</strong>. Users mine 💎 tokens in 15-second sessions, complete ecosystem tasks, and link their <strong>TON wallet via TON Connect</strong> to verify on-chain identity and unlock future TON token distribution and rewards.
+          <strong>TMX-QUANTUM</strong> runs inside Telegram for <strong>The Open Network (TON)</strong>. Accumulate 💎 across 15-second pulse rounds, complete community and ecosystem quests, and link your wallet via <strong>TON Connect</strong> for future on-chain reward eligibility.
         </p>
       </section>
     </main>
@@ -736,15 +744,15 @@
     <!-- TASKS TAB -->
     <section id="panel-tasks" class="tab-panel">
       <div class="card">
-        <h2 class="card-title">Social & Ecosystem Tasks</h2>
+        <h2 class="card-title">Ecosystem & Community Quests</h2>
         <p class="card-desc">
-          Tap <strong>Open</strong> to complete each action first, then tap <strong>Verify</strong> to claim your 💎 reward.
+          Select <strong>Open</strong> to visit a channel or app page first, then select <strong>Verify</strong> to claim your 💎 reward.
         </p>
 
         <div class="task-item">
           <div>
             <div style="font-weight:700;font-size:13px;">Launch Official Bot (@Tmxqunbot)</div>
-            <div class="task-meta">Social Reward: +300 💎</div>
+            <div class="task-meta">Quest Reward: +300 💎</div>
           </div>
           <button class="btn btn-primary btn-ghost" id="task-bot-tmxqunbot" type="button">Open</button>
         </div>
@@ -752,7 +760,7 @@
         <div class="task-item">
           <div>
             <div style="font-weight:700;font-size:13px;">Follow on X (@timex2429)</div>
-            <div class="task-meta">Social Reward: +300 💎</div>
+            <div class="task-meta">Quest Reward: +300 💎</div>
           </div>
           <button class="btn btn-primary btn-ghost" id="task-x-timex2429" type="button">Open</button>
         </div>
@@ -760,7 +768,7 @@
         <div class="task-item">
           <div>
             <div style="font-weight:700;font-size:13px;">Follow on Instagram (@tmxquantum245)</div>
-            <div class="task-meta">Social Reward: +300 💎</div>
+            <div class="task-meta">Quest Reward: +300 💎</div>
           </div>
           <button class="btn btn-primary btn-ghost" id="task-ig-tmxquantum245" type="button">Open</button>
         </div>
@@ -768,7 +776,7 @@
         <div class="task-item">
           <div>
             <div style="font-weight:700;font-size:13px;">Follow on Facebook (TMX-QUANTUM)</div>
-            <div class="task-meta">Social Reward: +300 💎</div>
+            <div class="task-meta">Quest Reward: +300 💎</div>
           </div>
           <button class="btn btn-primary btn-ghost" id="task-fb-tmxquantum" type="button">Open</button>
         </div>
@@ -776,7 +784,7 @@
         <div class="task-item">
           <div>
             <div style="font-weight:700;font-size:13px;">Follow on TikTok (@tmxquantum)</div>
-            <div class="task-meta">Social Reward: +300 💎</div>
+            <div class="task-meta">Quest Reward: +300 💎</div>
           </div>
           <button class="btn btn-primary btn-ghost" id="task-tt-tmxquantum" type="button">Open</button>
         </div>
@@ -811,13 +819,13 @@
     <section id="panel-leaderboard" class="tab-panel">
       <div class="card">
         <div class="card-header-row">
-          <h2 class="card-title" style="margin:0;">👤 Your User Data & Balance</h2>
+          <h2 class="card-title" style="margin:0;">👤 Operator Profile & TON Wallet</h2>
           <button class="btn btn-ghost" id="btnSyncData" type="button">Sync Data</button>
         </div>
         <div class="user-summary-box">
           <div>
-            <div id="profileDisplayName" style="font-weight:700;font-size:14px;">Miner</div>
-            <div id="profileUserId" class="user-id-tag">ID: guest_local • Tasks: 0/8</div>
+            <div id="profileDisplayName" style="font-weight:700;font-size:14px;">Operator</div>
+            <div id="profileUserId" class="user-id-tag">ID: guest_local • Quests: 0/8</div>
             <div id="profileTonWallet" class="ton-wallet-tag">💎 TON Wallet: Not Connected</div>
           </div>
           <div id="profileBalance" class="user-bal-tag">0 💎</div>
@@ -836,33 +844,33 @@
 
       <div class="card">
         <div class="card-header-row">
-          <h2 class="card-title" style="margin:0;">🏆 Users & Balances Leaderboard</h2>
+          <h2 class="card-title" style="margin:0;">🏆 Top Operators Leaderboard</h2>
           <button class="btn btn-ghost" id="btnRefreshLb" type="button">Refresh</button>
         </div>
         <p class="card-desc">
-          User balances and rankings synced from MongoDB Atlas (with local fallback when offline).
+          Balances and standings synced with MongoDB Atlas (falls back to local cache if offline).
         </p>
-        <div id="leaderboardList">Loading users and balances...</div>
+        <div id="leaderboardList">Loading operator standings...</div>
       </div>
     </section>
 
     <!-- BONUS TAB (DAILY LOGIN STREAK + SPIN & WIN + REFERRAL PROGRAM) -->
     <section id="panel-bonus" class="tab-panel">
       <div class="card">
-        <h2 class="card-title">🎁 7-Day Daily Login Bonus</h2>
+        <h2 class="card-title">🎁 7-Day Check-In Streak</h2>
         <p class="card-desc" id="dailyBonusDesc">
-          Claim <strong>+200 💎</strong> each day you log in, plus an extra <strong>+2,000 💎</strong> bonus on Day 7 of a consistent 7-day streak!
+          Claim <strong>+200 💎</strong> each day you check in, plus an extra <strong>+2,000 💎</strong> bonus on Day 7 of an unbroken 7-day streak!
         </p>
         <div id="streakBar" class="streak-bar" aria-label="7-Day Login Streak"></div>
         <button id="dailyBonusBtn" class="btn btn-primary" type="button">
-          🎁 Claim Daily Login (+200 💎)
+          🎁 Claim Daily Check-In (+200 💎)
         </button>
       </div>
 
       <div class="card">
-        <h2 class="card-title">🎡 Spin & Win</h2>
+        <h2 class="card-title">🎡 Quantum Spin</h2>
         <p class="card-desc">
-          Spin the quantum wheel once daily to win instant 💎 rewards (+25 💎 to +500 💎).
+          Spin once every 24 hours for an instant 💎 drop (+25 💎 to +500 💎).
         </p>
         <div class="spin-box">
           <div id="spinWheel" class="spin-wheel">
@@ -871,7 +879,7 @@
               <span id="wheelCenterLabel">SPIN</span>
             </div>
           </div>
-          <div id="spinResultText" class="spin-result-text">Ready for your daily spin!</div>
+          <div id="spinResultText" class="spin-result-text">Daily spin ready!</div>
           <button id="spinWinBtn" class="btn btn-spin" style="margin-bottom:0;" type="button">
             <span>🎡</span>
             <span id="spinWinLabel">Spin & Win 💎</span>
@@ -880,9 +888,9 @@
       </div>
 
       <div class="card">
-        <h2 class="card-title">🤝 Referral Program</h2>
+        <h2 class="card-title">🤝 Invite & Earn</h2>
         <p class="card-desc">
-          Invite friends to <strong>TMX-QUANTUM</strong> and earn <strong>+250 💎</strong> for every friend who joins with your link.
+          Share your invite link and earn <strong>+250 💎</strong> for each friend who joins <strong>TMX-QUANTUM</strong>.
         </p>
         <div class="ref-stats-row">
           <div class="ref-stat-pill">
@@ -891,7 +899,7 @@
           </div>
           <div class="ref-stat-pill">
             <div id="referralEarnedDisplay" class="ref-stat-num">0 💎</div>
-            <div class="ref-stat-lbl">Referral Earned</div>
+            <div class="ref-stat-lbl">Invite Rewards</div>
           </div>
         </div>
         <div id="referralLinkBox" class="ref-link-box">https://t.me/Tmxqunbot?start=ref_guest_local</div>
@@ -906,9 +914,9 @@
       </div>
 
       <div class="card">
-        <h2 class="card-title">App Diagnostics</h2>
+        <h2 class="card-title">Telemetry & Diagnostics</h2>
         <p class="card-desc">
-          Toggle the live error console if taps, saves, spins, or ads behave unexpectedly on your device.
+          Open the diagnostic log to inspect API calls, ad events, or local state behavior.
         </p>
         <button class="btn btn-ghost" id="btnToggleDiag" style="width:100%;" type="button">
           🛠️ Toggle Error & API Log
@@ -922,38 +930,38 @@
         <h2 class="card-title">Frequently Asked Questions (FAQ)</h2>
 
         <details open>
-          <summary>How does TMX-QUANTUM use the TON blockchain?</summary>
+          <summary>How does TMX-QUANTUM connect with TON?</summary>
           <p>
-            TMX-QUANTUM is built for The Open Network (TON) ecosystem inside Telegram. Your mined 💎 balance and task achievements link to your Telegram identity and TON Connect wallet for on-chain reward eligibility and ecosystem utility.
+            TMX-QUANTUM operates as a Telegram Mini App within the TON ecosystem. Your 💎 balance and quest progress associate with your Telegram profile and linked TON Connect wallet for future ecosystem features.
           </p>
         </details>
 
         <details open>
-          <summary>How does the 7-day login reward work?</summary>
+          <summary>How does the 7-day check-in streak work?</summary>
           <p>
-            Log in and claim daily for <strong>+200 💎</strong> per day. If you claim consistently for 7 consecutive days, Day 7 awards your <strong>+200 💎</strong> daily reward plus a <strong>+2,000 💎</strong> 7-day streak bonus. Missing a day resets your streak back to Day 1.
+            Check in daily for <strong>+200 💎</strong>. Completing 7 consecutive days unlocks a <strong>+2,000 💎</strong> bonus on Day 7 on top of the daily reward. Missing a day resets progress to Day 1.
           </p>
         </details>
 
         <details>
-          <summary>How do Spin & Win and Referrals work?</summary>
+          <summary>How do Quantum Spin and referrals work?</summary>
           <p>
-            You get one free Spin & Win chance every day for up to +500 💎, and you earn +250 💎 per referral invite. Progress syncs with <strong>MongoDB Atlas</strong> with local fallback.
+            You get one daily Quantum Spin for up to +500 💎 and earn +250 💎 per referred friend. Progress syncs with <strong>MongoDB Atlas</strong> with local storage fallback.
           </p>
         </details>
 
         <details>
-          <summary>What if the 2X Ad Boost does not load?</summary>
+          <summary>What if the 2X Ad Boost does not fill?</summary>
           <p>
-            Ad availability varies by region and network connection. If no ad fills, you can still submit your standard session without getting stuck.
+            Ad fill depends on network conditions and regional availability. If an ad is unavailable, you can still submit your standard round without interruption.
           </p>
         </details>
       </div>
 
       <div class="card">
-        <h2 class="card-title">Support & Contact Details</h2>
+        <h2 class="card-title">Support Contact</h2>
         <p class="card-desc" style="margin-bottom:8px;">
-          Need help with task verification, referrals, account sync, or bug reports? Contact our support email:
+          Questions about quests, wallet linking, referrals, or account sync? Reach us at:
         </p>
         <div style="font-size:13px;line-height:1.7;">
           <div><strong>Support Email:</strong> support@tmxquantum.app</div>
@@ -1003,17 +1011,17 @@
       SEVENTH_DAY_BONUS: 2000,
       SPIN_PRIZES: [25, 50, 100, 150, 250, 500],
       ROUND_SECONDS: 15,
-      STORAGE_KEY: "tmx_quantum_state_v8",
+      STORAGE_KEY: "tmxq_quantum_core_v1",
       REQUEST_TIMEOUT_MS: 4500
     };
 
-    const FALLBACK_LEADERBOARD = [
-      { user_id: "demo_1", username: "QuantumPioneer", balance: 1250, tasksCount: 3 },
-      { user_id: "demo_2", username: "OyeMiner", balance: 890, tasksCount: 2 },
-      { user_id: "demo_3", username: "TonVoyager", balance: 640, tasksCount: 2 }
+    const SEED_STANDINGS = [
+      { user_id: "q_node_101", username: "QuantumPioneer", balance: 1250, tasksCount: 3 },
+      { user_id: "q_node_102", username: "OyeMiner", balance: 890, tasksCount: 2 },
+      { user_id: "q_node_103", username: "TonVoyager", balance: 640, tasksCount: 2 }
     ];
 
-    const TASK_DEFS = [
+    const QUEST_CATALOG = [
       { id: "bot_tmxqunbot", elId: "task-bot-tmxqunbot", reward: 300, url: "https://t.me/Tmxqunbot", requiresVisit: true, actionType: "link" },
       { id: "x_timex2429", elId: "task-x-timex2429", reward: 300, url: "https://x.com/timex2429", requiresVisit: true, actionType: "link" },
       { id: "ig_tmxquantum245", elId: "task-ig-tmxquantum245", reward: 300, url: "https://instagram.com/tmxquantum245", requiresVisit: true, actionType: "link" },
@@ -1024,26 +1032,26 @@
       { id: "share_app", elId: "task-share-app", reward: 100, url: null, requiresVisit: false, actionType: "share" }
     ];
 
-    const logs = [];
+    const telemetryEntries = [];
 
-    function recordLog(level, message, meta = null) {
-      const time = new Date().toLocaleTimeString();
-      const extra = meta ? ` | ${typeof meta === "string" ? meta : JSON.stringify(meta)}` : "";
-      const entry = `[${time}] [${level}] ${message}${extra}`;
-      logs.push(entry);
-      if (logs.length > 80) logs.shift();
+    function pushTelemetry(level, message, meta = null) {
+      const stamp = new Date().toLocaleTimeString();
+      const suffix = meta ? ` | ${typeof meta === "string" ? meta : JSON.stringify(meta)}` : "";
+      const line = `[${stamp}] [${level}] ${message}${suffix}`;
+      telemetryEntries.push(line);
+      if (telemetryEntries.length > 80) telemetryEntries.shift();
 
-      const diagEl = document.getElementById("diagLogs");
-      if (diagEl) {
-        diagEl.textContent = logs.join("\n");
-        diagEl.scrollTop = diagEl.scrollHeight;
+      const logView = document.getElementById("diagLogs");
+      if (logView) {
+        logView.textContent = telemetryEntries.join("\n");
+        logView.scrollTop = logView.scrollHeight;
       }
 
       if (level === "ERROR") {
-        console.error(entry);
+        console.error(line);
         document.getElementById("diagBox")?.classList.add("open");
       } else {
-        console.log(entry);
+        console.log(line);
       }
     }
 
@@ -1052,9 +1060,9 @@
     }
 
     function clearLogs() {
-      logs.length = 0;
-      const diagEl = document.getElementById("diagLogs");
-      if (diagEl) diagEl.textContent = "Logs cleared.";
+      telemetryEntries.length = 0;
+      const logView = document.getElementById("diagLogs");
+      if (logView) logView.textContent = "Telemetry buffer cleared.";
     }
 
     function showBanner(text, type = "info") {
@@ -1065,19 +1073,19 @@
     }
 
     window.addEventListener("error", (event) => {
-      const msg = event?.message || "Unknown script error";
+      const msg = event?.message || "Unexpected runtime error";
       const loc = event?.filename ? `${event.filename}:${event.lineno}` : "";
-      recordLog("ERROR", `Uncaught Error: ${msg}`, loc);
+      pushTelemetry("ERROR", `Runtime Error: ${msg}`, loc);
       showBanner(`Error: ${msg}`, "error");
     });
 
     window.addEventListener("unhandledrejection", (event) => {
       const reason = event?.reason?.message || String(event?.reason || "Unhandled promise rejection");
-      recordLog("ERROR", `Promise Rejection: ${reason}`);
+      pushTelemetry("ERROR", `Promise Rejection: ${reason}`);
       showBanner(`Async Error: ${reason}`, "error");
     });
 
-    const defaultState = {
+    const initialAppState = {
       balance: 0,
       sessionPoints: 0,
       timerSeconds: CONFIG.ROUND_SECONDS,
@@ -1095,34 +1103,34 @@
       referralEarned: 0,
       referredBy: null,
       tonWalletAddress: null,
-      leaderboard: [...FALLBACK_LEADERBOARD]
+      leaderboard: [...SEED_STANDINGS]
     };
 
-    const memoryFallback = {};
+    const volatileStore = {};
 
-    function storageRead(key) {
+    function readStorage(key) {
       try {
         return localStorage.getItem(key);
       } catch {
-        return memoryFallback[key] || null;
+        return volatileStore[key] || null;
       }
     }
 
-    function storageWrite(key, value) {
+    function writeStorage(key, value) {
       try {
         localStorage.setItem(key, value);
       } catch {
-        memoryFallback[key] = value;
+        volatileStore[key] = value;
       }
     }
 
-    function loadLocalState() {
+    function restoreAppState() {
       try {
-        const raw = storageRead(CONFIG.STORAGE_KEY);
-        if (!raw) return { ...defaultState };
+        const raw = readStorage(CONFIG.STORAGE_KEY);
+        if (!raw) return { ...initialAppState };
         const parsed = JSON.parse(raw);
         return {
-          ...defaultState,
+          ...initialAppState,
           ...parsed,
           isMining: false,
           timerSeconds: CONFIG.ROUND_SECONDS,
@@ -1138,23 +1146,23 @@
           completedTasks: Array.isArray(parsed.completedTasks) ? parsed.completedTasks : [],
           leaderboard: Array.isArray(parsed.leaderboard) && parsed.leaderboard.length
             ? parsed.leaderboard
-            : [...FALLBACK_LEADERBOARD]
+            : [...SEED_STANDINGS]
         };
       } catch (err) {
-        recordLog("WARN", "State load fallback to defaults", err.message);
-        return { ...defaultState };
+        pushTelemetry("WARN", "State restore fell back to initial values", err.message);
+        return { ...initialAppState };
       }
     }
 
-    const state = loadLocalState();
-    let timerInterval = null;
-    let adController = null;
-    let tonConnectUI = null;
-    let currentWheelAngle = 0;
-    let isSpinning = false;
+    const state = restoreAppState();
+    let pulseTicker = null;
+    let adsgramInstance = null;
+    let tonConnectUi = null;
+    let wheelAngleDeg = 0;
+    let wheelBusy = false;
 
-    function saveLocalState() {
-      const toSave = {
+    function persistAppState() {
+      const snapshot = {
         balance: state.balance,
         sessionPoints: state.sessionPoints,
         boost2xActive: state.boost2xActive,
@@ -1171,21 +1179,17 @@
         tonWalletAddress: state.tonWalletAddress || null,
         leaderboard: state.leaderboard
       };
-      storageWrite(CONFIG.STORAGE_KEY, JSON.stringify(toSave));
+      writeStorage(CONFIG.STORAGE_KEY, JSON.stringify(snapshot));
     }
 
-    function getTodayDateStr() {
-      return new Date().toISOString().slice(0, 10);
+    function utcDayString(offsetDays = 0) {
+      const dt = new Date();
+      if (offsetDays !== 0) dt.setUTCDate(dt.getUTCDate() + offsetDays);
+      return dt.toISOString().slice(0, 10);
     }
 
-    function getYesterdayDateStr() {
-      const d = new Date();
-      d.setUTCDate(d.getUTCDate() - 1);
-      return d.toISOString().slice(0, 10);
-    }
-
-    function getNextStreakDay() {
-      const yesterday = getYesterdayDateStr();
+    function computeNextStreakDay() {
+      const yesterday = utcDayString(-1);
       if (!state.lastBonusDate) return 1;
       if (state.lastBonusDate === yesterday) {
         return state.loginStreak >= 7 ? 1 : state.loginStreak + 1;
@@ -1197,53 +1201,49 @@
       return window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
     }
 
-    function parseInitDataString(rawInitData) {
-      const out = { user: null, startParam: null, authDate: null, hash: null, queryId: null };
-      if (!rawInitData || typeof rawInitData !== "string") return out;
+    function parseInitDataQuery(rawInitData) {
+      const parsed = { user: null, startParam: null, authDate: null, hash: null, queryId: null };
+      if (!rawInitData || typeof rawInitData !== "string") return parsed;
       try {
         const params = new URLSearchParams(rawInitData);
-        out.startParam = params.get("start_param");
-        out.authDate = params.get("auth_date");
-        out.hash = params.get("hash");
-        out.queryId = params.get("query_id");
-        const userStr = params.get("user");
-        if (userStr) {
-          out.user = JSON.parse(userStr);
-        }
+        parsed.startParam = params.get("start_param");
+        parsed.authDate = params.get("auth_date");
+        parsed.hash = params.get("hash");
+        parsed.queryId = params.get("query_id");
+        const rawUser = params.get("user");
+        if (rawUser) parsed.user = JSON.parse(rawUser);
       } catch (err) {
-        recordLog("WARN", "Failed parsing initData string", err.message);
+        pushTelemetry("WARN", "initData query parse issue", err.message);
       }
-      return out;
+      return parsed;
     }
 
-    function getRawInitData() {
+    function readRawInitData() {
       const tg = getTelegramWebApp();
       if (tg && typeof tg.initData === "string" && tg.initData.trim().length > 0) {
         return tg.initData.trim();
       }
       try {
-        const searchParams = new URLSearchParams(window.location.search || "");
-        const fromQuery = searchParams.get("tgWebAppData") || searchParams.get("initData");
-        if (fromQuery && fromQuery.trim().length > 0) {
-          return fromQuery.trim();
-        }
+        const qp = new URLSearchParams(window.location.search || "");
+        const candidate = qp.get("tgWebAppData") || qp.get("initData");
+        if (candidate && candidate.trim().length > 0) return candidate.trim();
       } catch {}
       return "";
     }
 
-    function getInitDataBundle() {
+    function getSessionContext() {
       const tg = getTelegramWebApp();
-      const rawInitData = getRawInitData();
-      const parsedFromRaw = parseInitDataString(rawInitData);
+      const rawInitData = readRawInitData();
+      const parsed = parseInitDataQuery(rawInitData);
       const unsafe = tg?.initDataUnsafe || {};
-      const user = unsafe.user || parsedFromRaw.user || null;
-      const startParam = unsafe.start_param || parsedFromRaw.startParam || null;
-      const queryId = unsafe.query_id || parsedFromRaw.queryId || null;
+      const user = unsafe.user || parsed.user || null;
+      const startParam = unsafe.start_param || parsed.startParam || null;
+      const queryId = unsafe.query_id || parsed.queryId || null;
 
       return {
         initData: rawInitData,
         initDataUnsafe: {
-          ...parsedFromRaw,
+          ...parsed,
           ...unsafe,
           user,
           start_param: startParam,
@@ -1254,15 +1254,15 @@
       };
     }
 
-    function getCurrentUserProfile() {
-      const { user } = getInitDataBundle();
+    function resolveOperatorProfile() {
+      const { user } = getSessionContext();
       if (user && user.id) {
-        const displayName = user.username
+        const handleOrName = user.username
           ? `@${user.username}`
-          : [user.first_name, user.last_name].filter(Boolean).join(" ") || `User_${user.id}`;
+          : [user.first_name, user.last_name].filter(Boolean).join(" ") || `Operator_${user.id}`;
         return {
           user_id: String(user.id),
-          username: displayName,
+          username: handleOrName,
           first_name: user.first_name || "",
           last_name: user.last_name || "",
           language_code: user.language_code || "",
@@ -1271,44 +1271,44 @@
       }
       return {
         user_id: "guest_local",
-        username: "You (Local)",
-        first_name: "You",
+        username: "Operator (Local)",
+        first_name: "Operator",
         last_name: "",
         language_code: "en",
         is_premium: false
       };
     }
 
-    function getTelegramInitDataForTransport() {
-      const { initData, initDataUnsafe } = getInitDataBundle();
+    function buildInitDataHeader() {
+      const { initData, initDataUnsafe } = getSessionContext();
       if (initData) return initData;
       if (initDataUnsafe.query_id) {
         return `query_id=${encodeURIComponent(String(initDataUnsafe.query_id))}`;
       }
-      const profile = getCurrentUserProfile();
+      const profile = resolveOperatorProfile();
       return `user_id=${encodeURIComponent(String(profile.user_id))}`;
     }
 
-    function captureStartParamReferral() {
-      const { startParam } = getInitDataBundle();
-      const profile = getCurrentUserProfile();
+    function captureInviteRef() {
+      const { startParam } = getSessionContext();
+      const profile = resolveOperatorProfile();
       if (!startParam) return;
       const match = String(startParam).match(/^ref_(.+)$/);
       if (!match) return;
-      const referrerId = decodeURIComponent(match[1]).trim();
-      if (!referrerId || referrerId === profile.user_id || state.referredBy) return;
-      state.referredBy = referrerId;
-      saveLocalState();
-      recordLog("INFO", "Captured referral start_param from initData", { referredBy: referrerId });
+      const inviterId = decodeURIComponent(match[1]).trim();
+      if (!inviterId || inviterId === profile.user_id || state.referredBy) return;
+      state.referredBy = inviterId;
+      persistAppState();
+      pushTelemetry("INFO", "Recorded invite start_param", { referredBy: inviterId });
     }
 
     function initTelegram() {
       const tg = getTelegramWebApp();
-      const { initData, user, startParam } = getInitDataBundle();
-      captureStartParamReferral();
+      const { initData, user, startParam } = getSessionContext();
+      captureInviteRef();
 
       if (!tg) {
-        recordLog("INFO", "Running outside Telegram WebApp (browser/preview mode)", {
+        pushTelemetry("INFO", "Standalone browser preview mode active", {
           hasInitData: Boolean(initData),
           startParam: startParam || null
         });
@@ -1318,7 +1318,7 @@
       try {
         if (typeof tg.ready === "function") tg.ready();
         if (typeof tg.expand === "function") tg.expand();
-        recordLog("INFO", "Telegram WebApp initialized with initData", {
+        pushTelemetry("INFO", "Telegram Mini App shell ready", {
           version: tg.version || "unknown",
           platform: tg.platform || "unknown",
           hasInitData: Boolean(initData),
@@ -1326,11 +1326,11 @@
           startParam: startParam || null
         });
       } catch (err) {
-        recordLog("ERROR", "Telegram WebApp init failed", err.message);
+        pushTelemetry("ERROR", "Telegram shell initialization error", err.message);
       }
     }
 
-    function shortenTonAddress(addr) {
+    function formatTonAddress(addr) {
       if (!addr || typeof addr !== "string") return "";
       if (addr.length <= 14) return addr;
       return `${addr.slice(0, 6)}...${addr.slice(-6)}`;
@@ -1339,109 +1339,107 @@
     function initTonConnect() {
       try {
         if (!window.TON_CONNECT_UI || typeof window.TON_CONNECT_UI.TonConnectUI !== "function") {
-          recordLog("WARN", "TON Connect UI script not available; manual address fallback enabled");
+          pushTelemetry("WARN", "TON Connect UI bundle not loaded; address input fallback ready");
           return;
         }
-        const { user } = getInitDataBundle();
-        tonConnectUI = new window.TON_CONNECT_UI.TonConnectUI({
+        const { user } = getSessionContext();
+        tonConnectUi = new window.TON_CONNECT_UI.TonConnectUI({
           manifestUrl: CONFIG.TON_MANIFEST_URL,
           actionsConfiguration: {
             twaReturnUrl: user?.id ? `https://t.me/${CONFIG.BOT_USERNAME}/app` : window.location.href
           }
         });
 
-        tonConnectUI.onStatusChange((wallet) => {
+        tonConnectUi.onStatusChange((wallet) => {
           if (wallet && wallet.account && wallet.account.address) {
             state.tonWalletAddress = wallet.account.address;
-            saveLocalState();
-            renderUserDataCard();
+            persistAppState();
+            renderProfileCard();
             callApi("/api/wallet/link", {
               tonWalletAddress: state.tonWalletAddress,
               tonAppTarget: CONFIG.TON_APP_URL
             });
-            showBanner(`TON Wallet connected: ${shortenTonAddress(state.tonWalletAddress)}`, "success");
+            showBanner(`TON Wallet linked: ${formatTonAddress(state.tonWalletAddress)}`, "success");
           } else if (state.tonWalletAddress && !wallet) {
             state.tonWalletAddress = null;
-            saveLocalState();
-            renderUserDataCard();
+            persistAppState();
+            renderProfileCard();
           }
         });
-        recordLog("INFO", "TON Connect UI initialized");
+        pushTelemetry("INFO", "TON Connect UI ready");
       } catch (err) {
-        recordLog("WARN", "TON Connect UI init fallback", err.message);
+        pushTelemetry("WARN", "TON Connect UI fallback active", err.message);
       }
     }
 
     async function handleConnectTonWallet() {
       try {
-        if (tonConnectUI) {
-          if (tonConnectUI.connected || state.tonWalletAddress) {
-            const shouldDisconnect = confirm(
-              `Connected TON Wallet: ${state.tonWalletAddress || "Active"}\n\nDisconnect wallet?`
+        if (tonConnectUi) {
+          if (tonConnectUi.connected || state.tonWalletAddress) {
+            const confirmDisconnect = confirm(
+              `Linked TON Wallet: ${state.tonWalletAddress || "Active"}\n\nDisconnect wallet?`
             );
-            if (!shouldDisconnect) return;
-            if (tonConnectUI.connected) {
-              await tonConnectUI.disconnect();
-            }
+            if (!confirmDisconnect) return;
+            if (tonConnectUi.connected) await tonConnectUi.disconnect();
             state.tonWalletAddress = null;
-            saveLocalState();
-            renderUserDataCard();
+            persistAppState();
+            renderProfileCard();
             await callApi("/api/wallet/link", { tonWalletAddress: null });
             showBanner("TON wallet disconnected.", "info");
             return;
           }
-          await tonConnectUI.openModal();
+          await tonConnectUi.openModal();
           return;
         }
 
         if (state.tonWalletAddress) {
-          const unlink = confirm(`Linked TON Wallet: ${state.tonWalletAddress}\n\nUnlink this address?`);
-          if (!unlink) return;
+          const confirmUnlink = confirm(`Linked TON Wallet: ${state.tonWalletAddress}\n\nUnlink this address?`);
+          if (!confirmUnlink) return;
           state.tonWalletAddress = null;
-          saveLocalState();
-          renderUserDataCard();
+          persistAppState();
+          renderProfileCard();
           await callApi("/api/wallet/link", { tonWalletAddress: null });
           showBanner("TON wallet unlinked.", "info");
           return;
         }
 
-        const input = prompt("Enter your TON wallet address (EQ... or UQ...):");
-        if (!input) return;
-        const cleanAddr = input.trim();
+        const rawAddr = prompt("Enter a TON wallet address (EQ..., UQ..., kQ..., or 0Q...):");
+        if (!rawAddr) return;
+        const cleanAddr = rawAddr.trim();
         if (!/^(EQ|UQ|kQ|0Q)[A-Za-z0-9_-]{46}$/.test(cleanAddr)) {
-          showBanner("Please enter a valid TON wallet address starting with EQ or UQ.", "error");
+          showBanner("Invalid TON address format. Expected EQ, UQ, kQ, or 0Q address.", "error");
           return;
         }
 
         state.tonWalletAddress = cleanAddr;
-        saveLocalState();
-        renderUserDataCard();
-        const apiRes = await callApi("/api/wallet/link", {
+        persistAppState();
+        renderProfileCard();
+        const res = await callApi("/api/wallet/link", {
           tonWalletAddress: cleanAddr,
           tonAppTarget: CONFIG.TON_APP_URL
         });
         showBanner(
-          apiRes.ok
-            ? `TON wallet linked (${shortenTonAddress(cleanAddr)}) and synced!`
-            : `TON wallet linked locally (${shortenTonAddress(cleanAddr)}).`,
+          res.ok
+            ? `TON wallet saved (${formatTonAddress(cleanAddr)}) and synced.`
+            : `TON wallet saved locally (${formatTonAddress(cleanAddr)}).`,
           "success"
         );
       } catch (err) {
-        recordLog("ERROR", "Connect TON wallet failed", err.message);
-        showBanner(`Wallet connection error: ${err.message}`, "error");
+        pushTelemetry("ERROR", "TON wallet action failed", err.message);
+        showBanner(`Wallet error: ${err.message}`, "error");
       }
     }
 
     function openTonAppCatalog() {
-      const profile = getCurrentUserProfile();
-      recordLog("INFO", "Opening ton.app ecosystem", {
+      const profile = resolveOperatorProfile();
+      pushTelemetry("INFO", "Launching ton.app portal", {
         user_id: profile.user_id,
         tonWalletAddress: state.tonWalletAddress || null
       });
-      openTaskLink(CONFIG.TON_APP_URL);
+      openExternalTarget(CONFIG.TON_APP_URL);
     }
 
-    function extractPayload(raw) {
+    function unwrapResponse(raw) {
       if (!raw || typeof raw !== "object") return {};
       if (raw.data && typeof raw.data === "object" && !Array.isArray(raw.data)) {
         return { ...raw, ...raw.data };
@@ -1452,12 +1450,12 @@
       return raw;
     }
 
-    function extractBalance(raw) {
-      const p = extractPayload(raw);
-      const candidates = [p.balance, p.tmx_balance, p.points, p.score];
-      for (const c of candidates) {
-        if (typeof c === "number" && Number.isFinite(c)) return c;
-        if (typeof c === "string" && c.trim() !== "" && Number.isFinite(Number(c))) return Number(c);
+    function readBalanceField(raw) {
+      const payload = unwrapResponse(raw);
+      const keys = [payload.balance, payload.tmx_balance, payload.points, payload.score];
+      for (const val of keys) {
+        if (typeof val === "number" && Number.isFinite(val)) return val;
+        if (typeof val === "string" && val.trim() !== "" && Number.isFinite(Number(val))) return Number(val);
       }
       return null;
     }
@@ -1465,33 +1463,31 @@
     async function callApi(path, payload = {}, method = "POST") {
       const base = (CONFIG.API_BASE_URL || "").replace(/\/+$/, "");
       const cleanPath = path.startsWith("/") ? path : `/${path}`;
-      const profile = getCurrentUserProfile();
-      const { initData, initDataUnsafe, startParam } = getInitDataBundle();
-      const transportInitData = getTelegramInitDataForTransport();
+      const profile = resolveOperatorProfile();
+      const { initData, initDataUnsafe, startParam } = getSessionContext();
+      const initHeader = buildInitDataHeader();
 
       let url = `${base}${cleanPath}`;
       if (method === "GET") {
         const sep = url.includes("?") ? "&" : "?";
         url = `${url}${sep}user_id=${encodeURIComponent(profile.user_id)}`;
-        if (initData) {
-          url = `${url}&initData=${encodeURIComponent(initData)}`;
-        }
+        if (initData) url = `${url}&initData=${encodeURIComponent(initData)}`;
       }
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), CONFIG.REQUEST_TIMEOUT_MS);
+      const timerId = setTimeout(() => controller.abort(), CONFIG.REQUEST_TIMEOUT_MS);
 
-      const options = {
+      const fetchOpts = {
         method,
         headers: {
           "Content-Type": "application/json",
-          "X-Telegram-Init-Data": transportInitData
+          "X-Telegram-Init-Data": initHeader
         },
         signal: controller.signal
       };
 
       if (method !== "GET") {
-        options.body = JSON.stringify({
+        fetchOpts.body = JSON.stringify({
           ...payload,
           user_id: profile.user_id,
           username: profile.username,
@@ -1503,92 +1499,74 @@
       }
 
       try {
-        const res = await fetch(url, options);
-        clearTimeout(timeoutId);
+        const res = await fetch(url, fetchOpts);
+        clearTimeout(timerId);
 
-        const text = await res.text();
+        const bodyText = await res.text();
         let parsed = {};
         try {
-          parsed = text ? JSON.parse(text) : {};
+          parsed = bodyText ? JSON.parse(bodyText) : {};
         } catch {
-          parsed = { raw: text };
+          parsed = { raw: bodyText };
         }
 
         if (!res.ok) {
           throw new Error(parsed.error || parsed.message || `HTTP ${res.status} on ${cleanPath}`);
         }
 
-        const data = extractPayload(parsed);
-        recordLog("INFO", `API ${cleanPath} -> ${res.status}`, data);
+        const data = unwrapResponse(parsed);
+        pushTelemetry("INFO", `API ${cleanPath} -> ${res.status}`, data);
         return { ok: true, data };
       } catch (err) {
-        clearTimeout(timeoutId);
-        const reason = err.name === "AbortError" ? "Request timed out" : err.message;
-        recordLog("WARN", `API ${cleanPath} fallback triggered`, reason);
-        return { ok: false, error: reason };
+        clearTimeout(timerId);
+        const detail = err.name === "AbortError" ? "Request timed out" : err.message;
+        pushTelemetry("WARN", `API ${cleanPath} fallback`, detail);
+        return { ok: false, error: detail };
       }
     }
 
     async function runHealthCheck() {
-      showBanner("Testing backend & MongoDB Atlas connection...", "info");
-      const result = await callApi("/api/health", { ping: true });
-      if (result.ok) {
-        showBanner("Backend & MongoDB Atlas API reachable and healthy.", "success");
+      showBanner("Checking backend & MongoDB Atlas status...", "info");
+      const res = await callApi("/api/health", { ping: true });
+      if (res.ok) {
+        showBanner("Backend & MongoDB Atlas API online.", "success");
       } else {
-        showBanner(`Backend check note: ${result.error} (Local fallback active)`, "info");
+        showBanner(`API note: ${res.error} (Local cache active)`, "info");
       }
     }
 
-    function escapeHtml(value) {
+    function escapeMarkup(value) {
       return String(value ?? "").replace(/[<>&"]/g, (ch) => (
         { "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" }[ch]
       ));
     }
 
-    function applyServerState(data) {
+    function applyRemoteProfileState(data) {
       if (!data || typeof data !== "object") return;
-      const serverBal = extractBalance(data);
-      if (serverBal !== null) {
-        state.balance = serverBal;
-      }
+      const remoteBal = readBalanceField(data);
+      if (remoteBal !== null) state.balance = remoteBal;
       if (typeof data.minedRoundsSaved === "number") {
         state.minedRoundsSaved = Math.max(state.minedRoundsSaved, data.minedRoundsSaved);
       }
       if (typeof data.sharedAppCount === "number") {
         state.sharedAppCount = Math.max(state.sharedAppCount, data.sharedAppCount);
       }
-      if (Array.isArray(data.visitedTasks)) {
-        state.visitedTasks = data.visitedTasks;
-      }
-      if (Array.isArray(data.completedTasks)) {
-        state.completedTasks = data.completedTasks;
-      }
-      if (data.lastBonusDate) {
-        state.lastBonusDate = data.lastBonusDate;
-      }
-      if (typeof data.loginStreak === "number") {
-        state.loginStreak = data.loginStreak;
-      }
-      if (data.lastSpinDate) {
-        state.lastSpinDate = data.lastSpinDate;
-      }
-      if (typeof data.referralCount === "number") {
-        state.referralCount = data.referralCount;
-      }
-      if (typeof data.referralEarned === "number") {
-        state.referralEarned = data.referralEarned;
-      }
-      if (data.tonWalletAddress !== undefined) {
-        state.tonWalletAddress = data.tonWalletAddress || null;
-      }
+      if (Array.isArray(data.visitedTasks)) state.visitedTasks = data.visitedTasks;
+      if (Array.isArray(data.completedTasks)) state.completedTasks = data.completedTasks;
+      if (data.lastBonusDate) state.lastBonusDate = data.lastBonusDate;
+      if (typeof data.loginStreak === "number") state.loginStreak = data.loginStreak;
+      if (data.lastSpinDate) state.lastSpinDate = data.lastSpinDate;
+      if (typeof data.referralCount === "number") state.referralCount = data.referralCount;
+      if (typeof data.referralEarned === "number") state.referralEarned = data.referralEarned;
+      if (data.tonWalletAddress !== undefined) state.tonWalletAddress = data.tonWalletAddress || null;
       if (Array.isArray(data.leaderboard) && data.leaderboard.length > 0) {
         state.leaderboard = data.leaderboard;
       }
-      saveLocalState();
+      persistAppState();
     }
 
-    function renderUserDataCard() {
-      const me = getCurrentUserProfile();
+    function renderProfileCard() {
+      const me = resolveOperatorProfile();
       const nameEl = document.getElementById("profileDisplayName");
       const idEl = document.getElementById("profileUserId");
       const balEl = document.getElementById("profileBalance");
@@ -1597,13 +1575,13 @@
 
       if (nameEl) nameEl.textContent = me.username;
       if (idEl) {
-        idEl.textContent = `ID: ${me.user_id} • Verified Tasks: ${state.completedTasks.length}/${TASK_DEFS.length}`;
+        idEl.textContent = `ID: ${me.user_id} • Quests: ${state.completedTasks.length}/${QUEST_CATALOG.length}`;
       }
       if (balEl) balEl.textContent = `${Number(state.balance) || 0} 💎`;
 
       if (walletEl) {
         walletEl.textContent = state.tonWalletAddress
-          ? `💎 TON Wallet: ${shortenTonAddress(state.tonWalletAddress)}`
+          ? `💎 TON Wallet: ${formatTonAddress(state.tonWalletAddress)}`
           : "💎 TON Wallet: Not Connected";
       }
       if (connectBtnLabel) {
@@ -1614,13 +1592,13 @@
     }
 
     function renderReferralCard() {
-      const me = getCurrentUserProfile();
-      const refLink = `https://t.me/${CONFIG.BOT_USERNAME}?start=ref_${encodeURIComponent(me.user_id)}`;
+      const me = resolveOperatorProfile();
+      const refUrl = `https://t.me/${CONFIG.BOT_USERNAME}?start=ref_${encodeURIComponent(me.user_id)}`;
       const linkEl = document.getElementById("referralLinkBox");
       const countEl = document.getElementById("referralCountDisplay");
       const earnedEl = document.getElementById("referralEarnedDisplay");
 
-      if (linkEl) linkEl.textContent = refLink;
+      if (linkEl) linkEl.textContent = refUrl;
       if (countEl) countEl.textContent = `${Number(state.referralCount) || 0}`;
       if (earnedEl) earnedEl.textContent = `${Number(state.referralEarned) || 0} 💎`;
     }
@@ -1629,69 +1607,69 @@
       const barEl = document.getElementById("streakBar");
       if (!barEl) return;
 
-      const today = getTodayDateStr();
-      const yesterday = getYesterdayDateStr();
+      const today = utcDayString(0);
+      const yesterday = utcDayString(-1);
       const activeStreak = (state.lastBonusDate === today || state.lastBonusDate === yesterday)
         ? state.loginStreak
         : 0;
 
-      let html = "";
+      let markup = "";
       for (let day = 1; day <= 7; day++) {
-        const isClaimed = day <= activeStreak;
+        const claimed = day <= activeStreak;
         const isDay7 = day === 7;
         const label = isDay7 ? "D7 +2k" : `D${day}`;
-        html += `<div class="streak-day ${isClaimed ? "claimed" : ""} ${isDay7 ? "day7" : ""}">${label}</div>`;
+        markup += `<div class="streak-day ${claimed ? "claimed" : ""} ${isDay7 ? "day7" : ""}">${label}</div>`;
       }
-      barEl.innerHTML = html;
+      barEl.innerHTML = markup;
     }
 
-    function syncLocalLeaderboardWithCurrentUser() {
-      const me = getCurrentUserProfile();
-      const merged = [...(state.leaderboard || FALLBACK_LEADERBOARD)];
-      const idx = merged.findIndex((item) => String(item.user_id) === String(me.user_id));
-      const myEntry = {
+    function syncPlayerWithLeaderboard() {
+      const me = resolveOperatorProfile();
+      const rows = [...(state.leaderboard || SEED_STANDINGS)];
+      const idx = rows.findIndex((item) => String(item.user_id) === String(me.user_id));
+      const selfRow = {
         user_id: me.user_id,
         username: me.username,
         balance: Number(state.balance) || 0,
         tasksCount: state.completedTasks.length
       };
       if (idx >= 0) {
-        merged[idx] = { ...merged[idx], ...myEntry };
+        rows[idx] = { ...rows[idx], ...selfRow };
       } else {
-        merged.push(myEntry);
+        rows.push(selfRow);
       }
-      merged.sort((a, b) => (Number(b.balance) || 0) - (Number(a.balance) || 0));
-      state.leaderboard = merged.slice(0, 25);
-      saveLocalState();
+      rows.sort((a, b) => (Number(b.balance) || 0) - (Number(a.balance) || 0));
+      state.leaderboard = rows.slice(0, 25);
+      persistAppState();
     }
 
     function renderLeaderboard() {
       const listEl = document.getElementById("leaderboardList");
       if (!listEl) return;
 
-      syncLocalLeaderboardWithCurrentUser();
-      const me = getCurrentUserProfile();
+      syncPlayerWithLeaderboard();
+      const me = resolveOperatorProfile();
 
       if (!state.leaderboard.length) {
-        listEl.innerHTML = `<div class="card-desc">No user balances recorded yet.</div>`;
+        listEl.innerHTML = `<div class="card-desc">No operator balances recorded yet.</div>`;
         return;
       }
 
       listEl.innerHTML = state.leaderboard
-        .map((row, index) => {
-          const rank = index + 1;
+        .map((row, idx) => {
+          const rank = idx + 1;
           const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `#${rank}`;
-          const isMe = String(row.user_id) === String(me.user_id);
-          const safeName = escapeHtml(row.username || `Miner_${row.user_id}`);
-          const safeId = escapeHtml(row.user_id || "unknown");
-          const tasksLabel = typeof row.tasksCount === "number" ? ` • ${row.tasksCount} tasks` : "";
+          const isSelf = String(row.user_id) === String(me.user_id);
+          const safeName = escapeMarkup(row.username || `Operator_${row.user_id}`);
+          const safeId = escapeMarkup(row.user_id || "unknown");
+          const questInfo = typeof row.tasksCount === "number" ? ` • ${row.tasksCount} quests` : "";
           return `
-            <div class="lb-item ${isMe ? "me" : ""}">
+            <div class="lb-item ${isSelf ? "me" : ""}">
               <div class="lb-left">
                 <span class="lb-rank">${medal}</span>
                 <div>
-                  <div class="lb-name">${safeName}${isMe ? " (You)" : ""}</div>
-                  <div class="lb-sub">ID: ${safeId}${tasksLabel}</div>
+                  <div class="lb-name">${safeName}${isSelf ? " (You)" : ""}</div>
+                  <div class="lb-sub">ID: ${safeId}${questInfo}</div>
                 </div>
               </div>
               <span class="lb-score">${Number(row.balance) || 0} 💎</span>
@@ -1702,26 +1680,26 @@
     }
 
     async function syncUserData(showFeedback = false) {
-      const profile = getCurrentUserProfile();
-      const { startParam } = getInitDataBundle();
-      const syncRes = await callApi("/api/state", {
+      const profile = resolveOperatorProfile();
+      const { startParam } = getSessionContext();
+      const res = await callApi("/api/state", {
         user_id: profile.user_id,
         username: profile.username,
         start_param: startParam || state.referredBy || null
       });
 
-      if (syncRes.ok && extractBalance(syncRes.data) !== null) {
-        applyServerState(syncRes.data);
+      if (res.ok && readBalanceField(res.data) !== null) {
+        applyRemoteProfileState(res.data);
         renderUI();
         if (showFeedback) {
-          showBanner(`Synced user data & balance (${state.balance} 💎) with MongoDB Atlas.`, "success");
+          showBanner(`Synced profile & balance (${state.balance} 💎) with MongoDB Atlas.`, "success");
         }
         return true;
       }
 
       renderUI();
       if (showFeedback) {
-        showBanner(`Using local user data & balance (${state.balance} 💎) — API offline.`, "info");
+        showBanner(`Using local profile & balance (${state.balance} 💎) — API offline.`, "info");
       }
       return false;
     }
@@ -1734,55 +1712,49 @@
 
       if (res.ok && rows) {
         state.leaderboard = rows;
-        saveLocalState();
+        persistAppState();
         renderLeaderboard();
-        if (showFeedback) showBanner("Users & balances updated from MongoDB Atlas.", "success");
+        if (showFeedback) showBanner("Operator standings refreshed from MongoDB Atlas.", "success");
       } else {
         renderLeaderboard();
-        if (showFeedback) showBanner("Showing cached/local user balances (API offline).", "info");
+        if (showFeedback) showBanner("Showing cached operator standings (API offline).", "info");
       }
     }
 
-    function isTaskActionDone(task) {
-      if (task.actionType === "mine") {
-        return state.minedRoundsSaved > 0 || state.roundCompleted;
-      }
-      if (task.actionType === "share") {
-        return state.sharedAppCount > 0;
-      }
-      if (task.requiresVisit) {
-        return state.visitedTasks.includes(task.id);
-      }
+    function isQuestActionReady(quest) {
+      if (quest.actionType === "mine") return state.minedRoundsSaved > 0 || state.roundCompleted;
+      if (quest.actionType === "share") return state.sharedAppCount > 0;
+      if (quest.requiresVisit) return state.visitedTasks.includes(quest.id);
       return true;
     }
 
     function renderTasksUI() {
-      for (const task of TASK_DEFS) {
-        const el = document.getElementById(task.elId);
-        if (!el) continue;
+      for (const quest of QUEST_CATALOG) {
+        const node = document.getElementById(quest.elId);
+        if (!node) continue;
 
-        if (state.completedTasks.includes(task.id)) {
-          if (el.tagName === "BUTTON") {
+        if (state.completedTasks.includes(quest.id)) {
+          if (node.tagName === "BUTTON") {
             const badge = document.createElement("span");
             badge.className = "badge-done";
-            badge.id = task.elId;
+            badge.id = quest.elId;
             badge.textContent = "✓ Verified";
-            el.replaceWith(badge);
+            node.replaceWith(badge);
           } else {
-            el.textContent = "✓ Verified";
+            node.textContent = "✓ Verified";
           }
           continue;
         }
 
-        if (task.requiresVisit && !state.visitedTasks.includes(task.id)) {
-          el.className = "btn btn-primary btn-ghost";
-          el.textContent = "Open";
-        } else if (isTaskActionDone(task)) {
-          el.className = "btn btn-verify-ready btn-ghost";
-          el.textContent = "Verify";
+        if (quest.requiresVisit && !state.visitedTasks.includes(quest.id)) {
+          node.className = "btn btn-primary btn-ghost";
+          node.textContent = "Open";
+        } else if (isQuestActionReady(quest)) {
+          node.className = "btn btn-verify-ready btn-ghost";
+          node.textContent = "Verify";
         } else {
-          el.className = "btn btn-primary btn-ghost";
-          el.textContent = "Verify";
+          node.className = "btn btn-primary btn-ghost";
+          node.textContent = "Verify";
         }
       }
     }
@@ -1795,7 +1767,7 @@
 
       const tapLabel = document.getElementById("tapLabel");
       if (state.isMining) {
-        tapLabel.textContent = "KEEP TAPPING!";
+        tapLabel.textContent = "PULSE ACTIVE";
       } else if (state.roundCompleted) {
         tapLabel.textContent = "ROUND READY";
       } else {
@@ -1809,16 +1781,16 @@
 
       renderTasksUI();
 
-      const today = getTodayDateStr();
+      const today = utcDayString(0);
       const bonusBtn = document.getElementById("dailyBonusBtn");
       const bonusDesc = document.getElementById("dailyBonusDesc");
-      const nextDay = getNextStreakDay();
+      const nextDay = computeNextStreakDay();
       const nextReward = nextDay === 7
         ? CONFIG.DAILY_LOGIN_REWARD + CONFIG.SEVENTH_DAY_BONUS
         : CONFIG.DAILY_LOGIN_REWARD;
 
       if (bonusDesc) {
-        bonusDesc.innerHTML = `Earn <strong>+${CONFIG.DAILY_LOGIN_REWARD} 💎</strong> daily, plus an extra <strong>+${CONFIG.SEVENTH_DAY_BONUS} 💎</strong> on Day 7 of a consistent 7-day login streak (Current streak: <strong>${state.loginStreak}/7</strong>).`;
+        bonusDesc.innerHTML = `Earn <strong>+${CONFIG.DAILY_LOGIN_REWARD} 💎</strong> daily, plus an extra <strong>+${CONFIG.SEVENTH_DAY_BONUS} 💎</strong> on Day 7 of an unbroken 7-day check-in streak (Current streak: <strong>${state.loginStreak}/7</strong>).`;
       }
 
       if (bonusBtn) {
@@ -1827,7 +1799,7 @@
           bonusBtn.textContent = `✓ Day ${state.loginStreak} Claimed Today`;
         } else {
           bonusBtn.disabled = false;
-          bonusBtn.textContent = `🎁 Claim Day ${nextDay} Login (+${nextReward} 💎)`;
+          bonusBtn.textContent = `🎁 Claim Day ${nextDay} Check-In (+${nextReward} 💎)`;
         }
       }
 
@@ -1836,11 +1808,11 @@
       const spinBtn = document.getElementById("spinWinBtn");
       const spinLabel = document.getElementById("spinWinLabel");
       const spinResult = document.getElementById("spinResultText");
-      if (spinBtn && spinLabel && !isSpinning) {
+      if (spinBtn && spinLabel && !wheelBusy) {
         if (state.lastSpinDate === today) {
           spinBtn.disabled = true;
           spinLabel.textContent = "Daily Spin Used";
-          if (spinResult) spinResult.textContent = "Come back tomorrow for another free spin!";
+          if (spinResult) spinResult.textContent = "Come back tomorrow for your next spin.";
         } else {
           spinBtn.disabled = false;
           spinLabel.textContent = "Spin & Win 💎";
@@ -1848,41 +1820,41 @@
       }
 
       renderReferralCard();
-      renderUserDataCard();
+      renderProfileCard();
       renderLeaderboard();
     }
 
     function switchTab(tabName) {
       const tabs = ["mine", "tasks", "leaderboard", "bonus", "support"];
-      for (const t of tabs) {
-        document.getElementById(`panel-${t}`)?.classList.toggle("active", t === tabName);
-        document.getElementById(`nav-${t}`)?.classList.toggle("active", t === tabName);
+      for (const tab of tabs) {
+        document.getElementById(`panel-${tab}`)?.classList.toggle("active", tab === tabName);
+        document.getElementById(`nav-${tab}`)?.classList.toggle("active", tab === tabName);
       }
       if (tabName === "leaderboard") {
         syncUserData(false).then(() => loadLeaderboard(false));
       }
     }
 
-    function startMiningRound() {
+    function startQuantumCycle() {
       if (state.isMining) return;
-      clearInterval(timerInterval);
+      clearInterval(pulseTicker);
 
       state.isMining = true;
       state.roundCompleted = false;
       state.timerSeconds = CONFIG.ROUND_SECONDS;
       state.sessionPoints = 1;
       renderUI();
-      showBanner("15-second mining round started! Tap fast.", "info");
+      showBanner("15-second quantum round active! Tap to build session points.", "info");
 
-      timerInterval = setInterval(() => {
+      pulseTicker = setInterval(() => {
         state.timerSeconds -= 1;
         if (state.timerSeconds <= 0) {
           state.timerSeconds = 0;
           state.isMining = false;
           state.roundCompleted = true;
-          clearInterval(timerInterval);
+          clearInterval(pulseTicker);
           renderUI();
-          showBanner("Round finished! Boost 2X or tap Submit & Save Session.", "success");
+          showBanner("Round complete! Optional 2X ad boost available or save session.", "success");
         } else {
           renderUI();
         }
@@ -1892,57 +1864,57 @@
     function handleTap() {
       try {
         if (!state.isMining) {
-          startMiningRound();
+          startQuantumCycle();
           return;
         }
         state.sessionPoints += 1;
         renderUI();
       } catch (err) {
-        recordLog("ERROR", "Tap handler failed", err.message);
+        pushTelemetry("ERROR", "Tap action error", err.message);
         showBanner(`Tap error: ${err.message}`, "error");
       }
     }
 
     function initAdsgram() {
       try {
-        const initDataStr = getTelegramInitDataForTransport();
+        const initHeader = buildInitDataHeader();
         if (window.Adsgram && typeof window.Adsgram.init === "function" && CONFIG.ADSGRAM_BLOCK_ID) {
-          adController = window.Adsgram.init({
+          adsgramInstance = window.Adsgram.init({
             blockId: CONFIG.ADSGRAM_BLOCK_ID,
-            initData: initDataStr,
+            initData: initHeader,
             debug: false
           });
-          recordLog("INFO", "Adsgram AdController initialized");
+          pushTelemetry("INFO", "Adsgram block controller initialized");
         }
       } catch (err) {
-        recordLog("ERROR", "Adsgram init error", err.message);
+        pushTelemetry("ERROR", "Adsgram initialization failed", err.message);
       }
     }
 
     async function handleWatchAdBoost() {
       if (state.boost2xActive) {
-        showBanner("2X Boost is already active for your current session!", "info");
+        showBanner("2X Boost is already active for this session.", "info");
         return;
       }
 
       const boostBtn = document.getElementById("boostBtn");
       boostBtn.disabled = true;
-      showBanner("Loading rewarded ad...", "info");
+      showBanner("Requesting rewarded ad...", "info");
 
       try {
         initAdsgram();
-        if (adController && typeof adController.show === "function") {
-          await adController.show();
+        if (adsgramInstance && typeof adsgramInstance.show === "function") {
+          await adsgramInstance.show();
           state.boost2xActive = true;
-          saveLocalState();
+          persistAppState();
           renderUI();
-          showBanner("Ad completed! 2X Boost activated for this session.", "success");
+          showBanner("Rewarded ad complete! 2X Boost active for this session.", "success");
         } else {
           throw new Error("Ad SDK unavailable in this environment");
         }
       } catch (err) {
         const msg = err?.description || err?.message || "Ad closed or unavailable";
-        recordLog("WARN", "Ad boost did not complete", msg);
+        pushTelemetry("WARN", "Rewarded ad not completed", msg);
         showBanner(`Ad boost unavailable (${msg}). You can still save your session.`, "info");
       } finally {
         boostBtn.disabled = false;
@@ -1951,12 +1923,12 @@
 
     async function handleSubmitSession() {
       if (state.isMining) {
-        showBanner("Wait for the 15s timer to finish before submitting.", "info");
+        showBanner("Let the 15s timer finish before submitting the round.", "info");
         return;
       }
 
       if (state.sessionPoints <= 0) {
-        showBanner("Tap to start a mining round first so you have session points to save.", "info");
+        showBanner("Start a mining round first so you have session points to save.", "info");
         return;
       }
 
@@ -1967,21 +1939,21 @@
       const earned = state.sessionPoints * multiplier;
 
       try {
-        const apiRes = await callApi("/api/mine/claim", {
+        const res = await callApi("/api/mine/claim", {
           sessionPoints: state.sessionPoints,
           multiplier,
           earned
         });
 
-        const serverBal = apiRes.ok ? extractBalance(apiRes.data) : null;
-        if (serverBal !== null) {
-          state.balance = serverBal;
+        const remoteBal = res.ok ? readBalanceField(res.data) : null;
+        if (remoteBal !== null) {
+          state.balance = remoteBal;
         } else {
           state.balance += earned;
         }
 
-        if (Array.isArray(apiRes.data?.leaderboard)) {
-          state.leaderboard = apiRes.data.leaderboard;
+        if (Array.isArray(res.data?.leaderboard)) {
+          state.leaderboard = res.data.leaderboard;
         }
 
         state.minedRoundsSaved += 1;
@@ -1989,24 +1961,24 @@
         state.timerSeconds = CONFIG.ROUND_SECONDS;
         state.roundCompleted = false;
         state.boost2xActive = false;
-        saveLocalState();
+        persistAppState();
         renderUI();
 
         showBanner(
-          apiRes.ok
+          res.ok
             ? `Saved +${earned} 💎! Balance: ${state.balance} 💎.`
             : `Saved +${earned} 💎 locally (API offline). Balance: ${state.balance} 💎.`,
           "success"
         );
       } catch (err) {
-        recordLog("ERROR", "Submit session failed", err.message);
+        pushTelemetry("ERROR", "Session submission failed", err.message);
         showBanner(`Could not save session: ${err.message}`, "error");
       } finally {
         saveBtn.disabled = false;
       }
     }
 
-    function openTaskLink(url) {
+    function openExternalTarget(url) {
       if (!url) return;
       const tg = getTelegramWebApp();
       try {
@@ -2018,116 +1990,114 @@
           window.open(url, "_blank", "noopener,noreferrer");
         }
       } catch (err) {
-        recordLog("WARN", "Could not open task link", err.message);
+        pushTelemetry("WARN", "External link launch fallback", err.message);
       }
     }
 
-    async function handleTaskClick(task) {
-      if (state.completedTasks.includes(task.id)) {
-        showBanner("Task already verified.", "info");
+    async function handleTaskClick(quest) {
+      if (state.completedTasks.includes(quest.id)) {
+        showBanner("Quest already verified.", "info");
         return;
       }
 
-      if (task.requiresVisit && !state.visitedTasks.includes(task.id)) {
-        if (task.url) openTaskLink(task.url);
-        if (!state.visitedTasks.includes(task.id)) {
-          state.visitedTasks.push(task.id);
-        }
-        saveLocalState();
+      if (quest.requiresVisit && !state.visitedTasks.includes(quest.id)) {
+        if (quest.url) openExternalTarget(quest.url);
+        if (!state.visitedTasks.includes(quest.id)) state.visitedTasks.push(quest.id);
+        persistAppState();
         renderUI();
-        showBanner("Channel opened! Complete the action, then tap Verify to claim reward.", "info");
+        showBanner("Destination opened! Complete the step, then tap Verify to claim.", "info");
         return;
       }
 
-      if (task.actionType === "mine" && state.minedRoundsSaved <= 0) {
-        showBanner("Complete and save a 15s mining round on the Mine tab first, then tap Verify.", "info");
+      if (quest.actionType === "mine" && state.minedRoundsSaved <= 0) {
+        showBanner("Complete and save a 15s mining round first, then tap Verify.", "info");
         switchTab("mine");
         return;
       }
 
-      if (task.actionType === "share" && state.sharedAppCount <= 0) {
+      if (quest.actionType === "share" && state.sharedAppCount <= 0) {
         shareReferralInvite();
         showBanner("Invite opened! Once shared, tap Verify again to claim +100 💎.", "info");
         return;
       }
 
-      showBanner("Verifying task...", "info");
-      const apiRes = await callApi("/api/tasks/verify", {
-        taskId: task.id,
-        reward: task.reward,
-        visited: state.visitedTasks.includes(task.id),
+      showBanner("Verifying quest...", "info");
+      const res = await callApi("/api/tasks/verify", {
+        taskId: quest.id,
+        reward: quest.reward,
+        visited: state.visitedTasks.includes(quest.id),
         minedRoundsSaved: state.minedRoundsSaved,
         sharedAppCount: state.sharedAppCount
       });
 
-      const serverBal = apiRes.ok ? extractBalance(apiRes.data) : null;
-      if (serverBal !== null) {
-        state.balance = serverBal;
+      const remoteBal = res.ok ? readBalanceField(res.data) : null;
+      if (remoteBal !== null) {
+        state.balance = remoteBal;
       } else {
-        state.balance += task.reward;
+        state.balance += quest.reward;
       }
 
-      if (Array.isArray(apiRes.data?.completedTasks)) {
-        state.completedTasks = apiRes.data.completedTasks;
-      } else if (!state.completedTasks.includes(task.id)) {
-        state.completedTasks.push(task.id);
+      if (Array.isArray(res.data?.completedTasks)) {
+        state.completedTasks = res.data.completedTasks;
+      } else if (!state.completedTasks.includes(quest.id)) {
+        state.completedTasks.push(quest.id);
       }
 
-      saveLocalState();
+      persistAppState();
       renderUI();
-      showBanner(`Task verified! +${task.reward} 💎 added to your balance.`, "success");
+      showBanner(`Quest verified! +${quest.reward} 💎 added to balance.`, "success");
     }
 
     async function claimDailyBonus() {
-      const today = getTodayDateStr();
+      const today = utcDayString(0);
       if (state.lastBonusDate === today) {
-        showBanner("You have already claimed today's login bonus.", "info");
+        showBanner("Today's check-in bonus is already claimed.", "info");
         return;
       }
 
-      const nextStreak = getNextStreakDay();
-      const isSeventhDay = nextStreak === 7;
-      const totalReward = CONFIG.DAILY_LOGIN_REWARD + (isSeventhDay ? CONFIG.SEVENTH_DAY_BONUS : 0);
+      const nextStreak = computeNextStreakDay();
+      const isDay7 = nextStreak === 7;
+      const totalReward = CONFIG.DAILY_LOGIN_REWARD + (isDay7 ? CONFIG.SEVENTH_DAY_BONUS : 0);
 
-      const apiRes = await callApi("/api/bonus/claim", {
+      const res = await callApi("/api/bonus/claim", {
         reward: totalReward,
         baseReward: CONFIG.DAILY_LOGIN_REWARD,
-        streakBonus: isSeventhDay ? CONFIG.SEVENTH_DAY_BONUS : 0,
+        streakBonus: isDay7 ? CONFIG.SEVENTH_DAY_BONUS : 0,
         streakDay: nextStreak,
         date: today
       });
 
-      const serverBal = apiRes.ok ? extractBalance(apiRes.data) : null;
-      if (serverBal !== null) {
-        state.balance = serverBal;
+      const remoteBal = res.ok ? readBalanceField(res.data) : null;
+      if (remoteBal !== null) {
+        state.balance = remoteBal;
       } else {
         state.balance += totalReward;
       }
 
-      state.loginStreak = (typeof apiRes.data?.loginStreak === "number")
-        ? apiRes.data.loginStreak
+      state.loginStreak = (typeof res.data?.loginStreak === "number")
+        ? res.data.loginStreak
         : nextStreak;
       state.lastBonusDate = today;
-      saveLocalState();
+      persistAppState();
       renderUI();
 
       showBanner(
-        isSeventhDay
-          ? `7-Day Streak Complete! Claimed +${CONFIG.DAILY_LOGIN_REWARD} 💎 + +${CONFIG.SEVENTH_DAY_BONUS} 💎 bonus (+${totalReward} 💎 total)!`
-          : `Day ${state.loginStreak}/7 login claimed! +${totalReward} 💎 added.`,
+        isDay7
+          ? `Day 7 Streak Bonus! Claimed +${CONFIG.DAILY_LOGIN_REWARD} 💎 + +${CONFIG.SEVENTH_DAY_BONUS} 💎 bonus (+${totalReward} 💎 total).`
+          : `Day ${state.loginStreak}/7 check-in claimed! +${totalReward} 💎 added.`,
         "success"
       );
     }
 
     async function handleSpinAndWin() {
-      const today = getTodayDateStr();
-      if (isSpinning) return;
+      const today = utcDayString(0);
+      if (wheelBusy) return;
       if (state.lastSpinDate === today) {
-        showBanner("You have already used today's Spin & Win.", "info");
+        showBanner("Today's Quantum Spin has already been used.", "info");
         return;
       }
 
-      isSpinning = true;
+      wheelBusy = true;
       const spinBtn = document.getElementById("spinWinBtn");
       const wheelEl = document.getElementById("spinWheel");
       const centerLabel = document.getElementById("wheelCenterLabel");
@@ -2135,46 +2105,43 @@
 
       if (spinBtn) spinBtn.disabled = true;
       if (centerLabel) centerLabel.textContent = "•••";
-      if (resultText) resultText.textContent = "Spinning the quantum wheel...";
+      if (resultText) resultText.textContent = "Spinning wheel...";
 
       const prizes = CONFIG.SPIN_PRIZES;
       const prizeIndex = Math.floor(Math.random() * prizes.length);
       const prizeAmount = prizes[prizeIndex];
       const sliceDeg = 360 / prizes.length;
-      const targetDeg = 360 * 5 + (360 - prizeIndex * sliceDeg);
-      currentWheelAngle += targetDeg;
+      wheelAngleDeg += 360 * 5 + (360 - prizeIndex * sliceDeg);
 
-      if (wheelEl) {
-        wheelEl.style.transform = `rotate(${currentWheelAngle}deg)`;
-      }
+      if (wheelEl) wheelEl.style.transform = `rotate(${wheelAngleDeg}deg)`;
 
       setTimeout(async () => {
         try {
-          const apiRes = await callApi("/api/spin/claim", { reward: prizeAmount, date: today });
-          const serverBal = apiRes.ok ? extractBalance(apiRes.data) : null;
-          if (serverBal !== null) {
-            state.balance = serverBal;
+          const res = await callApi("/api/spin/claim", { reward: prizeAmount, date: today });
+          const remoteBal = res.ok ? readBalanceField(res.data) : null;
+          if (remoteBal !== null) {
+            state.balance = remoteBal;
           } else {
             state.balance += prizeAmount;
           }
           state.lastSpinDate = today;
-          saveLocalState();
+          persistAppState();
 
           if (centerLabel) centerLabel.textContent = `+${prizeAmount}`;
-          if (resultText) resultText.textContent = `You won +${prizeAmount} 💎!`;
-          showBanner(`Spin & Win! You earned +${prizeAmount} 💎.`, "success");
+          if (resultText) resultText.textContent = `Won +${prizeAmount} 💎!`;
+          showBanner(`Quantum Spin won +${prizeAmount} 💎.`, "success");
         } catch (err) {
-          recordLog("ERROR", "Spin & Win failed", err.message);
+          pushTelemetry("ERROR", "Spin claim failed", err.message);
           showBanner(`Spin error: ${err.message}`, "error");
         } finally {
-          isSpinning = false;
+          wheelBusy = false;
           renderUI();
         }
       }, 2250);
     }
 
     function getReferralLink() {
-      const me = getCurrentUserProfile();
+      const me = resolveOperatorProfile();
       return `https://t.me/${CONFIG.BOT_USERNAME}?start=ref_${encodeURIComponent(me.user_id)}`;
     }
 
@@ -2184,32 +2151,32 @@
         if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
           await navigator.clipboard.writeText(link);
         } else {
-          const temp = document.createElement("textarea");
-          temp.value = link;
-          document.body.appendChild(temp);
-          temp.select();
+          const helperInput = document.createElement("textarea");
+          helperInput.value = link;
+          document.body.appendChild(helperInput);
+          helperInput.select();
           document.execCommand("copy");
-          document.body.removeChild(temp);
+          document.body.removeChild(helperInput);
         }
         state.sharedAppCount += 1;
-        saveLocalState();
+        persistAppState();
         renderTasksUI();
-        showBanner("Referral link copied! Share it to earn +250 💎 per friend.", "success");
+        showBanner("Invite link copied! Earn +250 💎 per friend who joins.", "success");
       } catch (err) {
-        recordLog("WARN", "Clipboard copy fallback", err.message);
-        showBanner(`Referral link: ${link}`, "info");
+        pushTelemetry("WARN", "Clipboard write fallback", err.message);
+        showBanner(`Invite link: ${link}`, "info");
       }
     }
 
     function shareReferralInvite() {
       const link = getReferralLink();
-      const shareText = `Mine 💎 on TMX-QUANTUM (TON Telegram Mini App) and earn rewards! Join here:`;
+      const shareText = "Mine 💎 on TMX-QUANTUM (TON Telegram Mini App) and earn rewards! Join here:";
       const tg = getTelegramWebApp();
       const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareText)}`;
 
       try {
         state.sharedAppCount += 1;
-        saveLocalState();
+        persistAppState();
         renderTasksUI();
         if (tg && typeof tg.openTelegramLink === "function") {
           tg.openTelegramLink(shareUrl);
@@ -2217,7 +2184,7 @@
           window.open(shareUrl, "_blank", "noopener,noreferrer");
         }
       } catch (err) {
-        recordLog("WARN", "Share invite fallback", err.message);
+        pushTelemetry("WARN", "Share dialog fallback", err.message);
       }
     }
 
@@ -2239,8 +2206,8 @@
       document.getElementById("btnTestApi")?.addEventListener("click", runHealthCheck);
       document.getElementById("btnClearLogs")?.addEventListener("click", clearLogs);
 
-      for (const task of TASK_DEFS) {
-        document.getElementById(task.elId)?.addEventListener("click", () => handleTaskClick(task));
+      for (const quest of QUEST_CATALOG) {
+        document.getElementById(quest.elId)?.addEventListener("click", () => handleTaskClick(quest));
       }
 
       document.querySelectorAll(".nav-btn[data-tab]").forEach((btn) => {
@@ -2249,7 +2216,7 @@
     }
 
     (async function boot() {
-      recordLog("INFO", "TMX-QUANTUM booting...");
+      pushTelemetry("INFO", "TMX-QUANTUM starting...");
       bindEvents();
       initTelegram();
       initTonConnect();
@@ -2258,12 +2225,12 @@
 
       const synced = await syncUserData(false);
       if (synced) {
-        showBanner(`Synced user data & balance (${state.balance} 💎).`, "success");
+        showBanner(`Synced profile & balance (${state.balance} 💎).`, "success");
       } else {
         await loadLeaderboard(false);
-        showBanner(`Active! Balance: ${state.balance} 💎 (local cache until API connects).`, "info");
+        showBanner(`Ready! Balance: ${state.balance} 💎 (local cache until API connects).`, "info");
       }
     })();
   </script>
 </body>
-</html>
+  </html>
