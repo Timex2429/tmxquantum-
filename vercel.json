@@ -20,19 +20,33 @@
   ],
   "routes": [
     {
-      "src": "/tonconnect-manifest.json",
+      "src": "^/api/(.*)$",
+      "dest": "main.py"
+    },
+    {
+      "src": "^/webhook$",
+      "dest": "main.py"
+    },
+    {
+      "src": "^/tonconnect-manifest\\.json$",
+      "headers": {
+        "Cache-Control": "public, max-age=300, must-revalidate"
+      },
       "dest": "/tonconnect-manifest.json"
     },
     {
-      "src": "/1795016818399.jpg",
+      "src": "^/1795016818399\\.jpg$",
+      "headers": {
+        "Cache-Control": "public, max-age=86400"
+      },
       "dest": "/1795016818399.jpg"
     },
     {
-      "src": "/",
+      "src": "^/$",
       "dest": "/index.html"
     },
     {
-      "src": "/(.*)",
+      "src": "^/(.*)$",
       "dest": "main.py"
     }
   ]
