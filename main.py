@@ -24,9 +24,16 @@ app = FastAPI(
     version="1.5.0",
 )
 
+ALLOWED_ORIGINS = [
+    "https://www.tmxquantum.site",
+    "https://tmxquantum.site",
+    "https://api.tmxquantum.site",
+    "https://web.telegram.org",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -62,7 +69,7 @@ else:
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}" if BOT_TOKEN else ""
-MINI_APP_URL = os.getenv("MINI_APP_URL", "https://www.tmxquantum.site")
+MINI_APP_URL = (os.getenv("MINI_APP_URL") or "https://www.tmxquantum.site").strip()
 SUPPORT_HANDLE = os.getenv("SUPPORT_HANDLE", "@Tmxqunbot")
 INIT_DATA_MAX_AGE_SECONDS = int(os.getenv("INIT_DATA_MAX_AGE_SECONDS", "86400"))
 ALLOW_LOCAL_DEV_FALLBACK = os.getenv("ALLOW_LOCAL_DEV_FALLBACK", "false").lower() == "true"
