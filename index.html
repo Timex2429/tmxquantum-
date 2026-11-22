@@ -251,6 +251,39 @@
       margin-bottom: 12px;
     }
 
+    .stars-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .stars-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px;
+      background: var(--surface-2);
+      border: 1px solid rgba(251, 191, 36, 0.25);
+      border-radius: 12px;
+    }
+
+    .stars-title {
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .btn-stars {
+      background: linear-gradient(90deg, #d97706, #eab308);
+      border: 1px solid rgba(253, 224, 71, 0.55);
+      color: #090d16;
+      padding: 8px 12px;
+      font-size: 12px;
+      margin-bottom: 0;
+      width: auto;
+      white-space: nowrap;
+    }
+
     .ton-card {
       background: linear-gradient(150deg, rgba(2, 132, 199, 0.16), rgba(11, 21, 38, 0.96));
       border: 1px solid rgba(56, 189, 248, 0.35);
@@ -814,8 +847,7 @@
         </div>
       </div>
     </section>
-
-    <!-- RANKS / USERS & BALANCES TAB -->
+        <!-- RANKS / USERS & BALANCES TAB -->
     <section id="panel-leaderboard" class="tab-panel">
       <div class="card">
         <div class="card-header-row">
@@ -854,7 +886,7 @@
       </div>
     </section>
 
-    <!-- BONUS TAB (DAILY LOGIN STREAK + SPIN & WIN + REFERRAL PROGRAM) -->
+    <!-- BONUS TAB (DAILY LOGIN STREAK + SPIN & WIN + TELEGRAM STARS + REFERRAL PROGRAM) -->
     <section id="panel-bonus" class="tab-panel">
       <div class="card">
         <h2 class="card-title">🎁 7-Day Check-In Streak</h2>
@@ -884,6 +916,44 @@
             <span>🎡</span>
             <span id="spinWinLabel">Spin & Win 💎</span>
           </button>
+        </div>
+      </div>
+
+      <div class="card" id="starsStoreCard">
+        <h2 class="card-title">⭐ Telegram Stars Store (XTR)</h2>
+        <p class="card-desc" id="starsProStatus">
+          Pay directly with Telegram Stars for 30-day auto-renewing Pro access or instant 💎 credit packs.
+        </p>
+        <div class="stars-list">
+          <div class="stars-item">
+            <div>
+              <div class="stars-title">TMX-QUANTUM Pro (30d)</div>
+              <div class="task-meta">30-day Pro status (auto-renews monthly)</div>
+            </div>
+            <button class="btn btn-stars" id="buy-pro-monthly" data-stars-item="pro_monthly" type="button">
+              Buy • 250 ⭐
+            </button>
+          </div>
+
+          <div class="stars-item">
+            <div>
+              <div class="stars-title">100 Quantum Credits</div>
+              <div class="task-meta">Instant one-time +100 💎 top-up</div>
+            </div>
+            <button class="btn btn-stars" id="buy-credits-100" data-stars-item="credits_100" type="button">
+              Buy • 100 ⭐
+            </button>
+          </div>
+
+          <div class="stars-item">
+            <div>
+              <div class="stars-title">500 Quantum Credits</div>
+              <div class="task-meta">One-time +500 💎 bundle</div>
+            </div>
+            <button class="btn btn-stars" id="buy-credits-500" data-stars-item="credits_500" type="button">
+              Buy • 400 ⭐
+            </button>
+          </div>
         </div>
       </div>
 
@@ -951,6 +1021,13 @@
         </details>
 
         <details>
+          <summary>How do Telegram Stars purchases and subscriptions work?</summary>
+          <p>
+            Select a Pro subscription or credit pack in the Bonus tab to open Telegram's native Stars (<code>XTR</code>) checkout. You can manage or cancel 30-day auto-renewing subscriptions anytime in Telegram Settings &rarr; My Stars &rarr; Subscriptions, or send <code>/paysupport</code> to the bot.
+          </p>
+        </details>
+
+        <details>
           <summary>What if the 2X Ad Boost does not fill?</summary>
           <p>
             Ad fill depends on network conditions and regional availability. If an ad is unavailable, you can still submit your standard round without interruption.
@@ -961,10 +1038,11 @@
       <div class="card">
         <h2 class="card-title">Support Contact</h2>
         <p class="card-desc" style="margin-bottom:8px;">
-          Questions about quests, wallet linking, referrals, or account sync? Reach us at:
+          Questions about quests, wallet linking, referrals, Stars billing, or account sync? Reach us at:
         </p>
         <div style="font-size:13px;line-height:1.7;">
           <div><strong>Support Email:</strong> support@tmxquantum.app</div>
+          <div><strong>Bot Billing Support:</strong> Send <code>/paysupport</code> in @Tmxqunbot</div>
         </div>
       </div>
     </section>
@@ -998,8 +1076,7 @@
       <span>FAQ</span>
     </button>
   </nav>
-
-  <script>
+    <script>
     const CONFIG = {
       API_BASE_URL: "",
       ADSGRAM_BLOCK_ID: "61304",
@@ -1014,6 +1091,12 @@
       STORAGE_KEY: "tmxq_quantum_core_v1",
       REQUEST_TIMEOUT_MS: 4500
     };
+
+    const STARS_ITEMS = [
+      { id: "pro_monthly", elId: "buy-pro-monthly", label: "Buy • 250 ⭐" },
+      { id: "credits_100", elId: "buy-credits-100", label: "Buy • 100 ⭐" },
+      { id: "credits_500", elId: "buy-credits-500", label: "Buy • 400 ⭐" }
+    ];
 
     const SEED_STANDINGS = [
       { user_id: "q_node_101", username: "QuantumPioneer", balance: 1250, tasksCount: 3 },
@@ -1031,6 +1114,10 @@
       { id: "first_mine", elId: "task-first-mine", reward: 50, url: null, requiresVisit: false, actionType: "mine" },
       { id: "share_app", elId: "task-share-app", reward: 100, url: null, requiresVisit: false, actionType: "share" }
     ];
+
+    // Track timestamps when each link quest was opened: { [questId]: epochMs }
+    const questOpenedAt = {};
+    const MIN_QUEST_DWELL_MS = 5000;
 
     const telemetryEntries = [];
 
@@ -1103,6 +1190,8 @@
       referralEarned: 0,
       referredBy: null,
       tonWalletAddress: null,
+      isPro: false,
+      proExpiresAt: null,
       leaderboard: [...SEED_STANDINGS]
     };
 
@@ -1142,6 +1231,8 @@
           referralEarned: Number(parsed.referralEarned) || 0,
           referredBy: parsed.referredBy || null,
           tonWalletAddress: parsed.tonWalletAddress || null,
+          isPro: Boolean(parsed.isPro),
+          proExpiresAt: parsed.proExpiresAt || null,
           visitedTasks: Array.isArray(parsed.visitedTasks) ? parsed.visitedTasks : [],
           completedTasks: Array.isArray(parsed.completedTasks) ? parsed.completedTasks : [],
           leaderboard: Array.isArray(parsed.leaderboard) && parsed.leaderboard.length
@@ -1177,6 +1268,8 @@
         referralEarned: state.referralEarned,
         referredBy: state.referredBy || null,
         tonWalletAddress: state.tonWalletAddress || null,
+        isPro: Boolean(state.isPro),
+        proExpiresAt: state.proExpiresAt || null,
         leaderboard: state.leaderboard
       };
       writeStorage(CONFIG.STORAGE_KEY, JSON.stringify(snapshot));
@@ -1511,7 +1604,7 @@
         }
 
         if (!res.ok) {
-          throw new Error(parsed.error || parsed.message || `HTTP ${res.status} on ${cleanPath}`);
+          throw new Error(parsed.detail || parsed.error || parsed.message || `HTTP ${res.status} on ${cleanPath}`);
         }
 
         const data = unwrapResponse(parsed);
@@ -1559,10 +1652,93 @@
       if (typeof data.referralCount === "number") state.referralCount = data.referralCount;
       if (typeof data.referralEarned === "number") state.referralEarned = data.referralEarned;
       if (data.tonWalletAddress !== undefined) state.tonWalletAddress = data.tonWalletAddress || null;
+      if (typeof data.is_pro === "boolean") state.isPro = data.is_pro;
+      if (data.pro_expires_at !== undefined) state.proExpiresAt = data.pro_expires_at || null;
       if (Array.isArray(data.leaderboard) && data.leaderboard.length > 0) {
         state.leaderboard = data.leaderboard;
       }
       persistAppState();
+    }
+
+    function renderStarsStoreStatus() {
+      const statusEl = document.getElementById("starsProStatus");
+      if (!statusEl) return;
+      if (state.isPro) {
+        const expLabel = state.proExpiresAt
+          ? ` (active until ${new Date(state.proExpiresAt).toLocaleDateString()})`
+          : "";
+        statusEl.textContent = `⚡ Pro Active${expLabel} • Instant Telegram Stars (XTR) checkout`;
+      } else {
+        statusEl.textContent = "Pay directly with Telegram Stars for 30-day auto-renewing Pro access or instant 💎 credit packs.";
+      }
+    }
+
+    async function pollAfterStarsPayment(prevBalance, prevPro) {
+      for (let i = 0; i < 5; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+        const res = await callApi("/api/state", {});
+        if (!res.ok) continue;
+        applyRemoteProfileState(res.data);
+        renderUI();
+        if (state.balance !== prevBalance || state.isPro !== prevPro) {
+          showBanner(`Stars payment confirmed! Balance: ${state.balance} 💎`, "success");
+          return;
+        }
+      }
+      showBanner("Checkout finished. Tap Sync Data if your balance takes a moment to update.", "info");
+    }
+
+    async function openStarsInvoice(itemId, btnEl) {
+      const tg = getTelegramWebApp();
+      const profile = resolveOperatorProfile();
+
+      if (!profile.user_id || profile.user_id === "guest_local") {
+        showBanner("Open TMX-QUANTUM inside Telegram to pay with Telegram Stars.", "info");
+        return;
+      }
+
+      if (!tg || typeof tg.openInvoice !== "function") {
+        showBanner("Telegram Stars checkout requires opening TMX-QUANTUM inside Telegram.", "info");
+        return;
+      }
+
+      const meta = STARS_ITEMS.find((item) => item.id === itemId);
+      const originalLabel = btnEl ? btnEl.textContent : (meta?.label || "Buy ⭐");
+      if (btnEl) {
+        btnEl.disabled = true;
+        btnEl.textContent = "Creating...";
+      }
+
+      try {
+        const res = await callApi("/api/create-invoice", { item_id: itemId });
+        const invoiceLink = res.ok ? res.data?.invoiceLink : null;
+        if (!invoiceLink) {
+          throw new Error(res.error || "Could not create Telegram Stars invoice link");
+        }
+
+        const prevBalance = Number(state.balance) || 0;
+        const prevPro = Boolean(state.isPro);
+
+        tg.openInvoice(invoiceLink, async (status) => {
+          pushTelemetry("INFO", "Telegram openInvoice callback", { itemId, status });
+          if (status === "paid") {
+            showBanner("Stars payment received! Syncing your TMX-QUANTUM account...", "info");
+            await pollAfterStarsPayment(prevBalance, prevPro);
+          } else if (status === "cancelled") {
+            showBanner("Telegram Stars checkout was cancelled.", "info");
+          } else if (status === "failed") {
+            showBanner("Stars payment failed. Send /paysupport in @Tmxqunbot for help.", "error");
+          }
+        });
+      } catch (err) {
+        pushTelemetry("ERROR", "Stars invoice creation failed", err.message);
+        showBanner(`Stars error: ${err.message}`, "error");
+      } finally {
+        if (btnEl) {
+          btnEl.disabled = false;
+          btnEl.textContent = originalLabel;
+        }
+      }
     }
 
     function renderProfileCard() {
@@ -1573,7 +1749,9 @@
       const walletEl = document.getElementById("profileTonWallet");
       const connectBtnLabel = document.getElementById("connectTonLabel");
 
-      if (nameEl) nameEl.textContent = me.username;
+      if (nameEl) {
+        nameEl.textContent = state.isPro ? `${me.username} ⚡ PRO` : me.username;
+      }
       if (idEl) {
         idEl.textContent = `ID: ${me.user_id} • Quests: ${state.completedTasks.length}/${QUEST_CATALOG.length}`;
       }
@@ -1722,9 +1900,18 @@
     }
 
     function isQuestActionReady(quest) {
-      if (quest.actionType === "mine") return state.minedRoundsSaved > 0 || state.roundCompleted;
-      if (quest.actionType === "share") return state.sharedAppCount > 0;
-      if (quest.requiresVisit) return state.visitedTasks.includes(quest.id);
+      if (state.completedTasks.includes(quest.id)) return false;
+      if (quest.actionType === "mine") {
+        return Number(state.minedRoundsSaved) > 0 || Boolean(state.roundCompleted);
+      }
+      if (quest.actionType === "share") {
+        return Number(state.sharedAppCount) > 0;
+      }
+      if (quest.requiresVisit) {
+        const openedTime = questOpenedAt[quest.id];
+        const visited = state.visitedTasks.includes(quest.id);
+        return visited && typeof openedTime === "number" && (Date.now() - openedTime) >= MIN_QUEST_DWELL_MS;
+      }
       return true;
     }
 
@@ -1746,7 +1933,8 @@
           continue;
         }
 
-        if (quest.requiresVisit && !state.visitedTasks.includes(quest.id)) {
+        const visited = state.visitedTasks.includes(quest.id);
+        if (quest.requiresVisit && !visited) {
           node.className = "btn btn-primary btn-ghost";
           node.textContent = "Open";
         } else if (isQuestActionReady(quest)) {
@@ -1757,6 +1945,87 @@
           node.textContent = "Verify";
         }
       }
+    }
+
+    async function verifyTask(quest) {
+      showBanner("Verifying quest...", "info");
+      const res = await callApi("/api/tasks/verify", {
+        taskId: quest.id,
+        reward: quest.reward,
+        visited: state.visitedTasks.includes(quest.id),
+        openedAt: questOpenedAt[quest.id] || null,
+        minedRoundsSaved: state.minedRoundsSaved,
+        sharedAppCount: state.sharedAppCount
+      });
+
+      if (!res.ok) {
+        showBanner(res.error || "Could not verify quest yet. Complete the required step first.", "error");
+        return;
+      }
+
+      const remoteBal = readBalanceField(res.data);
+      if (remoteBal !== null) {
+        state.balance = remoteBal;
+      } else {
+        state.balance += quest.reward;
+      }
+
+      if (Array.isArray(res.data?.completedTasks)) {
+        state.completedTasks = res.data.completedTasks;
+      } else if (!state.completedTasks.includes(quest.id)) {
+        state.completedTasks.push(quest.id);
+      }
+
+      persistAppState();
+      renderUI();
+      showBanner(`Quest verified! +${quest.reward} 💎 added to balance.`, "success");
+    }
+
+    async function handleTaskClick(quest) {
+      if (state.completedTasks.includes(quest.id)) {
+        showBanner("Quest already verified.", "info");
+        return;
+      }
+
+      if (quest.requiresVisit) {
+        const alreadyVisited = state.visitedTasks.includes(quest.id);
+        const openedTime = questOpenedAt[quest.id];
+        const elapsed = typeof openedTime === "number" ? Date.now() - openedTime : Infinity;
+
+        // Step 1: Must open the link first
+        if (!alreadyVisited || !quest.url) {
+          if (quest.url) openExternalTarget(quest.url);
+          questOpenedAt[quest.id] = Date.now();
+          if (!state.visitedTasks.includes(quest.id)) {
+            state.visitedTasks.push(quest.id);
+          }
+          persistAppState();
+          renderTasksUI();
+          showBanner("Opened destination! Complete the action, then tap Verify after 5s.", "info");
+          return;
+        }
+
+        // Step 2: Prevent instant/accidental verification before visiting
+        if (elapsed < MIN_QUEST_DWELL_MS) {
+          const waitSec = Math.ceil((MIN_QUEST_DWELL_MS - elapsed) / 1000);
+          showBanner(`Complete the quest in the opened page first (${waitSec}s left), then tap Verify.`, "info");
+          return;
+        }
+      }
+
+      if (quest.actionType === "mine" && Number(state.minedRoundsSaved) <= 0 && !state.roundCompleted) {
+        showBanner("Complete and save a 15s mining round first, then tap Verify.", "info");
+        switchTab("mine");
+        return;
+      }
+
+      if (quest.actionType === "share" && Number(state.sharedAppCount) <= 0) {
+        shareReferralInvite();
+        showBanner("Invite opened! Share or copy your link, then tap Verify to claim +100 💎.", "info");
+        return;
+      }
+
+      await verifyTask(quest);
     }
 
     function renderUI() {
@@ -1780,6 +2049,7 @@
         : "Watch Ad for 2X Boost";
 
       renderTasksUI();
+      renderStarsStoreStatus();
 
       const today = utcDayString(0);
       const bonusBtn = document.getElementById("dailyBonusBtn");
@@ -1994,60 +2264,6 @@
       }
     }
 
-    async function handleTaskClick(quest) {
-      if (state.completedTasks.includes(quest.id)) {
-        showBanner("Quest already verified.", "info");
-        return;
-      }
-
-      if (quest.requiresVisit && !state.visitedTasks.includes(quest.id)) {
-        if (quest.url) openExternalTarget(quest.url);
-        if (!state.visitedTasks.includes(quest.id)) state.visitedTasks.push(quest.id);
-        persistAppState();
-        renderUI();
-        showBanner("Destination opened! Complete the step, then tap Verify to claim.", "info");
-        return;
-      }
-
-      if (quest.actionType === "mine" && state.minedRoundsSaved <= 0) {
-        showBanner("Complete and save a 15s mining round first, then tap Verify.", "info");
-        switchTab("mine");
-        return;
-      }
-
-      if (quest.actionType === "share" && state.sharedAppCount <= 0) {
-        shareReferralInvite();
-        showBanner("Invite opened! Once shared, tap Verify again to claim +100 💎.", "info");
-        return;
-      }
-
-      showBanner("Verifying quest...", "info");
-      const res = await callApi("/api/tasks/verify", {
-        taskId: quest.id,
-        reward: quest.reward,
-        visited: state.visitedTasks.includes(quest.id),
-        minedRoundsSaved: state.minedRoundsSaved,
-        sharedAppCount: state.sharedAppCount
-      });
-
-      const remoteBal = res.ok ? readBalanceField(res.data) : null;
-      if (remoteBal !== null) {
-        state.balance = remoteBal;
-      } else {
-        state.balance += quest.reward;
-      }
-
-      if (Array.isArray(res.data?.completedTasks)) {
-        state.completedTasks = res.data.completedTasks;
-      } else if (!state.completedTasks.includes(quest.id)) {
-        state.completedTasks.push(quest.id);
-      }
-
-      persistAppState();
-      renderUI();
-      showBanner(`Quest verified! +${quest.reward} 💎 added to balance.`, "success");
-    }
-
     async function claimDailyBonus() {
       const today = utcDayString(0);
       if (state.lastBonusDate === today) {
@@ -2206,6 +2422,12 @@
       document.getElementById("btnTestApi")?.addEventListener("click", runHealthCheck);
       document.getElementById("btnClearLogs")?.addEventListener("click", clearLogs);
 
+      for (const starsItem of STARS_ITEMS) {
+        document.getElementById(starsItem.elId)?.addEventListener("click", (ev) => {
+          openStarsInvoice(starsItem.id, ev.currentTarget);
+        });
+      }
+
       for (const quest of QUEST_CATALOG) {
         document.getElementById(quest.elId)?.addEventListener("click", () => handleTaskClick(quest));
       }
@@ -2233,4 +2455,4 @@
     })();
   </script>
 </body>
-  </html>
+</html>
