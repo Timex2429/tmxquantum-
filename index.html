@@ -421,6 +421,13 @@
       margin-bottom: 10px;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     }
+        <div class="task-item">
+          <div>
+            <div style="font-weight:700;font-size:13px;">Upvote TMX-QUANTUM on TON App</div>
+            <div class="task-meta">Ecosystem Reward: +300 💎</div>
+          </div>
+          <button class="btn btn-primary btn-ghost" id="task-tonapp-upvote" type="button">Open</button>
+        </div>
 
     .ref-stats-row {
       display: grid;
@@ -777,6 +784,13 @@
             <div style="font-weight:700;font-size:13px;">Follow on TikTok (@tmxquantum)</div>
             <div class="task-meta">Social Reward: +300 💎</div>
           </div>
+                  <div class="task-item">
+          <div>
+            <div style="font-weight:700;font-size:13px;">Upvote TMX-QUANTUM on TON App</div>
+            <div class="task-meta">Ecosystem Reward: +300 💎</div>
+          </div>
+          <button class="btn btn-primary btn-ghost" id="task-tonapp-upvote" type="button">Open</button>
+        </div>
           <button class="btn btn-primary btn-ghost" id="task-tt-tmxquantum" type="button">Open</button>
         </div>
 
@@ -2176,7 +2190,9 @@
       document.getElementById("btnTestApi")?.addEventListener("click", runHealthCheck);
       document.getElementById("btnClearLogs")?.addEventListener("click", clearLogs);
 
-      for (const task of TASK_DEFS) {
+      for (const task of TASK_DEFS)  
+      { id: "tonapp_upvote", elId: "task-tonapp-upvote", reward: 300, url: "https://ton.app/app/tmxquantum", requiresVisit: true },
+      
         document.getElementById(task.elId)?.addEventListener("click", () => handleTaskClick(task));
       }
 
