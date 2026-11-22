@@ -21,7 +21,7 @@ import requests
 app = FastAPI(
     title="TMX Quantum API",
     description="Backend service for TMX-QUANTUM Telegram Mini App",
-    version="1.5.0",
+    version="1.5.1",
 )
 
 ALLOWED_ORIGINS = [
@@ -29,6 +29,7 @@ ALLOWED_ORIGINS = [
     "https://tmxquantum.site",
     "https://api.tmxquantum.site",
     "https://web.telegram.org",
+    "https://t.me",
 ]
 
 app.add_middleware(
@@ -108,6 +109,8 @@ STARS_CATALOG = {
 
 DAILY_BASE_REWARD = 200
 SEVENTH_DAY_BONUS = 2000
+REFERRAL_INVITER_REWARD = 250
+REFERRAL_INVITEE_BONUS = 100
 MAX_SESSION_EARN = 10000
 
 
@@ -142,6 +145,18 @@ def resolve_user_id(raw_id: Optional[int | str], tg_user: Optional[dict] = None)
         return uid
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid user_id format")
+
+
+def parse_referrer_id(raw_ref: Optional[int | str]) -> Optional[int]:
+    if raw_ref is None:
+        return None
+    val = str(raw_ref).strip()
+    if val.startswith("ref_"):
+        val = val[4:].strip()
+    if not val.isdigit():
+        return None
+    parsed = int(val)
+    return parsed if parsed > 0 else None
 
 
 def resolve_username(raw_username: Optional[str], uid: int, tg_user: Optional[dict] = None) -> str:
@@ -234,17 +249,19 @@ def ensure_user_doc(database, uid: int, username: str, referred_by: Optional[int
     user = database.users.find_one({"user_id": uid})
     if not user:
         welcome_bonus = 0
+        valid_ref = None
         if referred_by and referred_by != uid:
             referrer = database.users.find_one({"user_id": referred_by})
             if referrer:
+                valid_ref = referred_by
                 database.users.update_one(
                     {"user_id": referred_by},
                     {
-                        "$inc": {"balance": 250, "referrals_count": 1},
-                        "$push": {"referred_users": uid},
+                        "$inc": {"balance": REFERRAL_INVITER_REWARD, "referrals_count": 1},
+                        "$addToSet": {"referred_users": uid},
                     },
                 )
-                welcome_bonus = 100
+                welcome_bonus = REFERRAL_INVITEE_BONUS
 
         user = {
             "user_id": uid,
@@ -252,7 +269,7 @@ def ensure_user_doc(database, uid: int, username: str, referred_by: Optional[int
             "balance": welcome_bonus,
             "mined_rounds_saved": 0,
             "shared_app_count": 0,
-            "referred_by": referred_by,
+            "referred_by": valid_ref,
             "referrals_count": 0,
             "referred_users": [],
             "completed_tasks": [],
@@ -799,7 +816,8 @@ async def sync_state(data: StateSyncRequest, request: Request):
             fallback_username=data.username,
             fallback_tg_user=data.user,
         )
-        user = ensure_user_doc(database, uid, uname)
+        ref_id = parse_referrer_id(data.start_param)
+        user = ensure_user_doc(database, uid, uname, referred_by=ref_id)
         pro_active = is_user_pro(user)
         return {
             "ok": True,
@@ -813,6 +831,7 @@ async def sync_state(data: StateSyncRequest, request: Request):
             "lastBonusDate": user.get("last_bonus_date"),
             "referrals_count": int(user.get("referrals_count", 0) or 0),
             "daily_streak": int(user.get("daily_streak", 0) or 0),
+            "loginStreak": int(user.get("daily_streak", 0) or 0),
             "wallet_address": user.get("wallet_address"),
             "tonWalletAddress": user.get("wallet_address"),
             "is_pro": pro_active,
@@ -1149,6 +1168,8 @@ async def _process_daily_bonus(database, uid: int, uname: str, date_str: Optiona
             "message": "Daily reward already claimed today.",
             "balance": bal,
             "total_balance": bal,
+            "streak": int(user.get("daily_streak", 0) or 0),
+            "loginStreak": int(user.get("daily_streak", 0) or 0),
             "lastBonusDate": today_key,
         }
 
@@ -1167,6 +1188,8 @@ async def _process_daily_bonus(database, uid: int, uname: str, date_str: Optiona
                 "message": "Daily reward already claimed today. Try again later.",
                 "balance": bal,
                 "total_balance": bal,
+                "streak": streak,
+                "loginStreak": streak,
                 "lastBonusDate": today_key,
             }
         if time_diff > timedelta(hours=48):
@@ -1196,6 +1219,7 @@ async def _process_daily_bonus(database, uid: int, uname: str, date_str: Optiona
         "status": "success",
         "reward": reward,
         "streak": streak,
+        "loginStreak": streak,
         "balance": bal,
         "total_balance": bal,
         "lastBonusDate": today_key,
@@ -1285,6 +1309,7 @@ async def spin_wheel(data: SpinRequest, request: Request):
         return {
             "ok": True,
             "status": "success",
+            "reward": won_reward,
             "reward_won": won_reward,
             "total_balance": bal,
             "balance": bal,
