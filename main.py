@@ -1,8 +1,12 @@
 from datetime import datetime, timedelta, timezone
+import hashlib
+import hmac
 import json
 import os
 import random
+import time
 from typing import Optional
+from urllib.parse import parse_qsl
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,7 +21,7 @@ import requests
 app = FastAPI(
     title="TMX Quantum API",
     description="Backend service for TMX-QUANTUM Telegram Mini App",
-    version="1.4.0",
+    version="1.5.0",
 )
 
 app.add_middleware(
@@ -60,6 +64,8 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}" if BOT_TOKEN else ""
 MINI_APP_URL = os.getenv("MINI_APP_URL", "https://www.tmxquantum.site")
 SUPPORT_HANDLE = os.getenv("SUPPORT_HANDLE", "@Tmxqunbot")
+INIT_DATA_MAX_AGE_SECONDS = int(os.getenv("INIT_DATA_MAX_AGE_SECONDS", "86400"))
+ALLOW_LOCAL_DEV_FALLBACK = os.getenv("ALLOW_LOCAL_DEV_FALLBACK", "false").lower() == "true"
 ADMIN_USER_IDS = {
     int(uid.strip())
     for uid in os.getenv("ADMIN_USER_IDS", "").split(",")
@@ -145,6 +151,77 @@ def resolve_username(raw_username: Optional[str], uid: int, tg_user: Optional[di
     return f"Operator_{uid}"
 
 
+def _extract_init_data(request: Request, body_init_data: Optional[str] = None) -> str:
+    header_val = request.headers.get("X-Telegram-Init-Data", "").strip()
+    if header_val and "hash=" in header_val:
+        return header_val
+    return (body_init_data or header_val or "").strip()
+
+
+def verify_and_extract_tg_user(
+    raw_init_data: Optional[str],
+    fallback_user_id: Optional[int | str] = None,
+    fallback_username: Optional[str] = None,
+    fallback_tg_user: Optional[dict] = None,
+) -> tuple[int, str, bool]:
+    """
+    Returns (verified_user_id, verified_username, is_cryptographically_verified).
+    Raises HTTPException(401) if initData is invalid/expired or required when BOT_TOKEN is set.
+    """
+    init_str = (raw_init_data or "").strip()
+
+    if init_str and "hash=" in init_str and BOT_TOKEN:
+        pairs = dict(parse_qsl(init_str, keep_blank_values=True))
+        received_hash = pairs.pop("hash", "")
+        if not received_hash:
+            raise HTTPException(status_code=401, detail="Missing initData hash")
+
+        auth_date_raw = pairs.get("auth_date")
+        try:
+            auth_date = int(auth_date_raw)
+        except Exception:
+            raise HTTPException(status_code=401, detail="Invalid initData auth_date")
+
+        now_ts = int(time.time())
+        if now_ts - auth_date > INIT_DATA_MAX_AGE_SECONDS or auth_date > now_ts + 60:
+            raise HTTPException(status_code=401, detail="Telegram initData expired")
+
+        data_check_string = "\n".join(
+            f"{k}={v}" for k, v in sorted(pairs.items(), key=lambda item: item[0])
+        )
+        secret_key = hmac.new(
+            key=b"WebAppData",
+            msg=BOT_TOKEN.encode("utf-8"),
+            digestmod=hashlib.sha256,
+        ).digest()
+        expected_hash = hmac.new(
+            key=secret_key,
+            msg=data_check_string.encode("utf-8"),
+            digestmod=hashlib.sha256,
+        ).hexdigest()
+
+        if not hmac.compare_digest(expected_hash, received_hash):
+            raise HTTPException(status_code=401, detail="Invalid Telegram initData signature")
+
+        tg_user_obj = {}
+        if pairs.get("user"):
+            try:
+                tg_user_obj = json.loads(pairs["user"])
+            except Exception:
+                raise HTTPException(status_code=401, detail="Malformed initData user JSON")
+
+        verified_uid = resolve_user_id(tg_user_obj.get("id"), tg_user_obj)
+        verified_uname = resolve_username(None, verified_uid, tg_user_obj)
+        return verified_uid, verified_uname, True
+
+    if BOT_TOKEN and not ALLOW_LOCAL_DEV_FALLBACK:
+        raise HTTPException(status_code=401, detail="Valid Telegram initData required")
+
+    uid = resolve_user_id(fallback_user_id, fallback_tg_user)
+    uname = resolve_username(fallback_username, uid, fallback_tg_user)
+    return uid, uname, False
+
+
 def ensure_user_doc(database, uid: int, username: str, referred_by: Optional[int] = None) -> dict:
     now = utc_now()
     user = database.users.find_one({"user_id": uid})
@@ -166,6 +243,8 @@ def ensure_user_doc(database, uid: int, username: str, referred_by: Optional[int
             "user_id": uid,
             "username": username,
             "balance": welcome_bonus,
+            "mined_rounds_saved": 0,
+            "shared_app_count": 0,
             "referred_by": referred_by,
             "referrals_count": 0,
             "referred_users": [],
@@ -292,7 +371,6 @@ def handle_successful_payment_message(message: dict) -> None:
     item_id = payload.get("item_id", "credits_100")
     item = STARS_CATALOG.get(item_id, STARS_CATALOG["credits_100"])
 
-    # Deduplicate by telegram_payment_charge_id so webhook retries never double-credit
     if database.star_payments.find_one({"charge_id": charge_id}):
         return
 
@@ -379,6 +457,7 @@ class MineClaimRequest(BaseModel):
     user_id: Optional[int | str] = None
     username: Optional[str] = None
     user: Optional[dict] = None
+    initData: Optional[str] = None
     sessionPoints: Optional[int] = None
     score: Optional[int] = None
     multiplier: Optional[int] = 1
@@ -394,15 +473,21 @@ class TaskClaimRequest(BaseModel):
     user_id: Optional[int | str] = None
     username: Optional[str] = None
     user: Optional[dict] = None
+    initData: Optional[str] = None
     task_id: Optional[str] = None
     taskId: Optional[str] = None
     reward: Optional[int] = None
+    visited: Optional[bool] = False
+    openedAt: Optional[int | float] = None
+    minedRoundsSaved: Optional[int] = 0
+    sharedAppCount: Optional[int] = 0
 
 
 class DailyClaimRequest(BaseModel):
     user_id: Optional[int | str] = None
     username: Optional[str] = None
     user: Optional[dict] = None
+    initData: Optional[str] = None
     reward: Optional[int] = None
     date: Optional[str] = None
 
@@ -411,6 +496,7 @@ class SpinRequest(BaseModel):
     user_id: Optional[int | str] = None
     username: Optional[str] = None
     user: Optional[dict] = None
+    initData: Optional[str] = None
     reward: Optional[int] = None
     date: Optional[str] = None
 
@@ -419,6 +505,7 @@ class WalletLinkRequest(BaseModel):
     user_id: Optional[int | str] = None
     username: Optional[str] = None
     user: Optional[dict] = None
+    initData: Optional[str] = None
     wallet_address: Optional[str] = None
     tonWalletAddress: Optional[str] = None
 
@@ -426,6 +513,7 @@ class WalletLinkRequest(BaseModel):
 class CreateInvoiceRequest(BaseModel):
     user_id: Optional[int | str] = None
     user: Optional[dict] = None
+    initData: Optional[str] = None
     item_id: str
 
 
@@ -556,12 +644,17 @@ async def telegram_webhook(request: Request):
 
 
 @app.post("/api/create-invoice")
-async def create_stars_invoice(req: CreateInvoiceRequest):
+async def create_stars_invoice(req: CreateInvoiceRequest, request: Request):
     item = STARS_CATALOG.get(req.item_id)
     if not item:
         raise HTTPException(status_code=400, detail="Invalid item_id")
 
-    uid = resolve_user_id(req.user_id, req.user)
+    raw_init = _extract_init_data(request, req.initData)
+    uid, _, _ = verify_and_extract_tg_user(
+        raw_init,
+        fallback_user_id=req.user_id,
+        fallback_tg_user=req.user,
+    )
     invoice_payload = {
         "title": item["title"],
         "description": item["description"],
@@ -599,6 +692,8 @@ async def initialize_user(data: UserInitRequest):
             "user_id": user["user_id"],
             "username": user.get("username", uname),
             "balance": int(user.get("balance", 0) or 0),
+            "minedRoundsSaved": int(user.get("mined_rounds_saved", 0) or 0),
+            "sharedAppCount": int(user.get("shared_app_count", 0) or 0),
             "referrals_count": int(user.get("referrals_count", 0) or 0),
             "completed_tasks": user.get("completed_tasks", []),
             "daily_streak": int(user.get("daily_streak", 0) or 0),
@@ -613,11 +708,16 @@ async def initialize_user(data: UserInitRequest):
 
 
 @app.post("/api/state")
-async def sync_state(data: StateSyncRequest):
+async def sync_state(data: StateSyncRequest, request: Request):
     database = get_db()
     try:
-        uid = resolve_user_id(data.user_id, data.user)
-        uname = resolve_username(data.username, uid, data.user)
+        raw_init = _extract_init_data(request, data.initData)
+        uid, uname, _ = verify_and_extract_tg_user(
+            raw_init,
+            fallback_user_id=data.user_id,
+            fallback_username=data.username,
+            fallback_tg_user=data.user,
+        )
         user = ensure_user_doc(database, uid, uname)
         pro_active = is_user_pro(user)
         return {
@@ -626,6 +726,8 @@ async def sync_state(data: StateSyncRequest):
             "user_id": uid,
             "username": user.get("username", uname),
             "balance": int(user.get("balance", 0) or 0),
+            "minedRoundsSaved": int(user.get("mined_rounds_saved", 0) or 0),
+            "sharedAppCount": int(user.get("shared_app_count", 0) or 0),
             "completedTasks": user.get("completed_tasks", []),
             "lastBonusDate": user.get("last_bonus_date"),
             "referrals_count": int(user.get("referrals_count", 0) or 0),
@@ -655,7 +757,7 @@ async def submit_score(data: GameScoreSubmission):
         user = database.users.find_one_and_update(
             {"user_id": data.user_id},
             {
-                "$inc": {"balance": int(data.score)},
+                "$inc": {"balance": int(data.score), "mined_rounds_saved": 1},
                 "$setOnInsert": {
                     "username": f"Operator_{data.user_id}",
                     "completed_tasks": [],
@@ -679,11 +781,16 @@ async def submit_score(data: GameScoreSubmission):
 
 
 @app.post("/api/mine/claim")
-async def claim_mining_session(data: MineClaimRequest):
+async def claim_mining_session(data: MineClaimRequest, request: Request):
     database = get_db()
     try:
-        uid = resolve_user_id(data.user_id, data.user)
-        uname = resolve_username(data.username, uid, data.user)
+        raw_init = _extract_init_data(request, data.initData)
+        uid, uname, _ = verify_and_extract_tg_user(
+            raw_init,
+            fallback_user_id=data.user_id,
+            fallback_username=data.username,
+            fallback_tg_user=data.user,
+        )
         ensure_user_doc(database, uid, uname)
 
         mult = 2 if data.multiplier == 2 else 1
@@ -698,7 +805,7 @@ async def claim_mining_session(data: MineClaimRequest):
         updated = database.users.find_one_and_update(
             {"user_id": uid},
             {
-                "$inc": {"balance": earned},
+                "$inc": {"balance": earned, "mined_rounds_saved": 1},
                 "$set": {"username": uname, "updated_at": utc_now()},
             },
             return_document=pymongo.ReturnDocument.AFTER,
@@ -708,6 +815,7 @@ async def claim_mining_session(data: MineClaimRequest):
             "ok": True,
             "status": "success",
             "earned": earned,
+            "minedRoundsSaved": int(updated.get("mined_rounds_saved", 0) or 0),
             "balance": int(updated.get("balance", 0) or 0),
             "total_balance": int(updated.get("balance", 0) or 0),
             "leaderboard": build_leaderboard(database, 25),
@@ -732,6 +840,8 @@ async def get_user_data(user_id: int):
             "user_id": user_id,
             "username": user.get("username", "Operator"),
             "balance": int(user.get("balance", 0) or 0),
+            "minedRoundsSaved": int(user.get("mined_rounds_saved", 0) or 0),
+            "sharedAppCount": int(user.get("shared_app_count", 0) or 0),
             "referrals_count": int(user.get("referrals_count", 0) or 0),
             "completed_tasks": user.get("completed_tasks", []),
             "daily_streak": int(user.get("daily_streak", 0) or 0),
@@ -812,7 +922,16 @@ async def get_tasks(user_id: int):
     return {"status": "success", "tasks": tasks_list}
 
 
-async def _process_task_claim(database, uid: int, uname: str, task_id: Optional[str], fallback_reward: Optional[int]):
+async def _process_task_claim(
+    database,
+    uid: int,
+    uname: str,
+    task_id: Optional[str],
+    fallback_reward: Optional[int],
+    visited: bool = False,
+    mined_rounds_saved: int = 0,
+    shared_app_count: int = 0,
+):
     if not task_id:
         raise HTTPException(status_code=400, detail="task_id is required")
 
@@ -830,6 +949,20 @@ async def _process_task_claim(database, uid: int, uname: str, task_id: Optional[
             "completed_tasks": completed_tasks,
         }
 
+    db_mined_rounds = int(user.get("mined_rounds_saved", 0) or 0)
+    db_referrals = int(user.get("referrals_count", 0) or 0)
+    db_shares = int(user.get("shared_app_count", 0) or 0)
+
+    if task_id == "first_mine":
+        if db_mined_rounds <= 0 and int(mined_rounds_saved or 0) <= 0:
+            raise HTTPException(status_code=400, detail="Complete and save a 15s mining round first.")
+    elif task_id == "share_app":
+        if db_referrals <= 0 and db_shares <= 0 and int(shared_app_count or 0) <= 0:
+            raise HTTPException(status_code=400, detail="Share or copy your invite link first.")
+    elif task_id in TASKS and TASKS[task_id].get("link"):
+        if not visited:
+            raise HTTPException(status_code=400, detail="Open the quest link first before verifying.")
+
     if task_id in TASKS:
         reward = int(TASKS[task_id]["reward"])
     elif fallback_reward is not None:
@@ -837,10 +970,14 @@ async def _process_task_claim(database, uid: int, uname: str, task_id: Optional[
     else:
         raise HTTPException(status_code=404, detail="Task not found")
 
+    inc_fields: dict = {"balance": reward}
+    if task_id == "share_app" and int(shared_app_count or 0) > 0:
+        inc_fields["shared_app_count"] = max(1, int(shared_app_count or 0))
+
     updated_user = database.users.find_one_and_update(
         {"user_id": uid},
         {
-            "$inc": {"balance": reward},
+            "$inc": inc_fields,
             "$addToSet": {"completed_tasks": task_id},
             "$set": {"username": uname, "updated_at": utc_now()},
         },
@@ -860,13 +997,27 @@ async def _process_task_claim(database, uid: int, uname: str, task_id: Optional[
 
 
 @app.post("/api/tasks/claim")
-async def claim_task(data: TaskClaimRequest):
+async def claim_task(data: TaskClaimRequest, request: Request):
     database = get_db()
     try:
-        uid = resolve_user_id(data.user_id, data.user)
-        uname = resolve_username(data.username, uid, data.user)
+        raw_init = _extract_init_data(request, data.initData)
+        uid, uname, _ = verify_and_extract_tg_user(
+            raw_init,
+            fallback_user_id=data.user_id,
+            fallback_username=data.username,
+            fallback_tg_user=data.user,
+        )
         tid = data.task_id or data.taskId
-        return await _process_task_claim(database, uid, uname, tid, data.reward)
+        return await _process_task_claim(
+            database,
+            uid,
+            uname,
+            tid,
+            data.reward,
+            visited=bool(data.visited),
+            mined_rounds_saved=int(data.minedRoundsSaved or 0),
+            shared_app_count=int(data.sharedAppCount or 0),
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -874,13 +1025,27 @@ async def claim_task(data: TaskClaimRequest):
 
 
 @app.post("/api/tasks/verify")
-async def verify_task(data: TaskClaimRequest):
+async def verify_task(data: TaskClaimRequest, request: Request):
     database = get_db()
     try:
-        uid = resolve_user_id(data.user_id, data.user)
-        uname = resolve_username(data.username, uid, data.user)
+        raw_init = _extract_init_data(request, data.initData)
+        uid, uname, _ = verify_and_extract_tg_user(
+            raw_init,
+            fallback_user_id=data.user_id,
+            fallback_username=data.username,
+            fallback_tg_user=data.user,
+        )
         tid = data.taskId or data.task_id
-        return await _process_task_claim(database, uid, uname, tid, data.reward)
+        return await _process_task_claim(
+            database,
+            uid,
+            uname,
+            tid,
+            data.reward,
+            visited=bool(data.visited),
+            mined_rounds_saved=int(data.minedRoundsSaved or 0),
+            shared_app_count=int(data.sharedAppCount or 0),
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -957,11 +1122,16 @@ async def _process_daily_bonus(database, uid: int, uname: str, date_str: Optiona
 
 
 @app.post("/api/daily/claim")
-async def claim_daily_reward(data: DailyClaimRequest):
+async def claim_daily_reward(data: DailyClaimRequest, request: Request):
     database = get_db()
     try:
-        uid = resolve_user_id(data.user_id, data.user)
-        uname = resolve_username(data.username, uid, data.user)
+        raw_init = _extract_init_data(request, data.initData)
+        uid, uname, _ = verify_and_extract_tg_user(
+            raw_init,
+            fallback_user_id=data.user_id,
+            fallback_username=data.username,
+            fallback_tg_user=data.user,
+        )
         return await _process_daily_bonus(database, uid, uname, data.date)
     except HTTPException:
         raise
@@ -970,11 +1140,16 @@ async def claim_daily_reward(data: DailyClaimRequest):
 
 
 @app.post("/api/bonus/claim")
-async def claim_bonus(data: DailyClaimRequest):
+async def claim_bonus(data: DailyClaimRequest, request: Request):
     database = get_db()
     try:
-        uid = resolve_user_id(data.user_id, data.user)
-        uname = resolve_username(data.username, uid, data.user)
+        raw_init = _extract_init_data(request, data.initData)
+        uid, uname, _ = verify_and_extract_tg_user(
+            raw_init,
+            fallback_user_id=data.user_id,
+            fallback_username=data.username,
+            fallback_tg_user=data.user,
+        )
         return await _process_daily_bonus(database, uid, uname, data.date)
     except HTTPException:
         raise
@@ -986,11 +1161,16 @@ async def claim_bonus(data: DailyClaimRequest):
 # 10. DAILY LUCKY SPIN WHEEL
 # ------------------------------------------------------------------
 @app.post("/api/spin/claim")
-async def spin_wheel(data: SpinRequest):
+async def spin_wheel(data: SpinRequest, request: Request):
     database = get_db()
     try:
-        uid = resolve_user_id(data.user_id, data.user)
-        uname = resolve_username(data.username, uid, data.user)
+        raw_init = _extract_init_data(request, data.initData)
+        uid, uname, _ = verify_and_extract_tg_user(
+            raw_init,
+            fallback_user_id=data.user_id,
+            fallback_username=data.username,
+            fallback_tg_user=data.user,
+        )
         user = ensure_user_doc(database, uid, uname)
 
         now = utc_now()
@@ -1037,9 +1217,7 @@ async def spin_wheel(data: SpinRequest):
 # ------------------------------------------------------------------
 # 11. TON WALLET CONNECT SAVE / LINK
 # ------------------------------------------------------------------
-async def _process_wallet_link(database, data: WalletLinkRequest):
-    uid = resolve_user_id(data.user_id, data.user)
-    uname = resolve_username(data.username, uid, data.user)
+async def _process_wallet_link(database, uid: int, uname: str, data: WalletLinkRequest):
     ensure_user_doc(database, uid, uname)
 
     addr = data.tonWalletAddress if data.tonWalletAddress is not None else data.wallet_address
@@ -1061,10 +1239,17 @@ async def _process_wallet_link(database, data: WalletLinkRequest):
 
 
 @app.post("/api/wallet/save")
-async def save_wallet(data: WalletLinkRequest):
+async def save_wallet(data: WalletLinkRequest, request: Request):
     database = get_db()
     try:
-        return await _process_wallet_link(database, data)
+        raw_init = _extract_init_data(request, data.initData)
+        uid, uname, _ = verify_and_extract_tg_user(
+            raw_init,
+            fallback_user_id=data.user_id,
+            fallback_username=data.username,
+            fallback_tg_user=data.user,
+        )
+        return await _process_wallet_link(database, uid, uname, data)
     except HTTPException:
         raise
     except Exception as e:
@@ -1072,10 +1257,17 @@ async def save_wallet(data: WalletLinkRequest):
 
 
 @app.post("/api/wallet/link")
-async def link_wallet(data: WalletLinkRequest):
+async def link_wallet(data: WalletLinkRequest, request: Request):
     database = get_db()
     try:
-        return await _process_wallet_link(database, data)
+        raw_init = _extract_init_data(request, data.initData)
+        uid, uname, _ = verify_and_extract_tg_user(
+            raw_init,
+            fallback_user_id=data.user_id,
+            fallback_username=data.username,
+            fallback_tg_user=data.user,
+        )
+        return await _process_wallet_link(database, uid, uname, data)
     except HTTPException:
         raise
     except Exception as e:
