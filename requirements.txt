@@ -7,3 +7,4 @@ motor>=3.3.0
 pymongo>=4.5.0
 python-dotenv>=1.0.0
 requests
+aiogram>=3.33.0
