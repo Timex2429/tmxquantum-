@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+import json
 import os
 import random
 from typing import Optional
@@ -16,7 +17,7 @@ import requests
 app = FastAPI(
     title="TMX Quantum API",
     description="Backend service for TMX-QUANTUM Telegram Mini App",
-    version="1.3.0",
+    version="1.4.0",
 )
 
 app.add_middleware(
@@ -48,6 +49,7 @@ if MONGO_URI:
         client.admin.command("ping")
         db.users.create_index([("user_id", pymongo.ASCENDING)], unique=True)
         db.users.create_index([("balance", pymongo.DESCENDING)])
+        db.star_payments.create_index([("charge_id", pymongo.ASCENDING)], unique=True)
         print(f"Connected to MongoDB Atlas database '{DB_NAME}'.")
     except Exception as e:
         print(f"MongoDB Connection Error: {e}")
@@ -57,6 +59,39 @@ else:
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}" if BOT_TOKEN else ""
 MINI_APP_URL = os.getenv("MINI_APP_URL", "https://www.tmxquantum.site")
+SUPPORT_HANDLE = os.getenv("SUPPORT_HANDLE", "@Tmxqunbot")
+ADMIN_USER_IDS = {
+    int(uid.strip())
+    for uid in os.getenv("ADMIN_USER_IDS", "").split(",")
+    if uid.strip().isdigit()
+}
+
+STARS_CATALOG = {
+    "pro_monthly": {
+        "title": "TMX-QUANTUM Pro (30d)",
+        "description": "30-day auto-renewing Pro access & mining boost",
+        "stars": 250,
+        "is_subscription": True,
+        "credits_grant": 0,
+        "pro_days": 30,
+    },
+    "credits_100": {
+        "title": "100 Quantum Credits",
+        "description": "Instant one-time balance top-up",
+        "stars": 100,
+        "is_subscription": False,
+        "credits_grant": 100,
+        "pro_days": 0,
+    },
+    "credits_500": {
+        "title": "500 Quantum Credits",
+        "description": "One-time 500-credit bundle for TMX-QUANTUM",
+        "stars": 400,
+        "is_subscription": False,
+        "credits_grant": 500,
+        "pro_days": 0,
+    },
+}
 
 DAILY_BASE_REWARD = 200
 SEVENTH_DAY_BONUS = 2000
@@ -71,6 +106,16 @@ def get_db():
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def is_user_pro(user: dict, now: Optional[datetime] = None) -> bool:
+    current = now or utc_now()
+    expires_at = user.get("pro_expires_at")
+    if isinstance(expires_at, datetime):
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        return expires_at > current
+    return False
 
 
 def resolve_user_id(raw_id: Optional[int | str], tg_user: Optional[dict] = None) -> int:
@@ -130,6 +175,8 @@ def ensure_user_doc(database, uid: int, username: str, referred_by: Optional[int
             "daily_streak": 0,
             "last_spin_time": None,
             "wallet_address": None,
+            "pro_expires_at": None,
+            "active_star_subscription_charge_id": None,
             "created_at": now,
             "updated_at": now,
         }
@@ -160,6 +207,155 @@ def build_leaderboard(database, limit: int = 25) -> list[dict]:
             "tasksCount": len(doc.get("completed_tasks") or []),
         })
     return items
+
+
+# ------------------------------------------------------------------
+# 2B. TELEGRAM BOT API & STARS HELPERS
+# ------------------------------------------------------------------
+def tg_api_call(method: str, payload: dict) -> dict:
+    if not BOT_TOKEN or not TELEGRAM_API_URL:
+        raise HTTPException(status_code=500, detail="BOT_TOKEN is not configured")
+    resp = requests.post(f"{TELEGRAM_API_URL}/{method}", json=payload, timeout=10)
+    data = resp.json()
+    if not data.get("ok"):
+        raise HTTPException(status_code=502, detail=data.get("description", f"Telegram {method} failed"))
+    return data
+
+
+def send_tg_message(chat_id: int | str, text: str, reply_markup: Optional[dict] = None) -> None:
+    if not BOT_TOKEN or not TELEGRAM_API_URL:
+        return
+    body = {
+        "chat_id": chat_id,
+        "text": text,
+        "parse_mode": "Markdown",
+    }
+    if reply_markup:
+        body["reply_markup"] = reply_markup
+    try:
+        requests.post(f"{TELEGRAM_API_URL}/sendMessage", json=body, timeout=5)
+    except Exception as exc:
+        print(f"Failed to send Telegram message: {exc}")
+
+
+def handle_pre_checkout(query: dict) -> None:
+    query_id = query.get("id")
+    if not query_id:
+        return
+    try:
+        payload = json.loads(query.get("invoice_payload") or "{}")
+    except Exception:
+        payload = {}
+
+    item_id = payload.get("item_id")
+    item = STARS_CATALOG.get(item_id)
+    total_amount = int(query.get("total_amount", 0) or 0)
+    currency = query.get("currency")
+
+    if not item or currency != "XTR" or total_amount != int(item["stars"]):
+        tg_api_call(
+            "answerPreCheckoutQuery",
+            {
+                "pre_checkout_query_id": query_id,
+                "ok": False,
+                "error_message": "Item unavailable or price has changed.",
+            },
+        )
+        return
+
+    tg_api_call(
+        "answerPreCheckoutQuery",
+        {
+            "pre_checkout_query_id": query_id,
+            "ok": True,
+        },
+    )
+
+
+def handle_successful_payment_message(message: dict) -> None:
+    payment = message.get("successful_payment") or {}
+    chat_id = (message.get("chat") or {}).get("id")
+    from_user = message.get("from") or {}
+    charge_id = payment.get("telegram_payment_charge_id")
+
+    if not charge_id:
+        return
+
+    database = get_db()
+    try:
+        payload = json.loads(payment.get("invoice_payload") or "{}")
+    except Exception:
+        payload = {}
+
+    uid = resolve_user_id(payload.get("user_id") or from_user.get("id"), from_user)
+    uname = resolve_username(None, uid, from_user)
+    item_id = payload.get("item_id", "credits_100")
+    item = STARS_CATALOG.get(item_id, STARS_CATALOG["credits_100"])
+
+    # Deduplicate by telegram_payment_charge_id so webhook retries never double-credit
+    if database.star_payments.find_one({"charge_id": charge_id}):
+        return
+
+    now = utc_now()
+    credits_to_add = int(item.get("credits_grant", 0) or 0)
+    pro_days = int(item.get("pro_days", 0) or 0)
+    is_recurring = bool(payment.get("is_recurring", False))
+    exp_ts = payment.get("subscription_expiration_date")
+
+    user = ensure_user_doc(database, uid, uname)
+    set_fields = {
+        "username": uname,
+        "updated_at": now,
+    }
+    if item.get("is_subscription"):
+        set_fields["active_star_subscription_charge_id"] = charge_id
+
+    if pro_days > 0:
+        if exp_ts:
+            new_expiry = datetime.fromtimestamp(int(exp_ts), tz=timezone.utc)
+        else:
+            current_expiry = user.get("pro_expires_at")
+            if isinstance(current_expiry, datetime) and current_expiry.tzinfo is None:
+                current_expiry = current_expiry.replace(tzinfo=timezone.utc)
+            base_time = current_expiry if (isinstance(current_expiry, datetime) and current_expiry > now) else now
+            new_expiry = base_time + timedelta(days=pro_days)
+        set_fields["pro_expires_at"] = new_expiry
+
+    update_doc: dict = {"$set": set_fields}
+    if credits_to_add > 0:
+        update_doc["$inc"] = {"balance": credits_to_add}
+
+    updated_user = database.users.find_one_and_update(
+        {"user_id": uid},
+        update_doc,
+        return_document=pymongo.ReturnDocument.AFTER,
+    )
+
+    database.star_payments.insert_one({
+        "charge_id": charge_id,
+        "user_id": uid,
+        "item_id": item_id,
+        "stars_paid": int(payment.get("total_amount", item["stars"]) or 0),
+        "credits_granted": credits_to_add,
+        "is_recurring": is_recurring,
+        "refunded": False,
+        "created_at": now,
+    })
+
+    if chat_id:
+        action_line = (
+            f"⚡ *Pro Subscription Active* (renewed via Telegram Stars)"
+            if is_recurring
+            else f"✅ *Payment Confirmed!* Added *{credits_to_add}* credits"
+            if credits_to_add > 0
+            else "✅ *TMX-QUANTUM Pro Activated!*"
+        )
+        send_tg_message(
+            chat_id,
+            f"{action_line}\n"
+            f"• Balance: *{int(updated_user.get('balance', 0) or 0)}*\n"
+            f"• Receipt ID: `{charge_id}`",
+        )
 
 
 # ------------------------------------------------------------------
@@ -227,6 +423,12 @@ class WalletLinkRequest(BaseModel):
     tonWalletAddress: Optional[str] = None
 
 
+class CreateInvoiceRequest(BaseModel):
+    user_id: Optional[int | str] = None
+    user: Optional[dict] = None
+    item_id: str
+
+
 # ------------------------------------------------------------------
 # 4. STATIC FRONTEND & HEALTH ENDPOINTS
 # ------------------------------------------------------------------
@@ -267,7 +469,7 @@ async def health_check():
 
 
 # ------------------------------------------------------------------
-# 5. TELEGRAM WEBHOOK
+# 5. TELEGRAM WEBHOOK & STARS PAYMENTS
 # ------------------------------------------------------------------
 @app.post("/webhook")
 async def telegram_webhook(request: Request):
@@ -276,10 +478,22 @@ async def telegram_webhook(request: Request):
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid JSON payload")
 
-    if isinstance(update, dict) and "message" in update and BOT_TOKEN:
+    if not isinstance(update, dict):
+        return {"status": "ok"}
+
+    if "pre_checkout_query" in update:
+        handle_pre_checkout(update["pre_checkout_query"])
+        return {"status": "ok"}
+
+    if "message" in update and BOT_TOKEN:
         message = update["message"]
+        if message.get("successful_payment"):
+            handle_successful_payment_message(message)
+            return {"status": "ok"}
+
         chat_id = message.get("chat", {}).get("id")
-        text = message.get("text", "")
+        from_user = message.get("from") or {}
+        text = (message.get("text") or "").strip()
 
         if chat_id and (text.startswith("/start") or text == "/play"):
             welcome_text = (
@@ -293,18 +507,80 @@ async def telegram_webhook(request: Request):
                     "web_app": {"url": MINI_APP_URL},
                 }]]
             }
-            payload = {
-                "chat_id": chat_id,
-                "text": welcome_text,
-                "parse_mode": "Markdown",
-                "reply_markup": keyboard,
-            }
+            send_tg_message(chat_id, welcome_text, reply_markup=keyboard)
+
+        elif chat_id and text.startswith("/paysupport"):
+            send_tg_message(
+                chat_id,
+                "🛠 *TMX-QUANTUM Stars & Subscription Support*\n\n"
+                "• *Cancel/Manage Auto-Renewal:* Telegram Settings → *My Stars* → *Subscriptions*.\n"
+                f"• *Billing Help / Refunds:* Message {SUPPORT_HANDLE} with your Receipt ID (`telegram_payment_charge_id`).",
+            )
+
+        elif chat_id and text.startswith("/refund"):
+            sender_id = from_user.get("id")
+            if sender_id not in ADMIN_USER_IDS:
+                send_tg_message(chat_id, "⛔ Unauthorized.")
+                return {"status": "ok"}
+
+            parts = text.split()
+            if len(parts) != 3:
+                send_tg_message(chat_id, "Usage: `/refund <user_id> <telegram_payment_charge_id>`")
+                return {"status": "ok"}
+
             try:
-                requests.post(f"{TELEGRAM_API_URL}/sendMessage", json=payload, timeout=5)
+                target_uid = int(parts[1])
+                charge_id = parts[2].strip()
+                tg_api_call(
+                    "refundStarPayment",
+                    {
+                        "user_id": target_uid,
+                        "telegram_payment_charge_id": charge_id,
+                    },
+                )
+                database = get_db()
+                payment_doc = database.star_payments.find_one_and_update(
+                    {"charge_id": charge_id},
+                    {"$set": {"refunded": True, "refunded_at": utc_now()}},
+                )
+                if payment_doc and int(payment_doc.get("credits_granted", 0) or 0) > 0:
+                    database.users.update_one(
+                        {"user_id": target_uid},
+                        {"$inc": {"balance": -int(payment_doc["credits_granted"])}},
+                    )
+                send_tg_message(chat_id, f"✅ Refunded `{charge_id}` for user `{target_uid}`.")
             except Exception as exc:
-                print(f"Failed to send Telegram message: {exc}")
+                send_tg_message(chat_id, f"❌ Refund failed: `{exc}`")
 
     return {"status": "ok"}
+
+
+@app.post("/api/create-invoice")
+async def create_stars_invoice(req: CreateInvoiceRequest):
+    item = STARS_CATALOG.get(req.item_id)
+    if not item:
+        raise HTTPException(status_code=400, detail="Invalid item_id")
+
+    uid = resolve_user_id(req.user_id, req.user)
+    invoice_payload = {
+        "title": item["title"],
+        "description": item["description"],
+        "payload": json.dumps({"user_id": uid, "item_id": req.item_id, "ts": int(utc_now().timestamp())}),
+        "provider_token": "",
+        "currency": "XTR",
+        "prices": [{"label": item["title"], "amount": int(item["stars"])}],
+    }
+    if item.get("is_subscription"):
+        invoice_payload["subscription_period"] = 2592000
+
+    data = tg_api_call("createInvoiceLink", invoice_payload)
+    return {
+        "ok": True,
+        "status": "success",
+        "invoiceLink": data.get("result"),
+        "stars": int(item["stars"]),
+        "is_subscription": bool(item.get("is_subscription", False)),
+    }
 
 
 # ------------------------------------------------------------------
@@ -316,6 +592,7 @@ async def initialize_user(data: UserInitRequest):
     try:
         uname = resolve_username(data.username, data.user_id)
         user = ensure_user_doc(database, data.user_id, uname, referred_by=data.referred_by)
+        pro_active = is_user_pro(user)
         return {
             "status": "success",
             "ok": True,
@@ -326,6 +603,8 @@ async def initialize_user(data: UserInitRequest):
             "completed_tasks": user.get("completed_tasks", []),
             "daily_streak": int(user.get("daily_streak", 0) or 0),
             "wallet_address": user.get("wallet_address", None),
+            "is_pro": pro_active,
+            "pro_expires_at": user.get("pro_expires_at").isoformat() if isinstance(user.get("pro_expires_at"), datetime) else None,
         }
     except HTTPException:
         raise
@@ -340,6 +619,7 @@ async def sync_state(data: StateSyncRequest):
         uid = resolve_user_id(data.user_id, data.user)
         uname = resolve_username(data.username, uid, data.user)
         user = ensure_user_doc(database, uid, uname)
+        pro_active = is_user_pro(user)
         return {
             "ok": True,
             "status": "success",
@@ -352,6 +632,8 @@ async def sync_state(data: StateSyncRequest):
             "daily_streak": int(user.get("daily_streak", 0) or 0),
             "wallet_address": user.get("wallet_address"),
             "tonWalletAddress": user.get("wallet_address"),
+            "is_pro": pro_active,
+            "pro_expires_at": user.get("pro_expires_at").isoformat() if isinstance(user.get("pro_expires_at"), datetime) else None,
             "leaderboard": build_leaderboard(database, 25),
         }
     except HTTPException:
@@ -444,6 +726,7 @@ async def get_user_data(user_id: int):
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
+        pro_active = is_user_pro(user)
         return {
             "status": "success",
             "user_id": user_id,
@@ -453,6 +736,8 @@ async def get_user_data(user_id: int):
             "completed_tasks": user.get("completed_tasks", []),
             "daily_streak": int(user.get("daily_streak", 0) or 0),
             "wallet_address": user.get("wallet_address"),
+            "is_pro": pro_active,
+            "pro_expires_at": user.get("pro_expires_at").isoformat() if isinstance(user.get("pro_expires_at"), datetime) else None,
         }
     except HTTPException:
         raise
