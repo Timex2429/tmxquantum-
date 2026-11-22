@@ -256,6 +256,7 @@ def ensure_user_doc(database, uid: int, username: str, referred_by: Optional[int
             "wallet_address": None,
             "pro_expires_at": None,
             "active_star_subscription_charge_id": None,
+            "star_subscription_auto_renew_canceled": False,
             "created_at": now,
             "updated_at": now,
         }
@@ -387,6 +388,7 @@ def handle_successful_payment_message(message: dict) -> None:
     }
     if item.get("is_subscription"):
         set_fields["active_star_subscription_charge_id"] = charge_id
+        set_fields["star_subscription_auto_renew_canceled"] = False
 
     if pro_days > 0:
         if exp_ts:
@@ -639,6 +641,78 @@ async def telegram_webhook(request: Request):
                 send_tg_message(chat_id, f"✅ Refunded `{charge_id}` for user `{target_uid}`.")
             except Exception as exc:
                 send_tg_message(chat_id, f"❌ Refund failed: `{exc}`")
+
+        elif chat_id and text.startswith("/cancelsub"):
+            sender_id = from_user.get("id")
+            if sender_id not in ADMIN_USER_IDS:
+                send_tg_message(chat_id, "⛔ Unauthorized.")
+                return {"status": "ok"}
+
+            parts = text.split()
+            if len(parts) < 2 or len(parts) > 4:
+                send_tg_message(
+                    chat_id,
+                    "Usage: `/cancelsub <user_id> [telegram_payment_charge_id] [restore]`",
+                )
+                return {"status": "ok"}
+
+            try:
+                target_uid = int(parts[1])
+                database = get_db()
+                user_doc = database.users.find_one({"user_id": target_uid}) or {}
+
+                charge_id: Optional[str] = None
+                is_restore = False
+
+                for token in parts[2:]:
+                    if token.lower() in ("restore", "uncancel", "reenable", "false"):
+                        is_restore = True
+                    else:
+                        charge_id = token.strip()
+
+                if not charge_id:
+                    charge_id = user_doc.get("active_star_subscription_charge_id")
+
+                if not charge_id:
+                    send_tg_message(
+                        chat_id,
+                        f"❌ No `telegram_payment_charge_id` provided or saved for user `{target_uid}`.",
+                    )
+                    return {"status": "ok"}
+
+                is_canceled = not is_restore
+                tg_api_call(
+                    "editUserStarSubscription",
+                    {
+                        "user_id": target_uid,
+                        "telegram_payment_charge_id": charge_id,
+                        "is_canceled": is_canceled,
+                    },
+                )
+
+                database.users.update_one(
+                    {"user_id": target_uid},
+                    {
+                        "$set": {
+                            "star_subscription_auto_renew_canceled": is_canceled,
+                            "updated_at": utc_now(),
+                        }
+                    },
+                )
+
+                status_label = (
+                    "re-enabled auto-renewal for"
+                    if is_restore
+                    else "canceled auto-renewal for (access remains until current period ends)"
+                )
+                send_tg_message(
+                    chat_id,
+                    f"✅ Successfully {status_label} user `{target_uid}` (`{charge_id}`).",
+                )
+            except HTTPException as exc:
+                send_tg_message(chat_id, f"❌ Subscription edit failed: `{exc.detail}`")
+            except Exception as exc:
+                send_tg_message(chat_id, f"❌ Subscription edit failed: `{exc}`")
 
     return {"status": "ok"}
 
