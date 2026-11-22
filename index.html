@@ -56,6 +56,7 @@
       padding: 10px 14px;
       margin-bottom: 14px;
     }
+
     .brand {
       display: flex;
       align-items: center;
@@ -421,13 +422,6 @@
       margin-bottom: 10px;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     }
-        <div class="task-item">
-          <div>
-            <div style="font-weight:700;font-size:13px;">Upvote TMX-QUANTUM on TON App</div>
-            <div class="task-meta">Ecosystem Reward: +300 💎</div>
-          </div>
-          <button class="btn btn-primary btn-ghost" id="task-tonapp-upvote" type="button">Open</button>
-        </div>
 
     .ref-stats-row {
       display: grid;
@@ -744,7 +738,7 @@
       <div class="card">
         <h2 class="card-title">Social & Ecosystem Tasks</h2>
         <p class="card-desc">
-          Tap <strong>Open</strong> to complete each social action first, then tap <strong>Verify</strong> to claim <strong>300 💎</strong> per social task.
+          Tap <strong>Open</strong> to complete each action first, then tap <strong>Verify</strong> to claim your 💎 reward.
         </p>
 
         <div class="task-item">
@@ -784,20 +778,21 @@
             <div style="font-weight:700;font-size:13px;">Follow on TikTok (@tmxquantum)</div>
             <div class="task-meta">Social Reward: +300 💎</div>
           </div>
-                  <div class="task-item">
+          <button class="btn btn-primary btn-ghost" id="task-tt-tmxquantum" type="button">Open</button>
+        </div>
+
+        <div class="task-item">
           <div>
             <div style="font-weight:700;font-size:13px;">Upvote TMX-QUANTUM on TON App</div>
             <div class="task-meta">Ecosystem Reward: +300 💎</div>
           </div>
           <button class="btn btn-primary btn-ghost" id="task-tonapp-upvote" type="button">Open</button>
         </div>
-          <button class="btn btn-primary btn-ghost" id="task-tt-tmxquantum" type="button">Open</button>
-        </div>
 
         <div class="task-item">
           <div>
             <div style="font-weight:700;font-size:13px;">Complete First 15s Mining Session</div>
-            <div class="task-meta">Reward: +50 💎</div>
+            <div class="task-meta">Reward: +50 💎 (Save a mining round first)</div>
           </div>
           <button class="btn btn-primary btn-ghost" id="task-first-mine" type="button">Verify</button>
         </div>
@@ -805,7 +800,7 @@
         <div class="task-item">
           <div>
             <div style="font-weight:700;font-size:13px;">Share TMX-QUANTUM with a Friend</div>
-            <div class="task-meta">Reward: +100 💎</div>
+            <div class="task-meta">Reward: +100 💎 (Copy or share invite link first)</div>
           </div>
           <button class="btn btn-primary btn-ghost" id="task-share-app" type="button">Verify</button>
         </div>
@@ -822,7 +817,7 @@
         <div class="user-summary-box">
           <div>
             <div id="profileDisplayName" style="font-weight:700;font-size:14px;">Miner</div>
-            <div id="profileUserId" class="user-id-tag">ID: guest_local • Tasks: 0</div>
+            <div id="profileUserId" class="user-id-tag">ID: guest_local • Tasks: 0/8</div>
             <div id="profileTonWallet" class="ton-wallet-tag">💎 TON Wallet: Not Connected</div>
           </div>
           <div id="profileBalance" class="user-bal-tag">0 💎</div>
@@ -965,6 +960,11 @@
         </div>
       </div>
     </section>
+
+    <footer id="tonapp-footer" style="margin-top: 24px; padding: 12px; font-size: 13px; text-align: center;">
+      <p>TMX-QUANTUM connects with the TON blockchain for wallet features and Web3 mini-app rewards.</p>
+      <a href="https://ton.app/app/tmxquantum" target="_blank" rel="noopener noreferrer">Find us on Ton.app</a>
+    </footer>
   </div>
 
   <!-- Bottom Navigation -->
@@ -1014,13 +1014,14 @@
     ];
 
     const TASK_DEFS = [
-      { id: "bot_tmxqunbot", elId: "task-bot-tmxqunbot", reward: 300, url: "https://t.me/Tmxqunbot", requiresVisit: true },
-      { id: "x_timex2429", elId: "task-x-timex2429", reward: 300, url: "https://x.com/timex2429", requiresVisit: true },
-      { id: "ig_tmxquantum245", elId: "task-ig-tmxquantum245", reward: 300, url: "https://instagram.com/tmxquantum245", requiresVisit: true },
-      { id: "fb_tmxquantum", elId: "task-fb-tmxquantum", reward: 300, url: "https://www.facebook.com/profile.php?id=61595898467380", requiresVisit: true },
-      { id: "tt_tmxquantum", elId: "task-tt-tmxquantum", reward: 300, url: "https://www.tiktok.com/@tmxquantum", requiresVisit: true },
-      { id: "first_mine", elId: "task-first-mine", reward: 50, url: null, requiresVisit: false },
-      { id: "share_app", elId: "task-share-app", reward: 100, url: null, requiresVisit: false }
+      { id: "bot_tmxqunbot", elId: "task-bot-tmxqunbot", reward: 300, url: "https://t.me/Tmxqunbot", requiresVisit: true, actionType: "link" },
+      { id: "x_timex2429", elId: "task-x-timex2429", reward: 300, url: "https://x.com/timex2429", requiresVisit: true, actionType: "link" },
+      { id: "ig_tmxquantum245", elId: "task-ig-tmxquantum245", reward: 300, url: "https://instagram.com/tmxquantum245", requiresVisit: true, actionType: "link" },
+      { id: "fb_tmxquantum", elId: "task-fb-tmxquantum", reward: 300, url: "https://www.facebook.com/profile.php?id=61595898467380", requiresVisit: true, actionType: "link" },
+      { id: "tt_tmxquantum", elId: "task-tt-tmxquantum", reward: 300, url: "https://www.tiktok.com/@tmxquantum", requiresVisit: true, actionType: "link" },
+      { id: "tonapp_upvote", elId: "task-tonapp-upvote", reward: 300, url: "https://ton.app/app/tmxquantum", requiresVisit: true, actionType: "link" },
+      { id: "first_mine", elId: "task-first-mine", reward: 50, url: null, requiresVisit: false, actionType: "mine" },
+      { id: "share_app", elId: "task-share-app", reward: 100, url: null, requiresVisit: false, actionType: "share" }
     ];
 
     const logs = [];
@@ -1083,6 +1084,8 @@
       isMining: false,
       roundCompleted: false,
       boost2xActive: false,
+      minedRoundsSaved: 0,
+      sharedAppCount: 0,
       visitedTasks: [],
       completedTasks: [],
       lastBonusDate: null,
@@ -1124,6 +1127,8 @@
           isMining: false,
           timerSeconds: CONFIG.ROUND_SECONDS,
           balance: Number(parsed.balance) || 0,
+          minedRoundsSaved: Number(parsed.minedRoundsSaved) || 0,
+          sharedAppCount: Number(parsed.sharedAppCount) || 0,
           loginStreak: Number(parsed.loginStreak) || 0,
           referralCount: Number(parsed.referralCount) || 0,
           referralEarned: Number(parsed.referralEarned) || 0,
@@ -1153,6 +1158,8 @@
         balance: state.balance,
         sessionPoints: state.sessionPoints,
         boost2xActive: state.boost2xActive,
+        minedRoundsSaved: state.minedRoundsSaved,
+        sharedAppCount: state.sharedAppCount,
         visitedTasks: state.visitedTasks,
         completedTasks: state.completedTasks,
         lastBonusDate: state.lastBonusDate,
@@ -1544,6 +1551,12 @@
       if (serverBal !== null) {
         state.balance = serverBal;
       }
+      if (typeof data.minedRoundsSaved === "number") {
+        state.minedRoundsSaved = Math.max(state.minedRoundsSaved, data.minedRoundsSaved);
+      }
+      if (typeof data.sharedAppCount === "number") {
+        state.sharedAppCount = Math.max(state.sharedAppCount, data.sharedAppCount);
+      }
       if (Array.isArray(data.visitedTasks)) {
         state.visitedTasks = data.visitedTasks;
       }
@@ -1584,7 +1597,7 @@
 
       if (nameEl) nameEl.textContent = me.username;
       if (idEl) {
-        idEl.textContent = `ID: ${me.user_id} • Verified Tasks: ${state.completedTasks.length}`;
+        idEl.textContent = `ID: ${me.user_id} • Verified Tasks: ${state.completedTasks.length}/${TASK_DEFS.length}`;
       }
       if (balEl) balEl.textContent = `${Number(state.balance) || 0} 💎`;
 
@@ -1730,6 +1743,19 @@
       }
     }
 
+    function isTaskActionDone(task) {
+      if (task.actionType === "mine") {
+        return state.minedRoundsSaved > 0 || state.roundCompleted;
+      }
+      if (task.actionType === "share") {
+        return state.sharedAppCount > 0;
+      }
+      if (task.requiresVisit) {
+        return state.visitedTasks.includes(task.id);
+      }
+      return true;
+    }
+
     function renderTasksUI() {
       for (const task of TASK_DEFS) {
         const el = document.getElementById(task.elId);
@@ -1748,12 +1774,12 @@
           continue;
         }
 
-        if (task.requiresVisit && state.visitedTasks.includes(task.id)) {
-          el.className = "btn btn-verify-ready btn-ghost";
-          el.textContent = "Verify";
-        } else if (task.requiresVisit) {
+        if (task.requiresVisit && !state.visitedTasks.includes(task.id)) {
           el.className = "btn btn-primary btn-ghost";
           el.textContent = "Open";
+        } else if (isTaskActionDone(task)) {
+          el.className = "btn btn-verify-ready btn-ghost";
+          el.textContent = "Verify";
         } else {
           el.className = "btn btn-primary btn-ghost";
           el.textContent = "Verify";
@@ -1958,6 +1984,7 @@
           state.leaderboard = apiRes.data.leaderboard;
         }
 
+        state.minedRoundsSaved += 1;
         state.sessionPoints = 0;
         state.timerSeconds = CONFIG.ROUND_SECONDS;
         state.roundCompleted = false;
@@ -2003,10 +2030,24 @@
 
       if (task.requiresVisit && !state.visitedTasks.includes(task.id)) {
         if (task.url) openTaskLink(task.url);
-        state.visitedTasks.push(task.id);
+        if (!state.visitedTasks.includes(task.id)) {
+          state.visitedTasks.push(task.id);
+        }
         saveLocalState();
         renderUI();
         showBanner("Channel opened! Complete the action, then tap Verify to claim reward.", "info");
+        return;
+      }
+
+      if (task.actionType === "mine" && state.minedRoundsSaved <= 0) {
+        showBanner("Complete and save a 15s mining round on the Mine tab first, then tap Verify.", "info");
+        switchTab("mine");
+        return;
+      }
+
+      if (task.actionType === "share" && state.sharedAppCount <= 0) {
+        shareReferralInvite();
+        showBanner("Invite opened! Once shared, tap Verify again to claim +100 💎.", "info");
         return;
       }
 
@@ -2014,7 +2055,9 @@
       const apiRes = await callApi("/api/tasks/verify", {
         taskId: task.id,
         reward: task.reward,
-        visited: state.visitedTasks.includes(task.id)
+        visited: state.visitedTasks.includes(task.id),
+        minedRoundsSaved: state.minedRoundsSaved,
+        sharedAppCount: state.sharedAppCount
       });
 
       const serverBal = apiRes.ok ? extractBalance(apiRes.data) : null;
@@ -2148,6 +2191,9 @@
           document.execCommand("copy");
           document.body.removeChild(temp);
         }
+        state.sharedAppCount += 1;
+        saveLocalState();
+        renderTasksUI();
         showBanner("Referral link copied! Share it to earn +250 💎 per friend.", "success");
       } catch (err) {
         recordLog("WARN", "Clipboard copy fallback", err.message);
@@ -2162,6 +2208,9 @@
       const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareText)}`;
 
       try {
+        state.sharedAppCount += 1;
+        saveLocalState();
+        renderTasksUI();
         if (tg && typeof tg.openTelegramLink === "function") {
           tg.openTelegramLink(shareUrl);
         } else {
@@ -2190,9 +2239,7 @@
       document.getElementById("btnTestApi")?.addEventListener("click", runHealthCheck);
       document.getElementById("btnClearLogs")?.addEventListener("click", clearLogs);
 
-      for (const task of TASK_DEFS)  
-      { id: "tonapp_upvote", elId: "task-tonapp-upvote", reward: 300, url: "https://ton.app/app/tmxquantum", requiresVisit: true },
-      
+      for (const task of TASK_DEFS) {
         document.getElementById(task.elId)?.addEventListener("click", () => handleTaskClick(task));
       }
 
@@ -2218,10 +2265,5 @@
       }
     })();
   </script>
-  <footer id="tonapp-footer" style="margin-top: 24px; padding: 12px; font-size: 13px; text-align: center;">
-  <p>TMX-QUANTUM connects with the TON blockchain for wallet features and Web3 mini-app rewards.</p>
-  <a href="https://ton.app/app/tmxquantum" target="_blank" rel="noopener">Find us on Ton.app</a>
-</footer>
-
 </body>
   </html>
