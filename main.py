@@ -15,8 +15,8 @@ import requests
 # ------------------------------------------------------------------
 app = FastAPI(
     title="TMX Quantum API",
-    description="Backend engine for TMX-QUANTUM Telegram Mini App & Web3 Mining",
-    version="1.2.0",
+    description="Backend service for TMX-QUANTUM Telegram Mini App",
+    version="1.3.0",
 )
 
 app.add_middleware(
@@ -28,32 +28,39 @@ app.add_middleware(
 )
 
 # ------------------------------------------------------------------
-# 2. MONGODB ATLAS & BOT CONFIGURATION
+# 2. DATABASE & BOT CONFIGURATION
 # ------------------------------------------------------------------
 MONGO_URI = (
     os.getenv("MONGO_URL")
     or os.getenv("MONGO_URI")
     or os.getenv("MONGODB_URI")
-    or "mongodb+srv://horaltmitchell_db_user:Arizabalaga25@tmx-quantum.mqltymh.mongodb.net/tmxquantum?retryWrites=true&w=majority"
+    or ""
 )
 DB_NAME = os.getenv("MONGODB_DB_NAME", "tmxquantum")
 
 client: Optional[pymongo.MongoClient] = None
 db = None
 
-try:
-    client = pymongo.MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
-    db = client[DB_NAME]
-    client.admin.command("ping")
-    db.users.create_index([("user_id", pymongo.ASCENDING)], unique=True)
-    db.users.create_index([("balance", pymongo.DESCENDING)])
-    print(f"✅ Successfully connected to MongoDB Atlas database '{DB_NAME}'!")
-except Exception as e:
-    print(f"❌ MongoDB Connection Error: {e}")
+if MONGO_URI:
+    try:
+        client = pymongo.MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+        db = client[DB_NAME]
+        client.admin.command("ping")
+        db.users.create_index([("user_id", pymongo.ASCENDING)], unique=True)
+        db.users.create_index([("balance", pymongo.DESCENDING)])
+        print(f"Connected to MongoDB Atlas database '{DB_NAME}'.")
+    except Exception as e:
+        print(f"MongoDB Connection Error: {e}")
+else:
+    print("Warning: MONGO_URI / MONGO_URL / MONGODB_URI is not set.")
 
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8667199385:AAEP4C7X81HYHQrbhVaiAvGg1nQuMa92ZKY")
-TELEGRAM_API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
-MINI_APP_URL = os.getenv("MINI_APP_URL", "https://timex2429-tmxquantum.vercel.app")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "")
+TELEGRAM_API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}" if BOT_TOKEN else ""
+MINI_APP_URL = os.getenv("MINI_APP_URL", "https://www.tmxquantum.site")
+
+DAILY_BASE_REWARD = 200
+SEVENTH_DAY_BONUS = 2000
+MAX_SESSION_EARN = 10000
 
 
 def get_db():
@@ -80,7 +87,7 @@ def resolve_user_id(raw_id: Optional[int | str], tg_user: Optional[dict] = None)
 
 
 def resolve_username(raw_username: Optional[str], uid: int, tg_user: Optional[dict] = None) -> str:
-    if raw_username and str(raw_username).strip() and str(raw_username) != "You (Local)":
+    if raw_username and str(raw_username).strip() and str(raw_username) not in ("You (Local)", "Operator (Local)"):
         return str(raw_username).strip()
     if tg_user:
         if tg_user.get("username"):
@@ -90,7 +97,7 @@ def resolve_username(raw_username: Optional[str], uid: int, tg_user: Optional[di
         ).strip()
         if full_name:
             return full_name
-    return f"Miner_{uid}"
+    return f"Operator_{uid}"
 
 
 def ensure_user_doc(database, uid: int, username: str, referred_by: Optional[int] = None) -> dict:
@@ -104,11 +111,11 @@ def ensure_user_doc(database, uid: int, username: str, referred_by: Optional[int
                 database.users.update_one(
                     {"user_id": referred_by},
                     {
-                        "$inc": {"balance": 500, "referrals_count": 1},
+                        "$inc": {"balance": 250, "referrals_count": 1},
                         "$push": {"referred_users": uid},
                     },
                 )
-                welcome_bonus = 200
+                welcome_bonus = 100
 
         user = {
             "user_id": uid,
@@ -127,9 +134,7 @@ def ensure_user_doc(database, uid: int, username: str, referred_by: Optional[int
             "updated_at": now,
         }
         database.users.insert_one(user)
-    elif username and user.get("username") != username and not (
-        user.get("username") and not str(user.get("username")).startswith("Miner_")
-    ):
+    elif username and user.get("username") != username and str(user.get("username", "")).startswith(("Miner_", "Operator_")):
         database.users.update_one(
             {"user_id": uid},
             {"$set": {"username": username, "updated_at": now}},
@@ -138,7 +143,7 @@ def ensure_user_doc(database, uid: int, username: str, referred_by: Optional[int
     return user
 
 
-def build_leaderboard(database, limit: int = 20) -> list[dict]:
+def build_leaderboard(database, limit: int = 25) -> list[dict]:
     safe_limit = max(1, min(int(limit), 100))
     cursor = (
         database.users.find({}, {"_id": 0, "user_id": 1, "username": 1, "balance": 1, "completed_tasks": 1})
@@ -150,7 +155,7 @@ def build_leaderboard(database, limit: int = 20) -> list[dict]:
         uid = doc.get("user_id")
         items.append({
             "user_id": uid,
-            "username": doc.get("username") or f"Miner_{uid}",
+            "username": doc.get("username") or f"Operator_{uid}",
             "balance": int(doc.get("balance", 0) or 0),
             "tasksCount": len(doc.get("completed_tasks") or []),
         })
@@ -162,7 +167,7 @@ def build_leaderboard(database, limit: int = 20) -> list[dict]:
 # ------------------------------------------------------------------
 class UserInitRequest(BaseModel):
     user_id: int
-    username: Optional[str] = "Miner"
+    username: Optional[str] = "Operator"
     referred_by: Optional[int] = None
 
 
@@ -171,6 +176,7 @@ class StateSyncRequest(BaseModel):
     username: Optional[str] = None
     user: Optional[dict] = None
     initData: Optional[str] = None
+    start_param: Optional[str] = None
 
 
 class MineClaimRequest(BaseModel):
@@ -206,12 +212,19 @@ class DailyClaimRequest(BaseModel):
 
 
 class SpinRequest(BaseModel):
-    user_id: int
+    user_id: Optional[int | str] = None
+    username: Optional[str] = None
+    user: Optional[dict] = None
+    reward: Optional[int] = None
+    date: Optional[str] = None
 
 
-class WalletSaveRequest(BaseModel):
-    user_id: int
-    wallet_address: str
+class WalletLinkRequest(BaseModel):
+    user_id: Optional[int | str] = None
+    username: Optional[str] = None
+    user: Optional[dict] = None
+    wallet_address: Optional[str] = None
+    tonWalletAddress: Optional[str] = None
 
 
 # ------------------------------------------------------------------
@@ -263,16 +276,16 @@ async def telegram_webhook(request: Request):
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid JSON payload")
 
-    if isinstance(update, dict) and "message" in update:
+    if isinstance(update, dict) and "message" in update and BOT_TOKEN:
         message = update["message"]
         chat_id = message.get("chat", {}).get("id")
         text = message.get("text", "")
 
         if chat_id and (text.startswith("/start") or text == "/play"):
             welcome_text = (
-                "⚡ *Welcome to TMX-QUANTUM Mining!*\n\n"
-                "Tap below to launch the Mini App, mine TMX tokens, complete"
-                " missions, spin the wheel, and earn referral rewards!"
+                "⚡ *Welcome to TMX-QUANTUM!*\n\n"
+                "Launch the Mini App below to run 15-second rounds, complete"
+                " ecosystem quests, claim daily streaks, and link your TON wallet."
             )
             keyboard = {
                 "inline_keyboard": [[{
@@ -289,7 +302,7 @@ async def telegram_webhook(request: Request):
             try:
                 requests.post(f"{TELEGRAM_API_URL}/sendMessage", json=payload, timeout=5)
             except Exception as exc:
-                print(f"⚠️ Failed to send Telegram message: {exc}")
+                print(f"Failed to send Telegram message: {exc}")
 
     return {"status": "ok"}
 
@@ -338,6 +351,7 @@ async def sync_state(data: StateSyncRequest):
             "referrals_count": int(user.get("referrals_count", 0) or 0),
             "daily_streak": int(user.get("daily_streak", 0) or 0),
             "wallet_address": user.get("wallet_address"),
+            "tonWalletAddress": user.get("wallet_address"),
             "leaderboard": build_leaderboard(database, 25),
         }
     except HTTPException:
@@ -352,8 +366,8 @@ async def sync_state(data: StateSyncRequest):
 @app.post("/api/game/submit-score")
 async def submit_score(data: GameScoreSubmission):
     database = get_db()
-    if data.score < 0:
-        raise HTTPException(status_code=400, detail="Invalid score format")
+    if data.score < 0 or data.score > MAX_SESSION_EARN:
+        raise HTTPException(status_code=400, detail="Invalid score value")
 
     try:
         user = database.users.find_one_and_update(
@@ -361,7 +375,7 @@ async def submit_score(data: GameScoreSubmission):
             {
                 "$inc": {"balance": int(data.score)},
                 "$setOnInsert": {
-                    "username": f"Miner_{data.user_id}",
+                    "username": f"Operator_{data.user_id}",
                     "completed_tasks": [],
                     "created_at": utc_now(),
                 },
@@ -392,10 +406,11 @@ async def claim_mining_session(data: MineClaimRequest):
 
         mult = 2 if data.multiplier == 2 else 1
         points = max(0, int(data.sessionPoints or 0))
-        raw_earned = data.earned if data.earned is not None else (data.score if data.score is not None else points * mult)
+        computed = points * mult
+        raw_earned = data.earned if data.earned is not None else (data.score if data.score is not None else computed)
         earned = int(raw_earned or 0)
 
-        if earned < 0 or earned > 10000:
+        if earned < 0 or earned > MAX_SESSION_EARN:
             raise HTTPException(status_code=400, detail="Invalid earned amount")
 
         updated = database.users.find_one_and_update(
@@ -432,7 +447,7 @@ async def get_user_data(user_id: int):
         return {
             "status": "success",
             "user_id": user_id,
-            "username": user.get("username", "Miner"),
+            "username": user.get("username", "Operator"),
             "balance": int(user.get("balance", 0) or 0),
             "referrals_count": int(user.get("referrals_count", 0) or 0),
             "completed_tasks": user.get("completed_tasks", []),
@@ -450,54 +465,44 @@ async def get_user_data(user_id: int):
 # ------------------------------------------------------------------
 TASKS = {
     "bot_tmxqunbot": {
-        "reward": 25,
+        "reward": 300,
         "title": "Launch Official Bot (@Tmxqunbot)",
         "link": "https://t.me/Tmxqunbot",
     },
     "x_timex2429": {
-        "reward": 20,
+        "reward": 300,
         "title": "Follow on X (@timex2429)",
         "link": "https://x.com/timex2429",
     },
     "ig_tmxquantum245": {
-        "reward": 20,
+        "reward": 300,
         "title": "Follow on Instagram (@tmxquantum245)",
         "link": "https://instagram.com/tmxquantum245",
     },
+    "fb_tmxquantum": {
+        "reward": 300,
+        "title": "Follow on Facebook (TMX-QUANTUM)",
+        "link": "https://www.facebook.com/profile.php?id=61595898467380",
+    },
+    "tt_tmxquantum": {
+        "reward": 300,
+        "title": "Follow on TikTok (@tmxquantum)",
+        "link": "https://www.tiktok.com/@tmxquantum",
+    },
+    "tonapp_upvote": {
+        "reward": 300,
+        "title": "Upvote TMX-QUANTUM on TON App",
+        "link": "https://ton.app/app/tmxquantum",
+    },
     "first_mine": {
-        "reward": 15,
+        "reward": 50,
         "title": "Complete First 15s Mining Session",
         "link": None,
     },
     "share_app": {
-        "reward": 30,
+        "reward": 100,
         "title": "Share TMX-QUANTUM with a Friend",
         "link": None,
-    },
-    "telegram_channel": {
-        "reward": 1000,
-        "title": "Join Official Telegram Channel",
-        "link": "https://t.me/tmxquantum",
-    },
-    "twitter_follow": {
-        "reward": 1000,
-        "title": "Follow us on X (Twitter)",
-        "link": "https://x.com/timex2429",
-    },
-    "instagram_follow": {
-        "reward": 1000,
-        "title": "Follow us on Instagram",
-        "link": "https://instagram.com/tmxquantum245",
-    },
-    "youtube_sub": {
-        "reward": 1500,
-        "title": "Subscribe on YouTube",
-        "link": "https://youtube.com/@tmxquantum",
-    },
-    "telegram_chat": {
-        "reward": 800,
-        "title": "Join TMX-Quantum Official Chat",
-        "link": "https://t.me/+LW4DJIurXOE0ZGU0",
     },
 }
 
@@ -508,15 +513,16 @@ async def get_tasks(user_id: int):
     user = database.users.find_one({"user_id": user_id})
     completed_tasks = user.get("completed_tasks", []) if user else []
 
-    tasks_list = []
-    for task_id, info in TASKS.items():
-        tasks_list.append({
+    tasks_list = [
+        {
             "task_id": task_id,
             "title": info["title"],
             "reward": info["reward"],
             "link": info["link"],
             "completed": task_id in completed_tasks,
-        })
+        }
+        for task_id, info in TASKS.items()
+    ]
 
     return {"status": "success", "tasks": tasks_list}
 
@@ -542,7 +548,7 @@ async def _process_task_claim(database, uid: int, uname: str, task_id: Optional[
     if task_id in TASKS:
         reward = int(TASKS[task_id]["reward"])
     elif fallback_reward is not None:
-        reward = max(0, min(int(fallback_reward), 2000))
+        reward = max(0, min(int(fallback_reward), 1000))
     else:
         raise HTTPException(status_code=404, detail="Task not found")
 
@@ -599,7 +605,7 @@ async def verify_task(data: TaskClaimRequest):
 # ------------------------------------------------------------------
 # 9. DAILY LOGIN STREAK & BONUS REWARDS
 # ------------------------------------------------------------------
-async def _process_daily_bonus(database, uid: int, uname: str, requested_reward: Optional[int] = None, date_str: Optional[str] = None):
+async def _process_daily_bonus(database, uid: int, uname: str, date_str: Optional[str] = None):
     user = ensure_user_doc(database, uid, uname)
     now = utc_now()
     today_key = date_str or now.strftime("%Y-%m-%d")
@@ -622,7 +628,7 @@ async def _process_daily_bonus(database, uid: int, uname: str, requested_reward:
     streak = int(user.get("daily_streak", 0) or 0)
     if last_claim:
         time_diff = now - last_claim
-        if time_diff < timedelta(hours=24):
+        if time_diff < timedelta(hours=20):
             bal = int(user.get("balance", 0) or 0)
             return {
                 "ok": True,
@@ -632,11 +638,11 @@ async def _process_daily_bonus(database, uid: int, uname: str, requested_reward:
                 "total_balance": bal,
                 "lastBonusDate": today_key,
             }
-        elif time_diff > timedelta(hours=48):
+        if time_diff > timedelta(hours=48):
             streak = 0
 
-    streak += 1
-    reward = int(requested_reward) if requested_reward and requested_reward > 0 else 20
+    streak = (streak % 7) + 1
+    reward = DAILY_BASE_REWARD + (SEVENTH_DAY_BONUS if streak == 7 else 0)
 
     updated_user = database.users.find_one_and_update(
         {"user_id": uid},
@@ -671,7 +677,7 @@ async def claim_daily_reward(data: DailyClaimRequest):
     try:
         uid = resolve_user_id(data.user_id, data.user)
         uname = resolve_username(data.username, uid, data.user)
-        return await _process_daily_bonus(database, uid, uname, data.reward, data.date)
+        return await _process_daily_bonus(database, uid, uname, data.date)
     except HTTPException:
         raise
     except Exception as e:
@@ -684,7 +690,7 @@ async def claim_bonus(data: DailyClaimRequest):
     try:
         uid = resolve_user_id(data.user_id, data.user)
         uname = resolve_username(data.username, uid, data.user)
-        return await _process_daily_bonus(database, uid, uname, data.reward, data.date)
+        return await _process_daily_bonus(database, uid, uname, data.date)
     except HTTPException:
         raise
     except Exception as e:
@@ -697,68 +703,105 @@ async def claim_bonus(data: DailyClaimRequest):
 @app.post("/api/spin/claim")
 async def spin_wheel(data: SpinRequest):
     database = get_db()
-    user = database.users.find_one({"user_id": data.user_id})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    try:
+        uid = resolve_user_id(data.user_id, data.user)
+        uname = resolve_username(data.username, uid, data.user)
+        user = ensure_user_doc(database, uid, uname)
 
-    now = utc_now()
-    last_spin = user.get("last_spin_time")
-    if isinstance(last_spin, datetime) and last_spin.tzinfo is None:
-        last_spin = last_spin.replace(tzinfo=timezone.utc)
+        now = utc_now()
+        last_spin = user.get("last_spin_time")
+        if isinstance(last_spin, datetime) and last_spin.tzinfo is None:
+            last_spin = last_spin.replace(tzinfo=timezone.utc)
 
-    if last_spin and (now - last_spin) < timedelta(hours=12):
+        if last_spin and (now - last_spin) < timedelta(hours=20):
+            bal = int(user.get("balance", 0) or 0)
+            return {
+                "ok": True,
+                "status": "cooldown",
+                "message": "Daily spin already used today. Please check back tomorrow.",
+                "balance": bal,
+                "total_balance": bal,
+            }
+
+        spin_rewards = [25, 50, 100, 150, 250, 500]
+        won_reward = random.choice(spin_rewards)
+
+        updated_user = database.users.find_one_and_update(
+            {"user_id": uid},
+            {
+                "$inc": {"balance": won_reward},
+                "$set": {"last_spin_time": now, "updated_at": now},
+            },
+            return_document=pymongo.ReturnDocument.AFTER,
+        )
+
+        bal = int(updated_user.get("balance", 0) or 0)
         return {
-            "status": "cooldown",
-            "message": "Spin available every 12 hours. Please check back later.",
+            "ok": True,
+            "status": "success",
+            "reward_won": won_reward,
+            "total_balance": bal,
+            "balance": bal,
         }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-    spin_rewards = [100, 250, 500, 1000, 2500, 5000]
-    won_reward = random.choice(spin_rewards)
 
-    updated_user = database.users.find_one_and_update(
-        {"user_id": data.user_id},
-        {
-            "$inc": {"balance": won_reward},
-            "$set": {"last_spin_time": now, "updated_at": now},
-        },
+# ------------------------------------------------------------------
+# 11. TON WALLET CONNECT SAVE / LINK
+# ------------------------------------------------------------------
+async def _process_wallet_link(database, data: WalletLinkRequest):
+    uid = resolve_user_id(data.user_id, data.user)
+    uname = resolve_username(data.username, uid, data.user)
+    ensure_user_doc(database, uid, uname)
+
+    addr = data.tonWalletAddress if data.tonWalletAddress is not None else data.wallet_address
+    clean_addr = addr.strip() if isinstance(addr, str) and addr.strip() else None
+
+    updated = database.users.find_one_and_update(
+        {"user_id": uid},
+        {"$set": {"wallet_address": clean_addr, "updated_at": utc_now()}},
         return_document=pymongo.ReturnDocument.AFTER,
     )
 
     return {
+        "ok": True,
         "status": "success",
-        "reward_won": won_reward,
-        "total_balance": int(updated_user.get("balance", 0) or 0),
-        "balance": int(updated_user.get("balance", 0) or 0),
+        "wallet_address": updated.get("wallet_address"),
+        "tonWalletAddress": updated.get("wallet_address"),
+        "message": "TON Wallet updated successfully",
     }
 
 
-# ------------------------------------------------------------------
-# 11. TON WALLET CONNECT SAVE
-# ------------------------------------------------------------------
 @app.post("/api/wallet/save")
-async def save_wallet(data: WalletSaveRequest):
+async def save_wallet(data: WalletLinkRequest):
     database = get_db()
-    user = database.users.find_one_and_update(
-        {"user_id": data.user_id},
-        {"$set": {"wallet_address": data.wallet_address, "updated_at": utc_now()}},
-        return_document=pymongo.ReturnDocument.AFTER,
-    )
+    try:
+        return await _process_wallet_link(database, data)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
 
-    return {
-        "status": "success",
-        "wallet_address": data.wallet_address,
-        "message": "TON Wallet saved successfully",
-    }
+@app.post("/api/wallet/link")
+async def link_wallet(data: WalletLinkRequest):
+    database = get_db()
+    try:
+        return await _process_wallet_link(database, data)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ------------------------------------------------------------------
 # 12. LEADERBOARD SYSTEM
 # ------------------------------------------------------------------
 @app.get("/api/leaderboard")
-async def get_leaderboard(limit: int = 20):
+async def get_leaderboard(limit: int = 25):
     database = get_db()
     try:
         items = build_leaderboard(database, limit)
