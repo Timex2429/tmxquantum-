@@ -6,7 +6,7 @@
   <title>TMX-QUANTUM • TON Quantum Mining Mini App</title>
   <meta name="description" content="TMX-QUANTUM is a Telegram Mini App built on The Open Network (TON), featuring quantum mining rounds, ecosystem tasks, daily streaks, and TON Connect wallet linking." />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+  <script src="https://js.onclckvd.com/in-stream-ad-admanager/tma.js"></script>
   <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
   <style>
     :root {
@@ -1081,7 +1081,7 @@
   <script>
     const CONFIG = {
       API_BASE_URL: "https://api.tmxquantum.site",
-      ADSGRAM_BLOCK_ID: "61304",
+      ONCLICKA_SPOT_ID: "615600",
       TON_APP_URL: "https://ton.app",
       TON_MANIFEST_URL: "https://www.tmxquantum.site/tonconnect-manifest.json",
       BOT_USERNAME: "Tmxqunbot",
@@ -1249,7 +1249,8 @@
 
     const state = restoreAppState();
     let pulseTicker = null;
-    let adsgramInstance = null;
+    let showOnClickaAd = null;
+    let onClickaInitPromise = null;
     let tonConnectUi = null;
     let wheelAngleDeg = 0;
     let wheelBusy = false;
@@ -2147,20 +2148,28 @@
       }
     }
 
-    function initAdsgram() {
-      try {
-        const initHeader = buildInitDataHeader();
-        if (window.Adsgram && typeof window.Adsgram.init === "function" && CONFIG.ADSGRAM_BLOCK_ID) {
-          adsgramInstance = window.Adsgram.init({
-            blockId: CONFIG.ADSGRAM_BLOCK_ID,
-            initData: initHeader,
-            debug: false
-          });
-          pushTelemetry("INFO", "Adsgram block controller initialized");
-        }
-      } catch (err) {
-        pushTelemetry("ERROR", "Adsgram initialization failed", err.message);
+    function initOnClicka() {
+      if (showOnClickaAd) return Promise.resolve(showOnClickaAd);
+      if (onClickaInitPromise) return onClickaInitPromise;
+
+      if (typeof window.initCdTma !== "function" || !CONFIG.ONCLICKA_SPOT_ID) {
+        pushTelemetry("WARN", "OnClicka TMA SDK not loaded yet");
+        return Promise.resolve(null);
       }
+
+      onClickaInitPromise = window.initCdTma({ id: CONFIG.ONCLICKA_SPOT_ID })
+        .then((showFn) => {
+          showOnClickaAd = typeof showFn === "function" ? showFn : null;
+          pushTelemetry("INFO", "OnClicka TMA controller initialized", { spotId: CONFIG.ONCLICKA_SPOT_ID });
+          return showOnClickaAd;
+        })
+        .catch((err) => {
+          onClickaInitPromise = null;
+          pushTelemetry("ERROR", "OnClicka initialization failed", err?.message || String(err));
+          return null;
+        });
+
+      return onClickaInitPromise;
     }
 
     async function handleWatchAdBoost() {
@@ -2174,9 +2183,9 @@
       showBanner("Requesting rewarded ad...", "info");
 
       try {
-        initAdsgram();
-        if (adsgramInstance && typeof adsgramInstance.show === "function") {
-          await adsgramInstance.show();
+        const showFn = showOnClickaAd || await initOnClicka();
+        if (typeof showFn === "function") {
+          await showFn();
           state.boost2xActive = true;
           persistAppState();
           renderUI();
@@ -2444,7 +2453,7 @@
       bindEvents();
       initTelegram();
       initTonConnect();
-      initAdsgram();
+      initOnClicka();
       renderUI();
 
       const synced = await syncUserData(false);
@@ -2457,4 +2466,4 @@
     })();
   </script>
 </body>
-    </html>
+  </html>
