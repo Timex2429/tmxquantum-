@@ -3,6 +3,15 @@ import process from "node:process";
 const TELEGRAM_API_TIMEOUT_MS = 5000;
 const DEFAULT_CHANNEL_ID = "3905270338";
 
+const REMINDER_PRESETS = {
+  mining:
+    "⚡ <b>TMX-QUANTUM Mining Reminder</b>\nYour quantum mining round is ready! Open the Mini App to claim your 💎 rewards and keep your momentum going.",
+  streak:
+    "🔥 <b>Daily Check-In Streak Reminder</b>\nDon't break your 7-day check-in streak on TMX-QUANTUM—claim today's bonus before the clock resets!",
+  spin:
+    "🎡 <b>Quantum Spin Ready</b>\nYour daily Quantum Spin is available on TMX-QUANTUM! Spin now for a chance at extra 💎 drops.",
+};
+
 function extractUserId(body) {
   if (!body || typeof body !== "object") return null;
   if (body.userId) return String(body.userId).trim();
@@ -24,15 +33,46 @@ function normalizeChannelChatId(rawId) {
   return cleaned;
 }
 
-function extractChannelChatId(body) {
+function getCandidateChannelIds(body) {
+  let raw = DEFAULT_CHANNEL_ID;
   if (body && typeof body === "object") {
-    if (body.channelId) return normalizeChannelChatId(body.channelId);
-    if (body.channel_id) return normalizeChannelChatId(body.channel_id);
-    if (body.chatId) return normalizeChannelChatId(body.chatId);
+    raw = body.channelId || body.channel_id || body.chatId || raw;
   }
   const envId = process.env.CHANNEL_CHAT_ID || process.env.TMX_CHANNEL_CHAT_ID;
-  if (envId) return normalizeChannelChatId(envId);
-  return normalizeChannelChatId(DEFAULT_CHANNEL_ID);
+  if (!body?.channelId && !body?.channel_id && !body?.chatId && envId) {
+    raw = envId;
+  }
+
+  const cleaned = String(raw || "").trim();
+  const normalized = normalizeChannelChatId(cleaned);
+  const candidates = [];
+
+  if (normalized) candidates.push(normalized);
+  if (cleaned && !candidates.includes(cleaned)) candidates.push(cleaned);
+
+  return candidates;
+}
+
+async function sendTelegramMessage(botToken, payload) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), TELEGRAM_API_TIMEOUT_MS);
+
+  try {
+    const telegramApiUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+    const telegramRes = await fetch(telegramApiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
+      body: JSON.stringify(payload),
+    });
+
+    clearTimeout(timeoutId);
+    const data = await telegramRes.json().catch(() => ({}));
+    return { ok: telegramRes.ok && data.ok !== false, status: telegramRes.status, data };
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
 }
 
 export default async function handler(req, res) {
@@ -42,7 +82,7 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS,POST");
   res.setHeader(
     "Access-Control-Allow-Headers",
-    "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, X-Telegram-Init-Data"
+    "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, X-Telegram-Init-Data, X-Admin-Secret"
   );
 
   // Handle Preflight OPTIONS Request
@@ -58,7 +98,7 @@ export default async function handler(req, res) {
     });
   }
 
-  const botToken = process.env.BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
+  const botToken = process.env.BOT_TOKEN || process.env.bot_token || process.env.TELEGRAM_BOT_TOKEN;
   if (!botToken) {
     return res.status(500).json({
       success: false,
@@ -80,86 +120,124 @@ export default async function handler(req, res) {
   }
 
   const isChannelPost = body.target === "channel" || body.action === "channel";
-  let chatId = null;
-  let messageText = "⚡ Thank you for your action on TMX-QUANTUM!";
 
   if (isChannelPost) {
-    chatId = extractChannelChatId(body);
-    if (!chatId) {
+    const requiredSecret = process.env.CHANNEL_ADMIN_SECRET;
+    if (requiredSecret) {
+      const providedSecret = req.headers["x-admin-secret"] || body.secret;
+      if (providedSecret !== requiredSecret) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized channel post request.",
+        });
+      }
+    }
+
+    const candidates = getCandidateChannelIds(body);
+    if (!candidates.length) {
       return res.status(400).json({
         success: false,
         message: "Channel chat ID missing.",
       });
     }
 
-    const rawMessage = body.message || body.text || body.announcement;
+    const presetKey = typeof body.reminderType === "string" ? body.reminderType.trim().toLowerCase() : "";
+    const rawMessage =
+      body.message ||
+      body.text ||
+      body.announcement ||
+      (presetKey && REMINDER_PRESETS[presetKey]) ||
+      (body.type === "reminder" ? REMINDER_PRESETS.mining : "");
+
     if (!rawMessage || typeof rawMessage !== "string" || !rawMessage.trim()) {
       return res.status(400).json({
         success: false,
         message: "Announcement or reminder message text is required for channel posts.",
       });
     }
-    messageText = rawMessage.trim();
-  } else {
-    chatId = extractUserId(body);
-    if (!chatId) {
+
+    const basePayload = {
+      text: rawMessage.trim(),
+      parse_mode: body.parseMode || body.parse_mode || "HTML",
+      disable_notification: Boolean(body.silent),
+    };
+
+    if (body.buttonText && body.buttonUrl) {
+      basePayload.reply_markup = {
+        inline_keyboard: [[{ text: String(body.buttonText), url: String(body.buttonUrl) }]],
+      };
+    }
+
+    try {
+      let lastFailure = null;
+      for (const candidateChatId of candidates) {
+        const result = await sendTelegramMessage(botToken, {
+          ...basePayload,
+          chat_id: candidateChatId,
+        });
+
+        if (result.ok) {
+          return res.status(200).json({
+            success: true,
+            message: "Channel announcement/reminder sent successfully.",
+            chat_id: candidateChatId,
+            message_id: result.data.result?.message_id ?? null,
+          });
+        }
+
+        lastFailure = result.data?.description || "Failed to dispatch Telegram channel message.";
+      }
+
       return res.status(400).json({
         success: false,
-        message: "User ID missing from request payload.",
+        message: lastFailure,
+      });
+    } catch (error) {
+      const isTimeout = error?.name === "AbortError";
+      return res.status(isTimeout ? 504 : 500).json({
+        success: false,
+        message: isTimeout
+          ? "Telegram API request timed out."
+          : error?.message || "Internal server error occurred.",
       });
     }
-    if (typeof body.text === "string" && body.text.trim()) {
-      messageText = body.text.trim();
-    }
   }
 
-  const payload = {
-    chat_id: chatId,
-    text: messageText,
-    parse_mode: body.parseMode || body.parse_mode || "HTML",
-    disable_notification: Boolean(body.silent),
-  };
-
-  if (body.buttonText && body.buttonUrl) {
-    payload.reply_markup = {
-      inline_keyboard: [[{ text: String(body.buttonText), url: String(body.buttonUrl) }]],
-    };
+  // Default: user notification
+  const userId = extractUserId(body);
+  if (!userId) {
+    return res.status(400).json({
+      success: false,
+      message: "User ID missing from request payload.",
+    });
   }
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), TELEGRAM_API_TIMEOUT_MS);
+  const userText =
+    typeof body.text === "string" && body.text.trim()
+      ? body.text.trim()
+      : "⚡ Thank you for your action on TMX-QUANTUM!";
 
   try {
-    const telegramApiUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
-
-    const telegramRes = await fetch(telegramApiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      signal: controller.signal,
-      body: JSON.stringify(payload),
+    const result = await sendTelegramMessage(botToken, {
+      chat_id: userId,
+      text: userText,
+      parse_mode: body.parseMode || body.parse_mode || "HTML",
+      disable_notification: Boolean(body.silent),
     });
 
-    clearTimeout(timeoutId);
-
-    const data = await telegramRes.json().catch(() => ({}));
-
-    if (!telegramRes.ok || data.ok === false) {
+    if (!result.ok) {
       return res.status(400).json({
         success: false,
-        message: data.description || "Failed to dispatch Telegram message.",
+        message: result.data?.description || "Failed to dispatch Telegram notification.",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: isChannelPost
-        ? "Channel announcement/reminder sent successfully."
-        : "Notification sent successfully.",
-      chat_id: chatId,
-      message_id: data.result?.message_id ?? null,
+      message: "Notification sent successfully.",
+      message_id: result.data.result?.message_id ?? null,
     });
   } catch (error) {
-    clearTimeout(timeoutId);
     const isTimeout = error?.name === "AbortError";
     return res.status(isTimeout ? 504 : 500).json({
       success: false,
@@ -168,4 +246,4 @@ export default async function handler(req, res) {
         : error?.message || "Internal server error occurred.",
     });
   }
-}
+    }
