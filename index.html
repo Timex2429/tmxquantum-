@@ -772,8 +772,8 @@
           <strong>TMX-QUANTUM</strong> runs inside Telegram for <strong>The Open Network (TON)</strong>. Accumulate 💎 across 15-second pulse rounds, complete community and ecosystem quests, and link your wallet via <strong>TON Connect</strong> for future on-chain reward eligibility.
         </p>
       </section>
-    </main>
-        <!-- TASKS TAB -->
+  </main>
+      <!-- TASKS TAB -->
     <section id="panel-tasks" class="tab-panel">
       <div class="card">
         <h2 class="card-title">Ecosystem & Community Quests</h2>
@@ -1075,7 +1075,8 @@
       <span class="nav-icon">❓</span>
       <span>FAQ</span>
     </button>
-              </nav>
+        </nav>
+          <script>
     const CONFIG = {
       API_BASE_URL: "",
       ONCLICKA_SPOT_ID: "615600",
@@ -1192,7 +1193,7 @@
 
     function readStorage(key) {
       try {
-        return localStorage.getItem(key);
+        return window.localStorage.getItem(key);
       } catch {
         return volatileStore[key] || null;
       }
@@ -1200,7 +1201,7 @@
 
     function writeStorage(key, value) {
       try {
-        localStorage.setItem(key, value);
+        window.localStorage.setItem(key, value);
       } catch {
         volatileStore[key] = value;
       }
@@ -2465,4 +2466,4 @@
     })();
   </script>
 </body>
-      </html>
+</html>
