@@ -10,6 +10,17 @@ function extractUserId(body) {
   return null;
 }
 
+function extractChannelChatId(body) {
+  if (body && typeof body === "object") {
+    if (body.channelId) return String(body.channelId).trim();
+    if (body.channel_id) return String(body.channel_id).trim();
+    if (body.chatId) return String(body.chatId).trim();
+  }
+  if (process.env.CHANNEL_CHAT_ID) return String(process.env.CHANNEL_CHAT_ID).trim();
+  if (process.env.TMX_CHANNEL_CHAT_ID) return String(process.env.TMX_CHANNEL_CHAT_ID).trim();
+  return null;
+}
+
 export default async function handler(req, res) {
   // CORS Configuration
   res.setHeader("Access-Control-Allow-Credentials", "true");
@@ -33,7 +44,7 @@ export default async function handler(req, res) {
     });
   }
 
-  const botToken = process.env.BOT_TOKEN;
+  const botToken = process.env.BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
   if (!botToken) {
     return res.status(500).json({
       success: false,
@@ -54,12 +65,51 @@ export default async function handler(req, res) {
     }
   }
 
-  const userId = extractUserId(body);
-  if (!userId) {
-    return res.status(400).json({
-      success: false,
-      message: "User ID missing from request payload.",
-    });
+  const isChannelPost = body.target === "channel" || body.action === "channel";
+  let chatId = null;
+  let messageText = "⚡ Thank you for your action on TMX-QUANTUM!";
+
+  if (isChannelPost) {
+    chatId = extractChannelChatId(body);
+    if (!chatId) {
+      return res.status(400).json({
+        success: false,
+        message: "Channel chat ID missing (set CHANNEL_CHAT_ID in env or pass channelId).",
+      });
+    }
+
+    const rawMessage = body.message || body.text || body.announcement;
+    if (!rawMessage || typeof rawMessage !== "string" || !rawMessage.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Announcement or reminder message text is required for channel posts.",
+      });
+    }
+    messageText = rawMessage.trim();
+  } else {
+    chatId = extractUserId(body);
+    if (!chatId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID missing from request payload.",
+      });
+    }
+    if (typeof body.text === "string" && body.text.trim()) {
+      messageText = body.text.trim();
+    }
+  }
+
+  const payload = {
+    chat_id: chatId,
+    text: messageText,
+    parse_mode: body.parseMode || body.parse_mode || "HTML",
+    disable_notification: Boolean(body.silent),
+  };
+
+  if (body.buttonText && body.buttonUrl) {
+    payload.reply_markup = {
+      inline_keyboard: [[{ text: String(body.buttonText), url: String(body.buttonUrl) }]],
+    };
   }
 
   const controller = new AbortController();
@@ -72,10 +122,7 @@ export default async function handler(req, res) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       signal: controller.signal,
-      body: JSON.stringify({
-        chat_id: userId,
-        text: "⚡ Thank you for your action on TMX-QUANTUM!",
-      }),
+      body: JSON.stringify(payload),
     });
 
     clearTimeout(timeoutId);
@@ -85,13 +132,16 @@ export default async function handler(req, res) {
     if (!telegramRes.ok || data.ok === false) {
       return res.status(400).json({
         success: false,
-        message: data.description || "Failed to dispatch Telegram notification.",
+        message: data.description || "Failed to dispatch Telegram message.",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "Notification sent successfully.",
+      message: isChannelPost
+        ? "Channel announcement/reminder sent successfully."
+        : "Notification sent successfully.",
+      message_id: data.result?.message_id ?? null,
     });
   } catch (error) {
     clearTimeout(timeoutId);
