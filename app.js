@@ -1,6 +1,7 @@
 import process from "node:process";
 
 const TELEGRAM_API_TIMEOUT_MS = 5000;
+const DEFAULT_CHANNEL_ID = "3905270338";
 
 function extractUserId(body) {
   if (!body || typeof body !== "object") return null;
@@ -10,15 +11,28 @@ function extractUserId(body) {
   return null;
 }
 
+function normalizeChannelChatId(rawId) {
+  if (!rawId) return null;
+  const cleaned = String(rawId).trim();
+  if (!cleaned) return null;
+  if (cleaned.startsWith("@") || cleaned.startsWith("-100")) {
+    return cleaned;
+  }
+  if (/^\d+$/.test(cleaned)) {
+    return `-100${cleaned}`;
+  }
+  return cleaned;
+}
+
 function extractChannelChatId(body) {
   if (body && typeof body === "object") {
-    if (body.channelId) return String(body.channelId).trim();
-    if (body.channel_id) return String(body.channel_id).trim();
-    if (body.chatId) return String(body.chatId).trim();
+    if (body.channelId) return normalizeChannelChatId(body.channelId);
+    if (body.channel_id) return normalizeChannelChatId(body.channel_id);
+    if (body.chatId) return normalizeChannelChatId(body.chatId);
   }
-  if (process.env.CHANNEL_CHAT_ID) return String(process.env.CHANNEL_CHAT_ID).trim();
-  if (process.env.TMX_CHANNEL_CHAT_ID) return String(process.env.TMX_CHANNEL_CHAT_ID).trim();
-  return null;
+  const envId = process.env.CHANNEL_CHAT_ID || process.env.TMX_CHANNEL_CHAT_ID;
+  if (envId) return normalizeChannelChatId(envId);
+  return normalizeChannelChatId(DEFAULT_CHANNEL_ID);
 }
 
 export default async function handler(req, res) {
@@ -74,7 +88,7 @@ export default async function handler(req, res) {
     if (!chatId) {
       return res.status(400).json({
         success: false,
-        message: "Channel chat ID missing (set CHANNEL_CHAT_ID in env or pass channelId).",
+        message: "Channel chat ID missing.",
       });
     }
 
@@ -141,6 +155,7 @@ export default async function handler(req, res) {
       message: isChannelPost
         ? "Channel announcement/reminder sent successfully."
         : "Notification sent successfully.",
+      chat_id: chatId,
       message_id: data.result?.message_id ?? null,
     });
   } catch (error) {
