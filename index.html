@@ -773,8 +773,7 @@
         </p>
       </section>
     </main>
-
-    <!-- TASKS TAB -->
+        <!-- TASKS TAB -->
     <section id="panel-tasks" class="tab-panel">
       <div class="card">
         <h2 class="card-title">Ecosystem & Community Quests</h2>
@@ -1076,9 +1075,7 @@
       <span class="nav-icon">❓</span>
       <span>FAQ</span>
     </button>
-  </nav>
-
-  <script>
+              </nav>
     const CONFIG = {
       API_BASE_URL: "",
       ONCLICKA_SPOT_ID: "615600",
@@ -1117,7 +1114,6 @@
       { id: "share_app", elId: "task-share-app", reward: 100, url: null, requiresVisit: false, actionType: "share" }
     ];
 
-    // Track timestamps when each link quest was opened: { [questId]: epochMs }
     const questOpenedAt = {};
     const MIN_QUEST_DWELL_MS = 5000;
 
@@ -1138,7 +1134,6 @@
 
       if (level === "ERROR") {
         console.error(line);
-        document.getElementById("diagBox")?.classList.add("open");
       } else {
         console.log(line);
       }
@@ -1345,6 +1340,7 @@
         startParam
       };
     }
+
     function resolveOperatorProfile() {
       const { user } = getSessionContext();
       if (user && user.id) {
@@ -1990,7 +1986,6 @@
         const openedTime = questOpenedAt[quest.id];
         const elapsed = typeof openedTime === "number" ? Date.now() - openedTime : Infinity;
 
-        // Step 1: Must open the link first
         if (!alreadyVisited || !quest.url) {
           if (quest.url) openExternalTarget(quest.url);
           questOpenedAt[quest.id] = Date.now();
@@ -2003,7 +1998,6 @@
           return;
         }
 
-        // Step 2: Prevent instant/accidental verification before visiting
         if (elapsed < MIN_QUEST_DWELL_MS) {
           const waitSec = Math.ceil((MIN_QUEST_DWELL_MS - elapsed) / 1000);
           showBanner(`Complete the quest in the opened page first (${waitSec}s left), then tap Verify.`, "info");
@@ -2143,24 +2137,35 @@
       }
     }
 
+    function extractShowHandler(initResult) {
+      if (typeof initResult === "function") return initResult;
+      if (initResult && typeof initResult.show === "function") return initResult.show.bind(initResult);
+      return null;
+    }
+
     function initOnClicka() {
       if (showOnClickaAd) return Promise.resolve(showOnClickaAd);
       if (onClickaInitPromise) return onClickaInitPromise;
 
       if (typeof window.initCdTma !== "function" || !CONFIG.ONCLICKA_SPOT_ID) {
-        pushTelemetry("WARN", "OnClicka TMA SDK not loaded yet");
+        pushTelemetry("WARN", "OnClicka TMA SDK (window.initCdTma) not detected yet");
         return Promise.resolve(null);
       }
 
-      onClickaInitPromise = window.initCdTma({ id: CONFIG.ONCLICKA_SPOT_ID })
-        .then((showFn) => {
-          showOnClickaAd = typeof showFn === "function" ? showFn : null;
-          pushTelemetry("INFO", "OnClicka TMA controller initialized", { spotId: CONFIG.ONCLICKA_SPOT_ID });
+      onClickaInitPromise = Promise.resolve()
+        .then(() => window.initCdTma({ id: CONFIG.ONCLICKA_SPOT_ID }))
+        .then((res) => {
+          const fn = extractShowHandler(res);
+          showOnClickaAd = fn;
+          pushTelemetry("INFO", "OnClicka TMA initialized", {
+            spotId: CONFIG.ONCLICKA_SPOT_ID,
+            hasShowHandler: typeof fn === "function"
+          });
           return showOnClickaAd;
         })
         .catch((err) => {
           onClickaInitPromise = null;
-          pushTelemetry("ERROR", "OnClicka initialization failed", err?.message || String(err));
+          pushTelemetry("WARN", "OnClicka initialization note", err?.message || String(err));
           return null;
         });
 
@@ -2460,4 +2465,4 @@
     })();
   </script>
 </body>
-</html>
+      </html>
