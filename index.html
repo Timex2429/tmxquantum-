@@ -989,7 +989,7 @@
         <p class="card-desc">
           Open the diagnostic log to inspect API calls, ad events, or local state behavior.
         </p>
-        <button class="btn btn-ghost" id="btnToggleDiag" style="width:100%;" type="button">
+        <button class="btn btn-ghost" id="btnToggleDiag" style="width:100%;" type="button" onclick="document.getElementById('diagBox')?.classList.toggle('open')">
           🛠️ Toggle Error & API Log
         </button>
       </div>
@@ -1080,7 +1080,7 @@
 
   <script>
     const CONFIG = {
-     API_BASE_URL: "",
+      API_BASE_URL: "",
       ONCLICKA_SPOT_ID: "615600",
       TON_APP_URL: "https://ton.app",
       TON_MANIFEST_URL: "https://www.tmxquantum.site/tonconnect-manifest.json",
@@ -1142,10 +1142,6 @@
       } else {
         console.log(line);
       }
-    }
-
-    function toggleDiag() {
-      document.getElementById("diagBox")?.classList.toggle("open");
     }
 
     function clearLogs() {
@@ -1349,7 +1345,6 @@
         startParam
       };
     }
-
     function resolveOperatorProfile() {
       const { user } = getSessionContext();
       if (user && user.id) {
@@ -2429,7 +2424,6 @@
       document.getElementById("spinWinBtn")?.addEventListener("click", handleSpinAndWin);
       document.getElementById("btnCopyRef")?.addEventListener("click", copyReferralLink);
       document.getElementById("btnShareRef")?.addEventListener("click", shareReferralInvite);
-      document.getElementById("btnToggleDiag")?.addEventListener("click", toggleDiag);
       document.getElementById("btnTestApi")?.addEventListener("click", runHealthCheck);
       document.getElementById("btnClearLogs")?.addEventListener("click", clearLogs);
 
@@ -2466,4 +2460,4 @@
     })();
   </script>
 </body>
-  </html>
+</html>
