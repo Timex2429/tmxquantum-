@@ -1075,8 +1075,8 @@
       <span class="nav-icon">❓</span>
       <span>FAQ</span>
     </button>
-        </nav>
-          <script>
+          </nav>
+            <script>
     const CONFIG = {
       API_BASE_URL: "",
       ONCLICKA_SPOT_ID: "615600",
@@ -2141,26 +2141,57 @@
     function extractShowHandler(initResult) {
       if (typeof initResult === "function") return initResult;
       if (initResult && typeof initResult.show === "function") return initResult.show.bind(initResult);
+      if (initResult && typeof initResult.open === "function") return initResult.open.bind(initResult);
+      if (typeof window.show === "function") return window.show.bind(window);
       return null;
+    }
+
+    function loadOnClickaScriptIfMissing() {
+      if (typeof window.initCdTma === "function") return Promise.resolve(true);
+      const src = "https://js.onclckvd.com/in-stream-ad-admanager/tma.js";
+      const existing = document.querySelector(`script[src="${src}"]`);
+
+      return new Promise((resolve) => {
+        const finish = (ok) => {
+          setTimeout(() => resolve(typeof window.initCdTma === "function" || ok), 150);
+        };
+
+        if (existing) {
+          existing.addEventListener("load", () => finish(true), { once: true });
+          existing.addEventListener("error", () => finish(false), { once: true });
+          setTimeout(() => finish(typeof window.initCdTma === "function"), 1800);
+          return;
+        }
+
+        const s = document.createElement("script");
+        s.src = src;
+        s.async = true;
+        s.onload = () => finish(true);
+        s.onerror = () => finish(false);
+        document.head.appendChild(s);
+      });
     }
 
     function initOnClicka() {
       if (showOnClickaAd) return Promise.resolve(showOnClickaAd);
       if (onClickaInitPromise) return onClickaInitPromise;
 
-      if (typeof window.initCdTma !== "function" || !CONFIG.ONCLICKA_SPOT_ID) {
-        pushTelemetry("WARN", "OnClicka TMA SDK (window.initCdTma) not detected yet");
-        return Promise.resolve(null);
-      }
-
-      onClickaInitPromise = Promise.resolve()
-        .then(() => window.initCdTma({ id: CONFIG.ONCLICKA_SPOT_ID }))
+      onClickaInitPromise = loadOnClickaScriptIfMissing()
+        .then(() => {
+          if (typeof window.initCdTma !== "function" || !CONFIG.ONCLICKA_SPOT_ID) {
+            pushTelemetry("WARN", "OnClicka TMA SDK (window.initCdTma) not detected yet");
+            return null;
+          }
+          return window.initCdTma({ id: CONFIG.ONCLICKA_SPOT_ID });
+        })
         .then((res) => {
           const fn = extractShowHandler(res);
           showOnClickaAd = fn;
           pushTelemetry("INFO", "OnClicka TMA initialized", {
             spotId: CONFIG.ONCLICKA_SPOT_ID,
-            hasShowHandler: typeof fn === "function"
+            hasShowHandler: typeof fn === "function",
+            initType: typeof res,
+            keys: res && typeof res === "object" ? Object.keys(res) : []
           });
           return showOnClickaAd;
         })
@@ -2466,4 +2497,4 @@
     })();
   </script>
 </body>
-</html>
+  </html>
